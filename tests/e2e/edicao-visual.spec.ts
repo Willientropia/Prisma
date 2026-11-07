@@ -1,39 +1,17 @@
-// ADENDO 02, B10: critérios de aceite da edição matemática visual.
-import { expect, test, type Page } from '@playwright/test';
-
-const P = 'C:/Users/voce/Documents/Usina Boa Vista/calculos';
-type Dev = { open(p: string): Promise<void>; newDoc(t: string): string; text(): string | undefined };
-const dev = (page: Page) => ({
-  open: (p: string) => page.evaluate((p) => (window as unknown as { prismaDev: Dev }).prismaDev.open(p), p),
-  newDoc: (t: string) => page.evaluate((t) => (window as unknown as { prismaDev: Dev }).prismaDev.newDoc(t), t),
-  text: () => page.evaluate(() => (window as unknown as { prismaDev: Dev }).prismaDev.text() ?? ''),
-});
-
-async function start(page: Page) {
-  await page.goto('/');
-  await page.waitForFunction(() => !!(window as unknown as { prismaDev?: Dev }).prismaDev?.open);
-}
+// ADENDO 02: edição matemática visual (critérios B10 e B7).
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
+import { CALC as P, armTimer, dev, fieldValues, focusField, resultTexts, start, timerMs } from './helpers';
 
 /** Folha nova; clica num ponto vazio da grade e digita (cria a região ali, como no SMath). */
 async function typeInNewSheet(page: Page, keys: string, at = { x: 100, y: 100 }) {
   await start(page);
   await dev(page).newDoc('folha');
-  const sheet = page.getByLabel('Folha');
-  await sheet.click({ position: at });
+  await page.getByLabel('Folha').click({ position: at });
   await page.keyboard.type(keys, { delay: 40 });
 }
 
-/** Clica no campo e espera o foco chegar (o MathLive leva alguns quadros), como uma pessoa faria. */
-async function focusField(page: Page, field: ReturnType<Page['locator']>) {
-  await field.click();
-  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('MATH-FIELD');
-}
-
-const resultTexts = (page: Page) => page.locator('.mresult-value').allTextContents().then((a) => a.map((t) => t.replace(/\s/g, '')));
-/** LaTeX dos campos MathLive na tela. */
-const fieldValues = (page: Page) => page.evaluate(() => [...document.querySelectorAll('math-field')].map((m) => (m as unknown as { value: string }).value));
-
-test('B10.1: S:4mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava S := 4 mm^2', async ({ page }) => {
+test('[B10-01] S:4mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava S := 4 mm^2', async ({ page }) => {
   await typeInNewSheet(page, 'S:4mm^2');
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('S := 4 mm^2');
@@ -47,14 +25,14 @@ test('B10.1: S:4mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava S 
   expect(unit.color).toBe('rgb(143, 180, 255)'); // --math-unit
 });
 
-test('B10.2: V_mp:400V vira V com índice reto mp; arquivo V_mp := 400 V', async ({ page }) => {
+test('[B10-02] V_mp:400V vira V com índice reto mp; arquivo V_mp := 400 V', async ({ page }) => {
   await typeInNewSheet(page, 'V_mp:400V');
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('V_mp := 400 V');
   expect((await fieldValues(page))[0]).toContain('V_{\\mathrm{mp}}');
 });
 
-test('B10.3: (a+b)/2 vira fração com a+b em cima, sem parênteses', async ({ page }) => {
+test('[B10-03] (a+b)/2 vira fração com a+b em cima, sem parênteses', async ({ page }) => {
   await typeInNewSheet(page, '(a+b)/2');
   const live = (await fieldValues(page))[0];
   expect(live).toContain('\\frac{');
@@ -63,13 +41,13 @@ test('B10.3: (a+b)/2 vira fração com a+b em cima, sem parênteses', async ({ p
   await expect.poll(() => dev(page).text()).toContain('(a + b)/2');
 });
 
-test('B10.4: r Ctrl+G vira ρ', async ({ page }) => {
+test('[B10-04] r Ctrl+G vira ρ', async ({ page }) => {
   await typeInNewSheet(page, 'r');
   await page.keyboard.press('Control+g');
   await expect.poll(async () => (await fieldValues(page))[0]).toContain('\\rho');
 });
 
-test('B10.5: I:11,5A mostra I ≔ 11,5 A e grava I := 11.5 A', async ({ page }) => {
+test('[B10-05] I:11,5A mostra I ≔ 11,5 A e grava I := 11.5 A', async ({ page }) => {
   await typeInNewSheet(page, 'I:11,5A');
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('I := 11.5 A');
@@ -77,7 +55,7 @@ test('B10.5: I:11,5A mostra I ≔ 11,5 A e grava I := 11.5 A', async ({ page }) 
   expect(shown).toContain('11,5');
 });
 
-test('B10.6: string-3 sem clicar em nada: 3,29 V, 0,82 % e o gráfico com 4 seções e linha de limite', async ({ page }) => {
+test('[B10-06] string-3 sem clicar em nada: 3,29 V, 0,82 % e o gráfico com 4 seções e linha de limite', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
@@ -87,21 +65,21 @@ test('B10.6: string-3 sem clicar em nada: 3,29 V, 0,82 % e o gráfico com 4 seç
   await expect(fig).toContainText('limite 1 %');
 });
 
-test('B10.7: mudar S de 4 para 6 atualiza para 2,20 V e 0,55 % logo depois da última tecla', async ({ page }) => {
+test('[B10-07] mudar S de 4 para 6 atualiza para 2,20 V e 0,55 % logo depois da última tecla', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
   await focusField(page, page.locator('[data-region="s"] math-field'));
   await page.keyboard.press('Control+a');
+  await armTimer(page, ['2,20V', '0,55%']);
   await page.keyboard.type('S:6mm^2', { delay: 30 });
-  const t0 = Date.now();
-  await expect.poll(() => resultTexts(page), { intervals: [10] }).toEqual(['2,20V', '0,55%']);
-  const ms = Date.now() - t0;
-  console.log(`B10.7: resultado novo ${ms} ms depois da última tecla`);
-  expect(ms).toBeLessThan(400); // alvo da B5: 150 ms; a margem cobre o tempo do próprio Playwright
+  await expect.poll(() => resultTexts(page)).toEqual(['2,20V', '0,55%']);
+  const ms = (await timerMs(page))!; // medido dentro da página, da última tecla ao resultado novo
+  console.log(`B10-07: resultado novo ${ms.toFixed(0)} ms depois da última tecla`);
+  expect(ms).toBeLessThanOrEqual(150);
 });
 
-test('B10.8: marcador de unidade + mV converte para mV e grava = ? mV', async ({ page }) => {
+test('[B10-08] marcador de unidade + mV converte para mV e grava = ? mV', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
@@ -115,7 +93,7 @@ test('B10.8: marcador de unidade + mV converte para mV e grava = ? mV', async ({
   await expect.poll(() => resultTexts(page)).toEqual(['3293,60mV', '0,82%']);
 });
 
-test('B10.9: nenhum ":=", "^", "?" ou "_" na tela (caderno e folha)', async ({ page }) => {
+test('[B10-09] nenhum ":=", "^", "?" ou "_" na tela (caderno e folha)', async ({ page }) => {
   await start(page);
   for (const f of [`${P}/cabos-cc.prsm`, `${P}/string-3.prsf`]) {
     await dev(page).open(f);
@@ -132,7 +110,7 @@ test('B10.9: nenhum ":=", "^", "?" ou "_" na tela (caderno e folha)', async ({ p
   }
 });
 
-test('B10.11: clicar numa expressão e sair sem editar não muda nenhum pixel', async ({ page }) => {
+test('[B10-11] clicar numa expressão e sair sem editar não muda nenhum pixel', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
@@ -148,7 +126,7 @@ test('B10.11: clicar numa expressão e sair sem editar não muda nenhum pixel', 
   expect(after.equals(before)).toBe(true);
 });
 
-test('B7: no caderno, Enter cria a próxima linha; Backspace numa linha vazia apaga e volta', async ({ page }) => {
+test('[B7-01] no caderno, Enter cria a próxima linha; Backspace numa linha vazia apaga e volta', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/cabos-cc.prsm`);
   await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
@@ -166,7 +144,7 @@ test('B7: no caderno, Enter cria a próxima linha; Backspace numa linha vazia ap
   await expect.poll(() => dev(page).text()).toBe(before.replace('V_mp := 400 V\n', 'V_mp := 400 V\nk := 2\n'));
 });
 
-test('B7: texto editado formatado vira Markdown no arquivo', async ({ page }) => {
+test('[B7-02] texto editado formatado vira Markdown no arquivo', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/cabos-cc.prsm`);
   const para = page.locator('.prose-editor').filter({ hasText: 'O fator 2' });

@@ -477,6 +477,7 @@ export const ICONS = {
 - Sem gradientes, sem cards com borda colorida à esquerda, sem sombras além das listadas.
 - Contraste mínimo de 4.5:1 para texto.
 - Botões são `<button>` de verdade, com foco visível (contorno de 2 px `--focus-ring`, `outline-offset: 1px`).
+- **Estabilidade do layout** (ADENDO 04): elementos de navegação (barra de título, abas de documento, barra de status) ocupam a mesma posição e o mesmo tamanho em todas as telas e estados. Uma interação nunca pode mover o elemento que o usuário acabou de usar. Painéis podem aparecer ou sumir, mas só abaixo ou ao lado do elemento clicado, nunca acima dele.
 
 ### 4.6 Marca e logo
 

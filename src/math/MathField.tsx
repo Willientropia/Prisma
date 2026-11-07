@@ -65,20 +65,26 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-function handleKey(mf: MathfieldElement, e: Key, state: { script: 'sub' | 'sup' | null }, p: { current: FieldProps }): boolean {
+type FieldState = { script: 'sub' | 'sup' | null; edited: boolean };
+
+function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current: FieldProps }): boolean {
   const before = () => beforeCaret(mf);
   const afterDigit = () => /\d$/.test(before());
   const atEnd = () => mf.position === mf.lastOffset;
   const insert = (latex: string) => mf.insert(latex, { selectionMode: latex.includes('#0') ? 'placeholder' : 'after', format: 'latex' });
   const leaveSub = () => { if (state.script === 'sub') mf.executeCommand('moveAfterParent'); if (state.script === 'sub') state.script = null; };
   // ao sair de um identificador, reclassifica: variável, unidade ou não definida (B4)
-  const classify = () => {
-    if (!atEnd() || state.script) return;
+  const classify = (force = false) => {
+    if (!force && (!atEnd() || state.script)) return;
     try {
       const canon = lineToLatex(latexToLine(mf.value), p.current.ctx);
       if (canon !== mf.value) { mf.setValue(canon, { silenceNotifications: true }); mf.position = mf.lastOffset; }
     } catch { /* expressão ainda incompleta */ }
   };
+
+  // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
+  // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
+  const commit = (how: Commit) => { state.script = null; classify(true); state.edited = false; p.current.onCommit(mf.value, how); };
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
     const l = lastLetter(before());
@@ -91,11 +97,11 @@ function handleKey(mf: MathfieldElement, e: Key, state: { script: 'sub' | 'sup' 
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
   if (OPERATOR_KEYS.has(e.key)) { leaveSub(); if (!['/', ',', ':', '='].includes(e.key)) classify(); }
   switch (e.key) {
-    case 'Enter': classify(); p.current.onCommit(mf.value, e.shiftKey ? 'shift-enter' : 'enter'); return true;
-    case 'Escape': classify(); p.current.onCommit(mf.value, 'escape'); return true;
+    case 'Enter': commit(e.shiftKey ? 'shift-enter' : 'enter'); return true;
+    case 'Escape': commit('escape'); return true;
     case 'Backspace': if (mf.value === '') { p.current.onBackspaceEmpty?.(); return true; } return false;
     case ':': insert('\\coloneq '); return true;
-    case '=': if (!mf.value.includes('coloneq')) p.current.onCommit(mf.value, 'eval'); return true;
+    case '=': if (!mf.value.includes('coloneq')) commit('eval'); return true;
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
     case "'": insert('\\class{u}{\\mathrm{#0}}'); return true; // força unidade (B4)
@@ -177,21 +183,20 @@ export function MathField(props: FieldProps) {
     mf.shadowRoot?.appendChild(style);
     mf.value = p.current.latex;
 
-    const state: { script: 'sub' | 'sup' | null } = { script: null };
-    let edited = false; // houve digitação desde que ganhou foco
+    const state: FieldState = { script: null, edited: false }; // edited: houve digitação desde o foco ou o último commit
     const onKey = (e: KeyboardEvent) => {
       if (handleKey(mf, e, state, p)) { e.preventDefault(); e.stopPropagation(); }
     };
     mf.addEventListener('keydown', onKey, { capture: true });
-    mf.addEventListener('input', () => { edited = true; p.current.onInput?.(mf.value); });
-    mf.addEventListener('focusin', () => { edited = false; p.current.onFocus?.(); });
+    mf.addEventListener('input', () => { state.edited = true; p.current.onInput?.(mf.value); });
+    mf.addEventListener('focusin', () => { state.edited = false; p.current.onFocus?.(); });
     mf.addEventListener('focusout', () => {
       state.script = null;
       // sair sem editar não grava nada (B10.11) e volta a mostrar o que está no arquivo:
       // depois de apagar uma linha, este componente pode já representar outra linha
-      if (edited) p.current.onCommit(mf.value, 'blur');
+      if (state.edited) p.current.onCommit(mf.value, 'blur');
       else if (mf.value !== p.current.latex) mf.value = p.current.latex;
-      edited = false;
+      state.edited = false;
       p.current.onLeave?.();
     });
     mfRef.current = mf;

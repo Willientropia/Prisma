@@ -1,6 +1,7 @@
 // Caminhos da SPEC seção 4.4. Todo ícone do app é traço SVG, nunca caractere.
 export const ICONS = {
   file: 'M6 3h8l4 4v14H6zM14 3v4h4',
+  home: 'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10', // ADENDO 04, D3
   open: 'M3 7h6l2 2h10v10H3z',
   save: 'M5 3h12l2 2v16H5zM8 3v6h8V3M8 21v-7h8v7',
   undo: 'M9 7l-5 5 5 5M4 12h10a6 6 0 016 6',

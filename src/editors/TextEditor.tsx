@@ -29,6 +29,9 @@ export function TextEditor({ markdown, className, autoFocus, onChange, resolveLi
   const cb = useRef({ onChange, resolveLink, onOpenLink });
   cb.current = { onChange, resolveLink, onOpenLink };
   const timer = useRef(0);
+  // último Markdown que editor e arquivo têm em comum: comparar com ele evita serializar o texto todo
+  // a cada render (num .prsm de 1 MB isso sozinho passava de 400 ms, C7-02)
+  const synced = useRef(markdown);
 
   const markLinks = (ed: Editor) => {
     ed.view.dom.querySelectorAll('a[href^="prisma:"]').forEach((a) => {
@@ -52,6 +55,7 @@ export function TextEditor({ markdown, className, autoFocus, onChange, resolveLi
       clearTimeout(timer.current);
       timer.current = window.setTimeout(() => {
         const md = fromEditor((ed.storage as { markdown: { getMarkdown(): string } }).markdown.getMarkdown());
+        synced.current = md;
         cb.current.onChange(md);
       }, 300);
     },
@@ -68,8 +72,7 @@ export function TextEditor({ markdown, className, autoFocus, onChange, resolveLi
   // mudança vinda de fora (outra edição, arquivo alterado no disco): só aplica fora de edição
   useEffect(() => {
     if (!editor || editor.isFocused) return;
-    const cur = fromEditor((editor.storage as { markdown: { getMarkdown(): string } }).markdown.getMarkdown());
-    if (cur !== markdown) editor.commands.setContent(toEditor(markdown), false);
+    if (markdown !== synced.current) { editor.commands.setContent(toEditor(markdown), false); synced.current = markdown; }
     markLinks(editor);
   }, [markdown, editor]);
 

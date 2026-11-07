@@ -1,0 +1,73 @@
+# Edição visual (ADENDO 02 B4 e B10; ADENDO 03 C3). Roda no Vitest em modo navegador, numa linha de cálculo
+# montada de verdade (MathLive), com teclado real.
+# teclas: texto digitado; teclas especiais entre chaves: {Enter}, {Ctrl+G}, {ArrowRight}, {Space}, {Backspace}.
+# linear: o que vai para o arquivo. latex_contem / latex_nao_contem: pedaços do LaTeX do campo.
+# tela_contem / tela_nao_contem: texto que o campo desenha.
+# contexto: folha (fundo escuro) ou caderno (página branca).
+
+- id: B10-01
+  contexto: folha
+  teclas: "S:4mm^2{Enter}"
+  linear: "S := 4 mm^2"
+  latex_contem: ['\coloneq', '\class{u}{\mathrm{mm}']
+  tela_contem: ["≔", "mm"]
+  tela_nao_contem: [":=", "^"]
+- id: B10-02
+  contexto: folha
+  teclas: "V_mp:400V{Enter}"
+  linear: "V_mp := 400 V"
+  latex_contem: ['V_{\mathrm{mp}}']
+  tela_nao_contem: ["_"]
+- id: B10-03
+  contexto: folha
+  teclas: "(a+b)/2{Enter}"
+  linear: "(a + b)/2"
+  latex_contem: ['\frac{']
+  latex_nao_contem: ['\left(']
+- id: B10-04
+  contexto: folha
+  teclas: "r{Ctrl+G}"
+  latex_contem: ['\rho']
+- id: B10-05
+  contexto: folha
+  teclas: "I:11,5A{Enter}"
+  linear: "I := 11.5 A"
+  tela_contem: ["11,5"]
+- id: B4-01
+  descricao: "dois-pontos insere ≔"
+  contexto: caderno
+  teclas: "x:2{Enter}"
+  linear: "x := 2"
+- id: B4-02
+  descricao: "asterisco vira ·"
+  contexto: caderno
+  teclas: "2*x{Enter}"
+  linear: "2*x"
+  latex_contem: ['\cdot']
+- id: B4-03
+  descricao: "barra invertida abre raiz"
+  contexto: caderno
+  teclas: "\\x{Enter}"
+  linear: "sqrt(x)"
+  latex_contem: ['\sqrt{']
+- id: B4-04
+  descricao: "ponto depois de letra abre índice; espaço sai"
+  contexto: caderno
+  teclas: "V.mp :400{Enter}"
+  linear: "V_mp := 400"
+- id: B4-05
+  descricao: "ponto e vírgula separa argumentos; vírgula depois de dígito é decimal"
+  contexto: caderno
+  teclas: "f(1,5;2){Enter}"
+  linear: "f(1.5, 2)"
+- id: B4-06
+  descricao: "= pede o resultado"
+  contexto: caderno
+  teclas: "2*3="
+  linear: "2*3 = ?"
+- id: B4-07
+  descricao: "número seguido de unidade conhecida vira unidade (azul)"
+  contexto: caderno
+  teclas: "L:25m{Enter}"
+  linear: "L := 25 m"
+  latex_contem: ['\class{u}{\mathrm{m}}']

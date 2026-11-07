@@ -6,3 +6,4 @@ src-tauri/gen/schemas/
 prisma-pacote-claude-code.zip
 test-results/
 playwright-report/
+.vitest/

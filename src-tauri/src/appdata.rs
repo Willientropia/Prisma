@@ -16,13 +16,21 @@ motor_latex: tectonic
 tema: grafite-violeta
 ";
 
+/// Só em build de depuração: PRISMA_HOME troca as pastas do sistema por uma pasta de teste,
+/// para o `npm run test:app` nunca mexer nos Documentos e na configuração de quem roda os testes.
+fn test_home() -> Option<PathBuf> {
+    if cfg!(debug_assertions) { std::env::var_os("PRISMA_HOME").map(PathBuf::from) } else { None }
+}
 pub fn config_dir(app: &AppHandle) -> Res<PathBuf> {
+    if let Some(h) = test_home() { return Ok(h.join("AppData/Roaming").join(APP)); }
     Ok(app.path().config_dir().map_err(err)?.join(APP))
 }
 fn local_dir(app: &AppHandle) -> Res<PathBuf> {
+    if let Some(h) = test_home() { return Ok(h.join("AppData/Local").join(APP)); }
     Ok(app.path().local_data_dir().map_err(err)?.join(APP))
 }
 fn docs_dir(app: &AppHandle) -> Res<PathBuf> {
+    if let Some(h) = test_home() { return Ok(h.join("Documentos").join(APP)); }
     Ok(app.path().document_dir().map_err(err)?.join(APP))
 }
 fn recovery_dir(app: &AppHandle) -> Res<PathBuf> {
@@ -133,4 +141,21 @@ pub fn files_in_args(args: &[String]) -> Vec<String> {
 #[tauri::command]
 pub fn startup_files() -> Vec<String> {
     files_in_args(&std::env::args().collect::<Vec<_>>())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A9-02 a frio: só arquivos que existem viram abas; opções (--x) e o próprio executável ficam de fora
+    #[test]
+    fn arquivos_na_linha_de_comando() {
+        let dir = std::env::temp_dir().join("prisma-args-test");
+        fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("a.prsm");
+        fs::write(&f, "x").unwrap();
+        let args: Vec<String> = vec!["prisma.exe".into(), "--remote-debugging-port=9222".into(), f.to_string_lossy().into(), dir.join("sumiu.prsm").to_string_lossy().into()];
+        assert_eq!(files_in_args(&args), vec![slash(&f)]);
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }

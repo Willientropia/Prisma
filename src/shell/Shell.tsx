@@ -96,17 +96,20 @@ export function DocTabs() {
   const { openDocs, active, activate } = useWorkspace();
   return (
     <div className={s.dtabs} role="tablist" aria-label="Documentos abertos">
-      <button type="button" role="tab" aria-selected={active === 'home'} className={active === 'home' ? s.dtOn : s.dt} onClick={() => activate('home')}>
-        <Tag color={active === 'home' ? 'var(--type-inicio)' : undefined}>INI</Tag>Início
+      <button type="button" role="tab" aria-label="Início" title="Início" aria-selected={active === 'home'} className={active === 'home' ? s.dtHomeOn : s.dtHome} onClick={() => activate('home')}>
+        <Icon name="home" size={16} stroke={1.7} />
       </button>
       {openDocs.map((d) => (
         <button key={d.id} type="button" role="tab" title={d.path ? displayPath(d.path) : 'Ainda não salvo'} aria-selected={active === d.id} className={active === d.id ? s.dtOn : s.dt} onClick={() => activate(d.id)}>
-          <Tag color={active === d.id ? TYPE_INFO[d.type].color : undefined}>{TYPE_INFO[d.type].tag}</Tag>{d.name}{d.dirty ? '*' : ''}{d.readOnly ? ' (somente leitura)' : ''}
+          <Tag color={active === d.id ? TYPE_INFO[d.type].color : undefined}>{TYPE_INFO[d.type].tag}</Tag><TabName text={`${d.name}${d.dirty ? '*' : ''}${d.readOnly ? ' (somente leitura)' : ''}`} />
         </button>
       ))}
     </div>
   );
 }
+
+/** Nome da aba com a largura do texto em peso 500 já reservada: ativar a aba não muda o tamanho dela (ADENDO 04, D5). */
+const TabName = ({ text }: { text: string }) => <span className={s.dtName} data-text={text}>{text}</span>;
 
 export function StatusBar() {
   const status = useWorkspace((x) => x.status);

@@ -1,0 +1,135 @@
+# Motor de cálculo (ADENDO 03, C3). Acrescentar um caso = acrescentar algumas linhas.
+# Campos: id, descricao, definicoes (linhas antes), expr (avaliada com "= ?" e a unidade de esperado),
+# verificar (condição de bloco verificar), esperado {valor, unidade, tolerancia, texto, estado}, erro.
+# A tolerância padrão é 0,5 %.
+
+# --- SPEC 8: testes obrigatórios ---
+- id: F2-01
+  descricao: queda de tensão CC, 6 mm²
+  definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "ΔV(L, I, S) := 2*ρ_cu*L*I/S"]
+  expr: "ΔV(25 m, 12 A, 6 mm^2)"
+  esperado: {valor: 1.79, unidade: V, texto: "1,79 V"}
+- id: F2-02
+  descricao: queda de tensão CC, 4 mm²
+  definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "ΔV(L, I, S) := 2*ρ_cu*L*I/S"]
+  expr: "ΔV(32 m, 11.5 A, 4 mm^2)"
+  esperado: {valor: 3.29, unidade: V, texto: "3,29 V"}
+- id: F2-03
+  descricao: queda percentual
+  expr: "3.29 V / 400 V"
+  esperado: {valor: 0.8225, unidade: "%", texto: "0,82 %"}
+- id: F2-04
+  descricao: geração mensal
+  definicoes: ["E_mes(P, HSP, PR) := P*HSP*PR*30 dia"]
+  expr: "E_mes(5.5 kWp, 5.4 h/dia, 0.8)"
+  esperado: {valor: 712.8, unidade: kWh}
+- id: F2-05
+  descricao: resistividade a 70 °C
+  definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "α_cu := 0.00393 1/°C", "ρ_T(T) := ρ_cu*(1 + α_cu*(T - 20 °C))"]
+  expr: "ρ_T(70 °C)"
+  esperado: {valor: 0.0214, unidade: "Ω*mm^2/m", texto: "0,0214 Ω·mm²/m"}
+- id: F2-06
+  descricao: somar grandezas incompatíveis
+  expr: "1 m + 1 A"
+  erro: "Unidades incompatíveis: m + A"
+- id: F2-06
+  descricao: atribuição com grandezas incompatíveis
+  definicoes: ["x := 1 m + 1 A"]
+  erro: "Unidades incompatíveis: m + A"
+
+# --- SPEC 8.2: ordem ---
+- id: F2-08
+  descricao: variável usada antes de definir
+  definicoes: ["y := x + 1", "x := 2"]
+  linha: 0
+  erro: "Variável não definida: x"
+
+# --- SPEC 8.5: exibição ---
+- id: F2-09
+  descricao: unidade simplificada sem unidade pedida
+  definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "ΔV(L, I, S) := 2*ρ_cu*L*I/S"]
+  expr: "ΔV(25 m, 12 A, 6 mm^2)"
+  sem_unidade: true
+  esperado: {valor: 1.79, unidade: V}
+- id: F2-09
+  descricao: unidade pedida incompatível
+  expr: "2 m"
+  unidade: V
+  erro: "Não é possível converter m em V"
+- id: F2-16
+  descricao: casas fixas (2,20 V)
+  expr: "2.2 V"
+  esperado: {texto: "2,20 V"}
+- id: F2-16
+  descricao: arredondamento decimal (2,685 vira 2,69)
+  expr: "2*0.0179*25*12/4 V"
+  esperado: {texto: "2,69 V"}
+
+# --- SPEC 8.6: funções nativas ---
+- id: F2-10
+  expr: "sqrt(16)"
+  esperado: {valor: 4}
+- id: F2-10
+  expr: "ln(exp(2))"
+  esperado: {valor: 2}
+- id: F2-10
+  descricao: log é base 10
+  expr: "log(1000)"
+  esperado: {valor: 3}
+- id: F2-10
+  descricao: seno em graus
+  expr: "sin(30 deg)"
+  esperado: {valor: 0.5}
+- id: F2-10
+  expr: "round(2.567, 1)"
+  esperado: {valor: 2.6}
+- id: F2-10
+  expr: "mean([1, 2, 3])"
+  esperado: {valor: 2}
+- id: F2-10
+  descricao: root por Newton
+  definicoes: ["f(x) := x^2 - 2"]
+  expr: "root(f, 1)"
+  esperado: {valor: 1.41421356, tolerancia: 0.0001%}
+- id: F2-10
+  descricao: root por bisseção
+  definicoes: ["f(x) := x^2 - 2"]
+  expr: "root(f, 0, 2)"
+  esperado: {valor: 1.41421356, tolerancia: 0.0001%}
+- id: F2-10
+  descricao: root com unidades
+  definicoes: ["g(x) := x^2 - 4 m^2"]
+  expr: "root(g, 1 m)"
+  esperado: {valor: 2, unidade: m}
+- id: F2-10
+  descricao: integral (Simpson adaptativo)
+  definicoes: ["f(x) := x^2 - 2"]
+  expr: "integral(f, 0, 3)"
+  esperado: {valor: 3, tolerancia: 0.001%}
+- id: F2-10
+  descricao: derivada numérica
+  definicoes: ["f(x) := x^2 - 2"]
+  expr: "deriv(f, 3)"
+  esperado: {valor: 6, tolerancia: 0.001%}
+- id: F2-10
+  descricao: interpolação linear
+  expr: "interp([0, 10], [0, 100], 2.5)"
+  esperado: {valor: 25}
+- id: F2-10
+  descricao: determinante
+  expr: "det([[1, 2], [3, 4]])"
+  esperado: {valor: -2}
+
+# --- verificações ---
+- id: F2-14
+  descricao: aprovado com folga
+  verificar: "0.82 / 100 < 2 %"
+  esperado: {estado: ok, texto: "0,82 %"}
+- id: F2-14
+  descricao: atenção perto do limite
+  verificar: "0.82 / 100 < 1 %"
+  esperado: {estado: warn}
+- id: F2-14
+  descricao: reprovado
+  verificar: "0.82 / 100 < 0.5 %"
+  esperado: {estado: fail}

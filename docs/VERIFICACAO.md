@@ -1,15 +1,19 @@
-# Prisma: relatório para verificação (fases 0 a 2 + ADENDOS 01 e 02)
+# Prisma: relatório para verificação (fases 0 a 2 + ADENDOS 01 a 04)
 
 Este documento é para um revisor (pessoa ou agente) conferir o que foi feito **antes da fase 3**. Ele diz o que existe, onde está, como rodar, o que foi verificado e como, e o que ficou de fora de propósito. Desconfie do que está escrito aqui: o objetivo é que você confira no código e rodando.
 
 **Especificação**, nesta ordem de precedência (o adendo mais novo vence onde se sobrepõe):
+1. [`ADENDO-04-posicao-das-abas.md`](../ADENDO-04-posicao-das-abas.md): abas de documento fixas logo abaixo da barra de título; ribbon embaixo, com 124 px fixos. Substitui a ordem da SPEC 5.
+1. [`ADENDO-03-testes-automatizados.md`](../ADENDO-03-testes-automatizados.md): testes, matriz de rastreio, regressão, `npm run verify`. Vale para todo o projeto.
 1. [`ADENDO-02-edicao-matematica-visual.md`](../ADENDO-02-edicao-matematica-visual.md): edição 100 % visual, estilo SMath. Substitui a edição em texto (SPEC 3.4 na tela e "Edição" de 7.1 e 7.2).
 2. [`ADENDO-01-formatos-e-arquivos.md`](../ADENDO-01-formatos-e-arquivos.md): sem cofre; extensões `.prsm/.prsf/.prsl/.prst/.prsp`; projetos; instalador. Substitui a SPEC 3.1, as extensões e os critérios da fase 1.
 3. [`SPEC.md`](../SPEC.md): fonte da verdade para o resto.
 
 **Outros documentos:**
 - **Referência visual:** [`referencia-design.dc.html`](../referencia-design.dc.html) (protótipo aprovado; vale o markup e os estilos).
-- **Notas:** [`fase-0.md`](fase-0.md), [`fase-1.md`](fase-1.md) (inclui o ADENDO 01), [`fase-2.md`](fase-2.md), [`adendo-02.md`](adendo-02.md).
+- **Notas:** [`fase-0.md`](fase-0.md), [`fase-1.md`](fase-1.md) (inclui o ADENDO 01), [`fase-2.md`](fase-2.md), [`adendo-02.md`](adendo-02.md), [`adendo-03.md`](adendo-03.md), [`adendo-04.md`](adendo-04.md).
+- **Matriz de rastreio:** [`tests/MATRIZ.md`](../tests/MATRIZ.md) (todo critério com ID e teste); itens manuais em [`tests/MANUAL.md`](../tests/MANUAL.md).
+- **Instruções permanentes do agente:** [`CLAUDE.md`](../CLAUDE.md).
 - **Repositório:** https://github.com/Willientropia/Prisma (branch `main`).
 
 ---
@@ -20,17 +24,19 @@ Requisitos: Node 22, Rust 1.90+ (testado com 1.99), Windows 11 com WebView2 e Mi
 
 ```bash
 npm install
-npm test                      # Vitest: conversor, parser, motor, conformidade visual (77 testes)
-npm run e2e                   # Playwright no Edge do Windows: critérios B10 do ADENDO 02 (12 testes)
-cd src-tauri && cargo test    # Rust: arquivos, projeto, recentes (5 testes)
-npm run dev                   # interface no navegador, porta 1420, com disco em memória
+npm run verify                # tudo, menos o app real; gera test-results/RELATORIO.md (código 0 = aprovado)
+npm run verify:full           # verify + app real compilado (tauri-driver); ao fechar fase ou adendo
+npm run test                  # rápido: Vitest (unidade e navegador) + cargo test
+npm run test:e2e              # Playwright no Edge, Tauri simulado
+npm run test:visual           # telas contra as imagens aprovadas
+npm run dev                   # interface no navegador, porta 1420, Tauri simulado
 npm run tauri dev             # app desktop
 npm run tauri build           # instalador NSIS em src-tauri/target/release/bundle/nsis/
 ```
 
 **Rede:** na máquina onde foi feito, um firewall FortiGate intercepta `registry.npmjs.org` com certificado próprio. As instalações usaram `--registry=https://registry.yarnpkg.com` (espelho oficial). O `package-lock.json` aponta para `registry.npmjs.org`. O Playwright usa o Edge instalado (`channel: 'msedge'`), então não baixa navegador.
 
-**Modo navegador (`npm run dev`):** sem Tauri, `src/platform.ts` usa um disco em memória com os arquivos de `resources/`. Os diálogos de abrir e salvar viram `window.prompt`. No console:
+**Modo navegador (`npm run dev`):** sem Tauri, `src/dev/tauri-mock.ts` simula os comandos do Rust (`mockIPC`), com um disco em memória montado de `tests/fixtures/` e `resources/` e relógio fixo. Os diálogos de abrir e salvar viram `window.prompt`. No console:
 
 | Comando | O que faz |
 |---|---|
@@ -41,6 +47,8 @@ npm run tauri build           # instalador NSIS em src-tauri/target/release/bund
 | `prismaDev.read(caminho)` | lê um arquivo |
 | `prismaDev.write(caminho, texto)` | grava e simula uma edição feita fora do app |
 | `prismaDev.remove(caminho)` | apaga um arquivo |
+| `prismaDev.moveDir(de, para)` | move uma pasta inteira (projeto portátil) |
+| `prismaDev.dialogLog` | diálogos de abrir/salvar pedidos pelo app (título, pasta, filtros) |
 
 Os testes `e2e` usam esses mesmos ganchos.
 
@@ -128,12 +136,23 @@ Também no e2e, para a B7:
 
 ---
 
+### ADENDO 03: testes
+
+Concluído. Matriz com todos os critérios (F0 a F7, A9, B10, B7, B4, V, C7, C9, BUG); cada um ativo tem teste, conferido pelo `check-matriz`. Camadas: Vitest (unidade, navegador e meta), cargo test, Playwright (interface, regressão, visual), app real com tauri-driver e itens manuais. Detalhes, bugs achados (BUG-005 e BUG-006) e decisões em [`adendo-03.md`](adendo-03.md).
+
+### ADENDO 04: posição das abas
+
+Concluído: ordem título → abas → ribbon → conteúdo → status; aba Início só com ícone de casa; ribbon com 124 px fixos; regra de estabilidade na SPEC 4.5. Critérios D6 em `tests/e2e/abas.spec.ts`. Detalhes em [`adendo-04.md`](adendo-04.md).
+
+---
+
 ## 4. O que conferir (roteiro sugerido)
 
 ### Automático
 
-1. `npx tsc` sem erros; `npm test` (77); `npm run e2e` (12, rode duas ou três vezes para ver se é estável); `cd src-tauri && cargo test` (5).
-2. Os comandos de grep do checklist 4.7 da SPEC (cores fora de `tokens.css`, símbolos como ícone).
+1. `npm run verify:full` e ler `test-results/RELATORIO.md`. Rode duas vezes para ver se é estável (C7.6 proíbe teste instável).
+2. `npx tsx scripts/check-matriz.ts`: confira por amostragem se o teste citado na matriz testa de fato o critério.
+3. As telas aprovadas em `tests/visual/__snapshots__/` contra o protótipo `referencia-design.dc.html`.
 
 ### Pontos de risco no código
 
@@ -219,6 +238,8 @@ Também no e2e, para a B7:
 ---
 
 ## 6. Não feito ainda
+
+- **ADENDO 03:** integração contínua no GitHub (opcional); conferência dos itens de `tests/MANUAL.md`. Decisões em aberto: ver [`adendo-03.md`](adendo-03.md) (contraste de 3 pares de tokens, variável com nome de unidade).
 
 - **Fase 0:** splash, janela "Sobre", avatar configurável.
 - **Fase 2:**

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
 import { lines, parse, type BlockSegment } from '../../format/doc';
 import { assignments, byPosition } from '../../format/views';
-import { fmtNumber } from '../../format/display';
+import { dirname, fmtNumber } from '../../format/display';
 import { idLatex, nodeLatex, parseLinear, parseUnit, unitLatex } from '../../format/mathlinear';
 import { recalc } from '../../engine/run';
 import { run } from '../../commands/registry';
@@ -70,7 +70,9 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const result = useWorkspace((x) => x.results[doc.id]);
   const projectPath = useWorkspace((x) => x.project?.path);
   const showSource = useWorkspace((x) => x.showSource);
-  const { edit, openFile, set, resolveLink } = useWorkspace.getState();
+  const { edit, openFile, set, resolveLink, loadDir } = useWorkspace.getState();
+  // "ir <nome>" procura também na pasta da folha (BUG-005: a pasta nunca era listada)
+  useEffect(() => { if (doc.path) void loadDir(dirname(doc.path)); }, [doc.path, loadDir]);
   const stale = useStale();
   const ctx = useMemo(() => ({ defined: new Set(result?.defined ?? []), isUnit: isKnownUnit }), [result]);
 
@@ -235,7 +237,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const regionView = (r: Region) => {
     const b = r.seg;
     const moving = drag?.ids.includes(r.id);
-    const style = { left: num(b, 'x') + (moving ? drag!.dx : 0), top: num(b, 'y') + (moving ? drag!.dy : 0) };
+    // prévia já encaixada na grade, igual ao que fica ao soltar
+    const style = moving ? { left: snap(num(b, 'x') + drag!.dx), top: snap(num(b, 'y') + drag!.dy) } : { left: num(b, 'x'), top: num(b, 'y') };
     const cls = [s.region, selected.has(r.id) ? s.regionOn : s.regionOff].join(' ');
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
     let content;

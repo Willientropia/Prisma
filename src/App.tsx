@@ -27,9 +27,10 @@ export function App() {
   const Editor = doc && EDITORS[doc.type];
   return (
     <div className={s.app}>
+      {/* ADENDO 04: abas sempre logo abaixo da barra de título; o ribbon vem embaixo delas */}
       <TitleBar />
-      <Ribbon />
       <DocTabs />
+      <Ribbon />
       <div className={s.body}>{doc && Editor ? <Editor key={doc.id} doc={doc} /> : <Home />}</div>
       <StatusBar />
       <AppMenu />

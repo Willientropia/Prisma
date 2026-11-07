@@ -1,0 +1,52 @@
+# Conversão linear <-> LaTeX (ADENDO 02, tabela B9; ADENDO 03, C3).
+# linear: como está no arquivo. O teste confere toLinear(toLatex(linear)) === linear.
+# digitado (opcional): LaTeX que o MathLive produz ao digitar; o teste confere toLinear(digitado) === linear.
+# tela_contem (opcional): pedaços que o LaTeX canônico da tela precisa ter.
+
+# --- tabela B9 ---
+- {id: B10-10, linear: "S := 4 mm^2", tela_contem: ['\coloneq', '\class{u}{\mathrm{mm}^{2}}']}
+- {id: B10-10, linear: "L := 32 m"}
+- {id: B10-10, linear: "I := 11.5 A", tela_contem: ['11{,}5']}
+- {id: B10-10, linear: "V_mp := 400 V", tela_contem: ['V_{\mathrm{mp}}']}
+- {id: B10-10, linear: "ΔV(L, I, S) := 2*ρ_cu*L*I/S", tela_contem: ['\frac{2\cdot \rho_{\mathrm{cu}}\cdot L\cdot I}{S}']}
+- {id: B10-10, linear: "ΔV(L, I, S) = ? V"}
+- {id: B10-10, linear: "ΔV(L, I, S)/V_mp = ? %"}
+- {id: B10-10, linear: "(a + b)/(c + d)", tela_contem: ['\frac{a+b}{c+d}']}
+- {id: B10-10, linear: "sqrt(x^2 + y^2)", tela_contem: ['\sqrt{x^{2}+y^{2}}']}
+- {id: B10-10, linear: "x <= 1 %", tela_contem: ['\le']}
+- {id: B10-10, linear: "T := 25 °C"}
+- {id: B10-10, linear: "M := [1, 2; 3, 4]", tela_contem: ['\begin{bmatrix}1&2\\3&4\end{bmatrix}']}
+- {id: B10-10, linear: "abs(x)", tela_contem: ['\lvert']}
+
+# --- outras formas do arquivo ---
+- {id: B10-10, linear: "E_mes(P, HSP, PR) := P*HSP*PR*30 dia"}
+- {id: B10-10, linear: "HSP := 5.4 h/dia"}
+- {id: B10-10, linear: "α_cu := 0.00393 1/°C"}
+- {id: B10-10, linear: "ρ := 0.0179 Ω*mm^2/m", tela_contem: ['\frac{\mathrm{\Omega}\cdot \mathrm{mm}^{2}}{\mathrm{m}}']}
+- {id: B10-10, linear: "x := -(a + b)"}
+- {id: B10-10, linear: "y := a - (b - c)"}
+- {id: B10-10, linear: "f(x) := x^2 - 2"}
+- {id: B10-10, linear: "root(f, 1) = ?"}
+- {id: B10-10, linear: "z := sin(30 °)"}
+- {id: B10-10, linear: "P := 2^(n + 1)"}
+
+# --- LaTeX produzido pelo MathLive ao digitar (antes da forma canônica) ---
+- {id: B10-01, linear: "S := 4 mm^2", digitado: 'S\coloneq4mm^2'}
+- {id: B10-01, linear: "4 mm^2", digitado: '4\,\class{u}{\mathrm{mm}}^{2}'}
+- {id: B10-02, linear: "V_mp := 400 V", digitado: 'V_{mp}\coloneq400V'}
+- {id: B10-03, linear: "(a + b)/2", digitado: '\frac{\left(a+b\right)}{2}'}
+- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11,5A'}
+- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11{,}5A'}
+- {id: B10-10, linear: "2*r*L*I/S", digitado: '2\cdot r\cdot L\cdot\frac{I}{S}'}
+- {id: B10-10, linear: "f(x, y)", digitado: 'f\left(x;y\right)'}
+- {id: B10-10, linear: "25 °C", digitado: '25\degree C'}
+- {id: B10-10, linear: "1 %", digitado: '1\%'}
+- {id: B10-10, linear: "x <= 1", digitado: 'x\le1'}
+- {id: B10-10, linear: "ΔV(L, I, S)", digitado: '\Delta V\left(L;I;S\right)'}
+- {id: B10-10, linear: "2*(x + 1)", digitado: '2\left(x+1\right)'}
+- {id: B10-10, linear: "sqrt(x)", digitado: '\sqrt{x}'}
+- {id: B10-10, linear: "abs(x)", digitado: '\left\lvert x\right\rvert'}
+- {id: B10-10, linear: "y + 1", digitado: '\class{undef}{y}+1'}
+- {id: B10-10, linear: "sin(x)", digitado: '\operatorname{sin}\left(x\right)'}
+- {id: B10-10, linear: "ρ_cu", digitado: '\rho_{\mathrm{cu}}'}
+- {id: B10-04, linear: "ρ", digitado: '\rho '}
