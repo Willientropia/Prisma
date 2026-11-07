@@ -1,0 +1,39 @@
+.logo { display: block; flex: none; }
+
+.wordmark { display: inline-flex; align-items: center; font-weight: 700; letter-spacing: -0.02em; color: var(--text-strong); }
+
+.tag, .tagColored, .tagSelected {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 28px; height: 18px; border-radius: 3px;
+  font: 600 9px 'JetBrains Mono', monospace; letter-spacing: 0.4px;
+}
+.tag { background: var(--border-soft); color: var(--text-2); }
+.tagColored { color: var(--text-strong); }
+.tagSelected { background: var(--selection); color: var(--tex-inserted-text); }
+
+.panelHeader {
+  display: flex; align-items: center; justify-content: space-between; flex: none;
+  min-height: 30px; padding: 0 10px;
+  background: var(--bg-ribbon); border-bottom: 1px solid var(--border);
+  font: 600 11px Inter, sans-serif; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-2);
+}
+.panelAside { text-transform: none; font-weight: 400; letter-spacing: 0; color: var(--text-muted); }
+
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--border-faint); }
+.kv > span { padding: 6px 10px; }
+.kv > span:first-child { color: var(--text-muted); border-right: 1px solid var(--border-faint); }
+
+.row, .rowOn {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 0 10px; border: none; background: transparent; color: var(--text-2);
+  font: 12px Inter, sans-serif; text-align: left;
+}
+.row:is(button):hover { background: var(--hover); }
+.rowOn { background: var(--selection); color: var(--text-strong); }
+
+.badgeOk, .badgeWarn {
+  display: inline-block; padding: 4px 8px; border-radius: 3px;
+  font: 600 11px Inter, sans-serif; letter-spacing: 0.3px; vertical-align: middle;
+}
+.badgeOk { background: var(--ok-badge-bg); color: var(--ok-badge-text); }
+.badgeWarn { background: var(--warn-badge-bg); color: var(--warn-badge-text); }

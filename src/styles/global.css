@@ -1,0 +1,27 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg-app);
+  color: var(--text);
+  font: 400 12px Inter, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+a { color: var(--accent-light); }
+a:hover { color: var(--accent-lighter); }
+
+/* matemática: variáveis em itálico, números e unidades retos */
+.m { font-family: 'STIX Two Text', Georgia, serif; }
+.v { font-style: italic; }
+.fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 6px; }
+.fr > span { padding: 0 6px; line-height: 1.25; }
+.fr > span:first-child { border-bottom: 1.3px solid currentColor; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

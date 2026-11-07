@@ -1,0 +1,93 @@
+/* Única fonte de cores do app (SPEC seção 4). Cor nova: criar token aqui primeiro. */
+:root {
+  /* superfícies (grafite com leve tom violeta) */
+  --bg-app: #15131c;
+  --bg-titlebar: #110f17;
+  --bg-tabsbar: #191620;
+  --bg-ribbon: #26222f;
+  --bg-raised: #1f1b28;
+  --bg-panel: #1c1924;
+  --bg-input: #221e2b;
+  --bg-workspace: #2a2633;
+  --bg-code: #131118;
+  --bg-grid: #16131d;
+  --grid-line: #201c29;
+
+  /* bordas */
+  --border-strong: #4a4359;
+  --border: #363042;
+  --border-soft: #322c3e;
+  --border-faint: #2a2535;
+  --border-subtle: #27222f;
+
+  /* texto */
+  --text-strong: #ffffff;
+  --text: #e2dfea;
+  --text-2: #cbc6d6;
+  --text-3: #b6b0c3;
+  --text-muted: #a29bb3;
+  --text-dim: #6e6780;
+  --text-linenum: #5e5770;
+
+  /* interação */
+  --hover: #27222f;
+  --hover-strong: #322c3e;
+  --hover-btn: #2a2535;
+  --selection: #3b2a63;
+  --focus-ring: #a78bfa;
+
+  /* destaque (vem do logo) */
+  --accent: #6d28d9;
+  --accent-light: #a78bfa;
+  --accent-lighter: #c4b5fd;
+  --region-selected-bg: rgba(109, 40, 217, 0.22);
+
+  /* tipos de arquivo */
+  --type-caderno: #6d28d9;
+  --type-folha: #0f766e;
+  --type-tex: #3b5bdb;
+  --type-lib: #b45309;
+  --type-inicio: #4b4458;
+
+  /* estados */
+  --ok-text: #7fd6a4;
+  --ok-badge-bg: #e3f3ea;
+  --ok-badge-text: #12603a;
+  --warn-badge-bg: #4a3a14;
+  --warn-badge-text: #f3cf7a;
+  --warn-text: #f3cf7a;
+  --error-text: #f19a9a;
+  --limit-line: #e58a57;
+  --plot-line: #a78bfa;
+
+  /* LaTeX */
+  --tex-keyword: #c4b5fd;
+  --tex-comment: #7d7690;
+  --tex-text: #d6d2e0;
+  --tex-inserted-bg: #2e2350;
+  --tex-inserted-text: #ddd3ff;
+
+  /* página branca (caderno e PDF): igual em qualquer tema */
+  --paper: #ffffff;
+  --paper-text: #1d2228;
+  --paper-text-2: #3a414b;
+  --paper-border: #d5d9df;
+  --paper-accent: #6d28d9;
+
+  /* extras tirados do protótipo (referencia-design.dc.html) */
+  --text-btn: #e9e6f0;          /* botões secundários, avatar, matemática na folha */
+  --icon-ribbon: #cfcadb;       /* traço dos ícones do ribbon */
+  --text-group: #9aa3ad;        /* título de grupo do ribbon */
+  --text-shortcut: #8b849c;     /* atalho no menu do app */
+  --limit-label: #f0ab85;       /* rótulo da linha de limite */
+  --paper-prose: #363042;       /* parágrafo de caderno na página */
+  --pdf-text: #111111;
+  --pdf-text-2: #4b4458;
+  --pdf-rule: #9ca3af;          /* filetes do PDF e título da miniatura */
+  --thumb-lines: #d1d5db;       /* linhas da miniatura de modelo */
+
+  /* sombras e overlay (seção 4.3) */
+  --shadow-page: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --overlay: rgba(8, 9, 12, 0.55);
+}

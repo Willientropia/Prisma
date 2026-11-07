@@ -1,0 +1,45 @@
+.home { display: flex; flex: 1; min-height: 0; }
+.nav {
+  flex: 0 0 220px; display: flex; flex-direction: column; gap: 4px; padding: 22px 12px;
+  background: var(--bg-tabsbar); border-right: 1px solid var(--border-subtle);
+}
+.brand { padding: 0 10px 16px; }
+.grow { flex: 1; }
+.main { flex: 1; min-width: 0; overflow: auto; padding: 30px 40px; display: flex; flex-direction: column; gap: 26px; background: var(--bg-app); }
+.section { display: flex; flex-direction: column; gap: 12px; }
+.sectionHead { display: flex; align-items: center; justify-content: space-between; }
+.h2 { margin: 0; font: 600 15px Inter, sans-serif; color: var(--text-strong); }
+.hint { color: var(--text-muted); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.card {
+  display: flex; flex-direction: column; gap: 10px; padding: 16px; text-align: left;
+  border-radius: 6px; border: 1px solid var(--border-soft); background: var(--bg-raised); color: var(--text);
+}
+.card:hover { border-color: var(--border-strong); }
+.cardIcon { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-strong); }
+.cardName { font: 600 13px Inter, sans-serif; color: var(--text-strong); }
+.cardDesc { font: 12px/1.5 Inter, sans-serif; color: var(--text-muted); }
+
+.table { border: 1px solid var(--border-soft); border-radius: 6px; overflow: hidden; }
+.thead, .trow { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1.3fr); align-items: center; }
+.thead { background: var(--bg-ribbon); color: var(--text-muted); font: 600 11px Inter, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+.thead > span, .trow > span { padding: 9px 14px; }
+.trow { width: 100%; border: none; border-top: 1px solid var(--border-subtle); background: var(--bg-tabsbar); color: var(--text-3); font: 12px Inter, sans-serif; text-align: left; }
+.trow:hover { background: var(--hover); }
+.trow > .tname { display: flex; align-items: center; gap: 10px; color: var(--text); }
+
+.models { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.model {
+  display: flex; flex-direction: column; gap: 8px; padding: 0; overflow: hidden; text-align: left;
+  border: 1px solid var(--border-soft); border-radius: 6px; background: var(--bg-raised); color: var(--text);
+}
+.model:hover { border-color: var(--border-strong); }
+.thumbWrap { display: flex; justify-content: center; padding: 14px; background: var(--bg-titlebar); }
+.thumb { width: 72px; height: 96px; padding: 7px; display: flex; flex-direction: column; gap: 4px; background: var(--paper); }
+.thumbBand { height: 6px; }
+.thumbTitle { height: 3px; width: 60%; background: var(--pdf-rule); }
+.thumbLines { flex: 1; background: repeating-linear-gradient(var(--thumb-lines) 0 2px, transparent 2px 5px); }
+.modelText { display: flex; flex-direction: column; gap: 2px; padding: 0 10px 10px; }
+.modelName { font: 600 12px Inter, sans-serif; color: var(--text-strong); }
+.modelKind { font: 11px Inter, sans-serif; color: var(--text-muted); }
