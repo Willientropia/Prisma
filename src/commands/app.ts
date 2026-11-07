@@ -2,6 +2,7 @@
 import { register, onUnhandled } from './registry';
 import { useWorkspace, activeDoc } from '../store/workspace';
 import { interrupt, recalc } from '../engine/run';
+import { activeTextEditor } from '../editors/TextEditor';
 import '../shell/ribbons'; // registra os rótulos do ribbon
 
 const st = useWorkspace.getState;
@@ -26,6 +27,27 @@ register('app.configuracoes', { label: 'Configurações' });
 register('home.modelos', { label: 'Modelos' });
 register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });
+
+register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }) });
+
+// grupo Texto (caderno): age no último editor de texto focado (ADENDO 02, B7)
+const text = (fn: (e: NonNullable<typeof activeTextEditor>) => void) => () => {
+  if (!activeTextEditor || activeTextEditor.isDestroyed) return say('Clique num texto do caderno primeiro');
+  fn(activeTextEditor);
+};
+register('texto.negrito', { run: text((e) => e.chain().focus().toggleBold().run()) });
+register('texto.italico', { run: text((e) => e.chain().focus().toggleItalic().run()) });
+register('texto.titulo', { run: text((e) => e.chain().focus().toggleHeading({ level: 2 }).run()) });
+register('texto.lista', { run: text((e) => e.chain().focus().toggleBulletList().run()) });
+register('texto.link', {
+  run: text(async (e) => {
+    const r = await st().ask({ title: 'Link', message: 'Endereço ou nota (ex.: string-3):', input: '', buttons: [{ id: 'ok', label: 'Inserir', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
+    const v = r.value.trim();
+    if (r.id !== 'ok' || !v) return;
+    const href = /^[a-z]+:/i.test(v) ? v : `prisma:${encodeURI(v)}`;
+    e.chain().focus().extendMarkRange('link').setLink({ href }).run();
+  }),
+});
 
 register('calc.tudo', { shortcut: 'Ctrl+Enter', run: () => void recalc(st().active) });
 register('calc.interromper', { run: interrupt });

@@ -39,7 +39,7 @@ describe('SPEC seção 8: testes obrigatórios', () => {
   it('E_mes(5.5 kWp, 5.4 h/dia, 0.8) = P·HSP·PR·30 dia = 712,8 kWh', () => {
     const r = last(['E_mes(P, HSP, PR) := P*HSP*PR*30 dia', 'E_mes(5.5 kWp, 5.4 h/dia, 0.8) = ? kWh']);
     near(r.value, 712.8);
-    expect(r.text).toBe('712,8 kWh');
+    expect(r.text).toBe('712,80 kWh');
   });
 
   it('ρ_T(70 °C) = ρ_cu·(1 + 0,00393·50) = 0,0214 Ω·mm²/m', () => {
@@ -66,7 +66,7 @@ describe('regras do motor', () => {
   });
 
   it('pedir unidade incompatível é erro', () => {
-    expect(last(['2 m = ? V']).error).toBe('Unidades incompatíveis: m não vira V');
+    expect(last(['2 m = ? V']).error).toBe('Não é possível converter m em V');
   });
 
   it('comentário, linha vazia e grego por \\nome', () => {
@@ -89,8 +89,8 @@ describe('regras do motor', () => {
   });
 
   it('formata números e unidades', () => {
-    expect([fmtNum(1.7899999), fmtNum(712.8), fmtNum(0.02141), fmtNum(0), fmtNum(1e-7), fmtNum(-3.5)]).toEqual(['1,79', '712,8', '0,0214', '0', '1,00e-7', '-3,5']);
-    expect([fmtNum(2 * 0.0179 * 25 * 12 / 4), fmtNum(-2.685), fmtNum(0.125), fmtNum(5, { decimals: 3, sep: '.' })]).toEqual(['2,69', '-2,69', '0,13', '5']);
+    expect([fmtNum(1.7899999), fmtNum(712.8), fmtNum(0.02141), fmtNum(0), fmtNum(1e-7), fmtNum(-3.5)]).toEqual(['1,79', '712,80', '0,0214', '0,00', '1,00e-7', '-3,50']);
+    expect([fmtNum(2 * 0.0179 * 25 * 12 / 4), fmtNum(-2.685), fmtNum(0.125), fmtNum(5, { decimals: 3, sep: '.' })]).toEqual(['2,69', '-2,69', '0,13', '5.000']);
     expect(prettyUnit('(ohm mm^2) / m')).toBe('Ω·mm²/m');
   });
 });
@@ -117,7 +117,7 @@ describe('funções nativas', () => {
     expect(v('det([[1, 2], [3, 4]])').value).toBeCloseTo(-2);
   });
   it('root com unidades', () => {
-    expect(v('root(g, 1 m)', ['g(x) := x^2 - 4 m^2']).text).toBe('2 m');
+    expect(v('root(g, 1 m)', ['g(x) := x^2 - 4 m^2']).text).toBe('2,00 m');
   });
 });
 
@@ -142,5 +142,21 @@ describe('exemplos da seção 3', () => {
   it('string-3 (ordem y, x): 3,29 V, 0,82 %', () => {
     const r = evaluate(inputFrom('calculos/string-3.prsf', byPosition));
     expect(r.blocks.resultado.map((l) => l.text)).toEqual(['3,29 V', '0,82 %']);
+  });
+});
+
+describe('ADENDO 02: gráfico e partes do resultado', () => {
+  it('string-3: ΔV % × seção, com limite, avaliado com todas as definições da folha', () => {
+    const r = evaluate(inputFrom('calculos/string-3.prsf', byPosition));
+    const p = Object.values(r.plots ?? {})[0];
+    expect(p.error).toBeUndefined();
+    expect(p.xs).toEqual([2.5, 4, 6, 10]);
+    expect(p.ys.map((y) => Number(y!.toFixed(2)))).toEqual([1.32, 0.82, 0.55, 0.33]);
+    expect(p.limite).toEqual({ valor: 1, rotulo: 'limite 1 %' });
+  });
+
+  it('resultado traz número e unidade separados', () => {
+    expect(last(['ΔV(25 m, 12 A, 6 mm^2) = ? mV'])).toMatchObject({ numText: '1790,00', unitRaw: 'mV' });
+    expect(last(['3.29 V / 400 V = ? %'])).toMatchObject({ numText: '0,82', unitRaw: '%' });
   });
 });

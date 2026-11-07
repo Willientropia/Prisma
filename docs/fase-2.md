@@ -1,5 +1,7 @@
 # Fase 2: motor e caderno
 
+> **A edição foi refeita pelo [ADENDO 02](../ADENDO-02-edicao-matematica-visual.md)** (ver [adendo-02.md](adendo-02.md)): MathLive em toda expressão, texto em TipTap, resultados com casas fixas (2,20 V). O motor desta fase continua valendo; o que está abaixo sobre edição em texto e "MathLive não entrou" é histórico.
+
 ## Plano
 
 - Motor em `src/engine/` com math.js: tradução da sintaxe linear (seção 3.4), unidades SI, funções nativas da seção 8.6, verificações, mensagens em português.

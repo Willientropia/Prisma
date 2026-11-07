@@ -25,3 +25,43 @@ a:hover { color: var(--accent-lighter); }
 .fr > span:first-child { border-bottom: 1.3px solid currentColor; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* matemática (ADENDO 02): campo MathLive e renderização estática com o mesmo visual */
+.mfield math-field {
+  display: inline-block; vertical-align: baseline; min-width: 0.6em;
+  border: none; background: transparent; padding: 0 2px; outline: none; color: inherit; font-size: inherit;
+}
+math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { display: none; }
+.mfield-paper { color: var(--paper-text); --mf-unit: var(--math-unit-paper); }
+.mfield-dark { color: var(--math-var); --mf-unit: var(--math-unit); }
+.mfield-invalid math-field { text-decoration: underline wavy var(--math-error); text-decoration-skip-ink: none; }
+.mmarkup .ML__mathit, .mmarkup .ML__cmr { font-family: 'STIX Two Text', Georgia, serif; }
+.mmarkup .ML__mathit { font-style: italic; }
+.mmarkup .u, .mmarkup .u * { color: var(--mf-unit); }
+.mmarkup .undef { text-decoration: underline wavy var(--math-error); }
+
+.mline { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; border-radius: 2px; }
+.mline:focus-within { outline: 1px solid var(--math-focus-frame); outline-offset: 3px; }
+.mline-error { text-decoration: underline wavy var(--math-error); }
+.mline-comment { font: italic 13px Inter, sans-serif; color: var(--paper-text-2); }
+.mresult { display: inline-flex; align-items: baseline; gap: 6px; }
+.mresult-value .ML__cmr, .mresult-value .ML__mathit { font-weight: 600; }
+.mfield-dark .mresult-value, .mfield-dark.mresult-value { color: var(--math-result); }
+.mresult-stale { opacity: 0.5; }
+.unit-marker {
+  width: 6px; height: 6px; padding: 0; margin-left: 1px; border: none; border-radius: 1px;
+  background: var(--text-dim); opacity: 0; cursor: pointer; align-self: center;
+}
+.mline:hover .unit-marker, .mline:focus-within .unit-marker, .unit-marker:focus-visible { opacity: 1; }
+.unit-input { display: inline-block; min-width: 2em; border-bottom: 1px solid var(--math-focus-frame); }
+
+/* texto editável formatado (TipTap) */
+.prose-editor .ProseMirror { outline: none; white-space: pre-wrap; }
+.prose-editor .ProseMirror p { margin: 0 0 8px; }
+.prose-editor .ProseMirror p:last-child { margin-bottom: 0; }
+.prose-editor .ProseMirror h1 { margin: 0 0 8px; font: 700 24px Inter, sans-serif; }
+.prose-editor .ProseMirror h2 { margin: 6px 0 8px; font: 600 18px Inter, sans-serif; }
+.prose-editor .ProseMirror h3 { margin: 6px 0 8px; font: 600 15px Inter, sans-serif; }
+.prose-editor .ProseMirror ul, .prose-editor .ProseMirror ol { margin: 0 0 8px; padding-left: 22px; }
+.prose-editor .ProseMirror code { font: 12.5px 'JetBrains Mono', monospace; }
+.prose-editor a.broken-link { color: var(--paper-error); text-decoration: underline wavy; }

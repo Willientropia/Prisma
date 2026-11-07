@@ -89,6 +89,15 @@
   --pdf-rule: #9ca3af;          /* filetes do PDF e título da miniatura */
   --thumb-lines: #d1d5db;       /* linhas da miniatura de modelo */
 
+  /* matemática (ADENDO 02, B3) */
+  --math-var: #e9e6f0;
+  --math-op: #cbc6d6;
+  --math-unit: #8fb4ff;        /* unidades em azul, como no SMath */
+  --math-unit-paper: #1d4ed8;
+  --math-result: #ffffff;
+  --math-error: #f19a9a;
+  --math-focus-frame: #a78bfa; /* moldura da região em edição */
+
   /* sombras e overlay (seção 4.3) */
   --shadow-page: 0 2px 10px rgba(0, 0, 0, 0.4);
   --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.5);

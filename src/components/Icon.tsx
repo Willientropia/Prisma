@@ -33,6 +33,10 @@ export const ICONS = {
   clean: 'M4 20h16M7 16l9-9 3 3-9 9H7z',
   test: 'M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3',
   close: 'M6 6l12 12M18 6L6 18',
+  bold: 'M7 4h6a4 4 0 010 8H7zM7 12h7a4 4 0 010 8H7z',
+  italic: 'M10 4h8M6 20h8M14 4l-4 16',
+  heading: 'M6 4v16M18 4v16M6 12h12',
+  list: 'M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1',
 } as const;
 
 export type IconName = keyof typeof ICONS;

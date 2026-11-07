@@ -35,21 +35,30 @@
 .blockBody { margin: 0; padding: 16px 22px 14px; font: 13px/1.75 'JetBrains Mono', monospace; color: var(--paper-text); white-space: pre-wrap; }
 .selectedBlock { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 
-/* folha livre */
+/* folha livre (ADENDO 02, B6) */
+.sheetScroll { flex: 1; min-height: 0; overflow: auto; background: var(--bg-grid); }
 .sheet {
-  position: relative; flex: 1; min-height: 560px; overflow: auto;
+  position: relative; outline: none;
   background-color: var(--bg-grid);
   background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 20px 20px;
 }
-.region { position: absolute; color: var(--text-btn); }
-.regionOff { border: 1px solid transparent; padding: 4px 8px; }
-.regionOn { border: 1px solid var(--accent-light); background: var(--region-selected-bg); padding: 4px 8px; }
-.regionTitle { font: 600 16px Inter, sans-serif; color: var(--text-strong); }
-.regionCode { margin: 0; font: 13px/1.7 'JetBrains Mono', monospace; white-space: pre; }
-.plot { margin: 0; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); }
-.plot figcaption { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-.plotEmpty { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); color: var(--text-muted); }
+.region { position: absolute; color: var(--math-var); padding: 3px; border: 1px solid transparent; cursor: move; }
+.region > * { cursor: auto; }
+.regionOff:hover { border-color: var(--border); }
+.regionOn { background: var(--region-selected-bg); }
+.region:focus-within { background: transparent; border-color: var(--math-focus-frame); }
+.region :global(.mline:focus-within) { outline: none; }
+.regionLine { line-height: 1.6; }
+.regionText { font: 600 16px Inter, sans-serif; color: var(--text-strong); min-width: 120px; }
+.regionPre { margin: 0; font: 12px 'JetBrains Mono', monospace; color: var(--text-muted); white-space: pre; }
+.cross { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; pointer-events: none;
+  background: linear-gradient(var(--accent-light), var(--accent-light)) center / 1px 100% no-repeat, linear-gradient(var(--accent-light), var(--accent-light)) center / 100% 1px no-repeat; }
+.band { position: absolute; border: 1px dashed var(--accent-light); background: var(--region-selected-bg); pointer-events: none; }
+.plot { margin: 0; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); cursor: auto; }
+.plot figcaption { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.limitLabel { color: var(--limit-label); }
+.plotError { color: var(--error-text); font-size: 11px; margin-bottom: 4px; }
 .cmdline { display: flex; flex-direction: column; gap: 3px; padding: 6px 12px; flex: none; background: var(--bg-titlebar); border-top: 1px solid var(--border); font: 12px 'JetBrains Mono', monospace; color: var(--text-muted); }
 .cmdline label { display: flex; gap: 8px; align-items: center; color: var(--text-btn); }
 .cmdline input { flex: 1; border: none; outline: none; background: transparent; color: var(--text-btn); font: inherit; }
@@ -129,3 +138,9 @@
 /* ADENDO 01 */
 .page a.brokenLink { color: var(--paper-error); text-decoration: underline wavy; }
 .libWarn { padding: 2px 10px 6px 18px; color: var(--warn-text); font-size: 11px; line-height: 1.4; }
+
+/* ADENDO 02 */
+.withSource { display: flex; flex: 1; min-height: 0; }
+.withSource > * { flex: 1 1 50%; min-width: 0; overflow: auto; }
+.source { border-left: 1px solid var(--border); background: var(--bg-code); }
+.calcLines { padding: 14px 22px; display: flex; flex-direction: column; gap: 10px; }

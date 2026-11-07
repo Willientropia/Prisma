@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: { port: 1420, strictPort: true, watch: { ignored: ['**/src-tauri/**'] } },
-  // app desktop carregado do disco: o math.js (~600 kB) no pacote principal não pesa como pesaria na web
-  build: { chunkSizeWarningLimit: 1500 },
+  // app desktop carregado do disco: MathLive, math.js, TipTap e CodeMirror (~2,7 MB) não pesam como pesariam na web
+  build: { chunkSizeWarningLimit: 3000 },
 });

@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import Markdown, { defaultUrlTransform } from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Badge, PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
+// Caderno (SPEC 7.1 + ADENDO 02, B7): texto formatado (TipTap) e blocos com uma linha MathLive por linha de cálculo.
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
 import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
 import { outline, type OutlineItem } from '../../format/views';
-import { dirname, displayPath, joinPath } from '../../format/display';
-import { LeftPanel } from '../../shell/ProjectPanel';
-import { classify, greek } from '../../engine/syntax';
-import { MathView } from '../../engine/render';
+import { dirname, displayPath } from '../../format/display';
 import { recalc } from '../../engine/run';
 import type { LineResult } from '../../engine/evaluate';
 import { register } from '../../commands/registry';
 import { useWorkspace, type OpenDoc } from '../../store/workspace';
+import { LeftPanel } from '../../shell/ProjectPanel';
+import { MathLine, isKnownUnit } from '../../math/MathLine';
+import { holdKeys } from '../../math/MathField';
+import { TextEditor } from '../TextEditor';
+import { SourceView } from '../SourceView';
 import s from '../editors.module.css';
 
 export const BLOCK_LABEL: Record<string, string> = {
@@ -24,10 +25,9 @@ export function blockProps(b: BlockSegment): [string, string][] {
 }
 
 type BlockItem = Extract<OutlineItem, { kind: 'block' }>;
-type Editing = { kind: 'text'; start: number } | { kind: 'line'; key: string; line: number; isNew?: boolean } | null;
-
+type Focus = { key: string; line: number } | null;
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
-const isComment = (raw: string) => raw.trim().startsWith('#');
+const SINGLE_LINE = new Set(['funcao', 'verificar']); // B7: uma linha só
 
 function props(it: OutlineItem, r: LineResult[] | undefined): [string, string][] {
   if (it.kind === 'text') return it.tag === 'TIT' ? [['Tipo', 'Título'], ['Nível', String(it.level)]] : [['Tipo', 'Texto'], ['Palavras', String(it.text.split(/\s+/).length)]];
@@ -49,55 +49,113 @@ function lineSpan(it: BlockItem, i: number) {
   let start = it.bodyStart;
   for (let k = 0; k < i; k++) start += ls[k].length;
   const raw = (ls[i] ?? '').replace(/\r?\n$/, '');
-  return { start, end: start + raw.length, nl: (ls[i] ?? '').length - raw.length, raw };
+  return { start, end: start + raw.length, nl: (ls[i] ?? '').length - raw.length, raw, count: ls.length };
 }
 
-/** [[nota]] e [[nota#id]] viram links internos (SPEC 3.5). */
-const wiki = (t: string) => t.replace(/\[\[([^\]|#]+)(#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_, n: string, h = '', label?: string) => `[${label ?? n}](prisma:${encodeURIComponent(n)}${h})`);
-const urlTransform = (u: string) => (u.startsWith('prisma:') ? u : defaultUrlTransform(u));
+/** Faixa de cada segmento de texto (sem os brancos das pontas), para o editor de texto trocar só ela. */
+function textRanges(text: string) {
+  const d = parse(text);
+  let pos = d.frontmatterRaw.length;
+  return d.segments.map((seg, si) => {
+    const start = pos;
+    pos += seg.raw.length;
+    if (seg.kind !== 'text') return null;
+    const lead = seg.raw.length - seg.raw.trimStart().length;
+    const body = seg.raw.trim();
+    return body ? { si, start: start + lead, end: start + lead + body.length, md: body } : null;
+  });
+}
+
+/** Resultado anterior fica apagado se o cálculo passar de 300 ms (B5). */
+function useStale(): boolean {
+  const calculating = useWorkspace((x) => x.calculating);
+  const [stale, setStale] = useState(false);
+  useEffect(() => {
+    if (!calculating) { setStale(false); return; }
+    const t = setTimeout(() => setStale(true), 300);
+    return () => clearTimeout(t);
+  }, [calculating]);
+  return stale;
+}
 
 export function Caderno({ doc }: { doc: OpenDoc }) {
   const parsed = useMemo(() => parse(doc.text), [doc.text]);
   const items = useMemo(() => outline(parsed), [parsed]);
+  const texts = useMemo(() => textRanges(doc.text), [doc.text]);
   const result = useWorkspace((x) => x.results[doc.id]);
   const projectPath = useWorkspace((x) => x.project?.path);
-  useWorkspace((x) => x.dirFiles); // redesenha quando a pasta for listada (links)
+  const showSource = useWorkspace((x) => x.showSource);
+  useWorkspace((x) => x.dirFiles); // links: redesenha quando a pasta for listada
   const { edit, openFile, set, resolveLink, loadDir } = useWorkspace.getState();
   const [selStart, setSelStart] = useState<number | null>(null);
-  const [editing, setEditing] = useState<Editing>(null);
-  const [pending, setPending] = useState<{ offset: number } | null>(null);
+  const [focus, setFocus] = useState<Focus>(null);
+  const [pending, setPending] = useState<number | null>(null);
+  const stale = useStale();
 
-  // cálculo automático: reavalia logo depois de cada mudança
-  useEffect(() => { const t = setTimeout(() => void recalc(doc.id), 150); return () => clearTimeout(t); }, [doc.id, doc.text, projectPath]);
+  // recálculo: as linhas já esperam 150 ms depois da última tecla; aqui só junta mudanças do mesmo instante
+  useEffect(() => { const t = setTimeout(() => void recalc(doc.id), 0); return () => clearTimeout(t); }, [doc.id, doc.text, projectPath]);
+  useEffect(() => { if (doc.path) void loadDir(dirname(doc.path)); }, [doc.path, loadDir]);
 
-  // [[links]]: lista a pasta do arquivo e a de cada caminho relativo explícito
-  useEffect(() => {
-    if (!doc.path) return;
-    const here = dirname(doc.path);
-    void loadDir(here);
-    for (const m of doc.text.matchAll(/\[\[([^\]|#]+)/g)) if (m[1].includes('/')) void loadDir(dirname(joinPath(here, m[1])));
-  }, [doc.path, doc.text, loadDir]);
-
+  const ctx = useMemo(() => ({ defined: new Set(result?.defined ?? []), isUnit: isKnownUnit }), [result]);
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];
-  const user = useMemo(() => new Set(result?.defined ?? []), [result]);
   const libIds = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
 
-  // depois de inserir uma célula: seleciona e abre a edição
-  useEffect(() => {
-    if (!pending) return;
-    const it = items.find((i) => i.start === pending.offset);
-    if (!it) return;
-    setSelStart(it.start);
-    setEditing(it.kind === 'text' ? { kind: 'text', start: it.start } : EVALUATED.has(it.block.type) ? { kind: 'line', key: it.key, line: 0 } : null);
-    setPending(null);
-    document.querySelector(`[data-start="${it.start}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [items, pending]);
+  // estado atual do arquivo (a edição anterior pode ter mudado as posições)
+  const fresh = () => {
+    const d = useWorkspace.getState().openDocs.find((x) => x.id === doc.id);
+    return d ? outline(parse(d.text)) : [];
+  };
+  const blockByKey = (key: string) => fresh().find((x): x is BlockItem => x.kind === 'block' && x.key === key);
 
+  const writeLine = (key: string, i: number, raw: string) => {
+    const it = blockByKey(key);
+    if (!it) return;
+    const sp = lineSpan(it, i);
+    if (raw === '') { if (sp.count > 1 || !SINGLE_LINE.has(it.block.type)) edit(doc.id, sp.start, sp.end + sp.nl, ''); return; }
+    edit(doc.id, sp.start, sp.end, raw);
+  };
+  /** Enter no fim de uma linha de cálculo: cria a próxima e põe o cursor nela (B7). */
+  const newLineAfter = (key: string, i: number) => {
+    const it = blockByKey(key);
+    if (!it || SINGLE_LINE.has(it.block.type)) { (document.activeElement as HTMLElement | null)?.blur?.(); setFocus(null); return; }
+    const sp = lineSpan(it, i);
+    const at = sp.end + sp.nl;
+    holdKeys(); // o que for digitado até a linha nova ter foco vai para ela
+    edit(doc.id, at, at, '\n');
+    setFocus({ key, line: i + 1 });
+  };
+  /** Backspace numa linha vazia: apaga e volta para a anterior. */
+  const deleteEmpty = (key: string, i: number) => {
+    const it = blockByKey(key);
+    if (!it) return;
+    const sp = lineSpan(it, i);
+    if (sp.count <= 1) return;
+    holdKeys();
+    edit(doc.id, sp.start, sp.end + sp.nl, '');
+    setFocus({ key, line: Math.max(0, i - 1) });
+  };
+  const addLine = (it: BlockItem) => {
+    const at = it.bodyStart + it.block.body.length;
+    holdKeys();
+    edit(doc.id, at, at, '\n');
+    setFocus({ key: it.key, line: lines(it.block.body).length });
+  };
+
+  // inserção pelo ribbon (grupo Células): depois da célula selecionada, já em edição
   const insertAfter = (content: string) => {
     const at = sel ? sel.end : doc.text.replace(/\s+$/, '').length;
     edit(doc.id, at, at, `\n\n${content}`);
-    setPending({ offset: at + 2 });
+    setPending(at + 2);
   };
+  useEffect(() => {
+    if (pending === null) return;
+    const it = items.find((i) => i.start === pending);
+    if (!it) return;
+    setSelStart(it.start);
+    if (it.kind === 'block' && EVALUATED.has(it.block.type)) setFocus({ key: it.key, line: 0 });
+    setPending(null);
+    document.querySelector(`[data-start="${it.start}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [items, pending]);
   const nextId = (prefix: string) => {
     const used = new Set(blocks(parsed).map((b) => b.id));
     let n = 1;
@@ -105,114 +163,95 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     return `${prefix}-${n}`;
   };
   const fence = (type: string, prefix: string, body: string) => '```' + `${type} {#${nextId(prefix)}}\n${body}\n` + '```';
-
-  // botões do grupo Células (o registro é global; o caderno ativo responde)
   const CELL_CMDS = ['caderno.texto', 'caderno.calculo', 'caderno.funcao', 'caderno.grafico', 'caderno.verificacao'];
   useEffect(() => {
     register('caderno.texto', { run: () => insertAfter('Novo parágrafo.') });
-    register('caderno.calculo', { run: () => insertAfter(fence('calc', 'calc', 'x := 1 m')) });
-    register('caderno.funcao', { run: () => insertAfter(fence('funcao', 'funcao', 'f(x) := 2*x')) });
-    register('caderno.verificacao', { run: () => insertAfter(fence('verificar', 'verificacao', 'x < 2 m')) });
+    register('caderno.calculo', { run: () => insertAfter(fence('calc', 'calc', '')) });
+    register('caderno.funcao', { run: () => insertAfter(fence('funcao', 'funcao', '')) });
+    register('caderno.verificacao', { run: () => insertAfter(fence('verificar', 'verificacao', '')) });
     register('caderno.grafico', { run: () => insertAfter(fence('grafico', 'grafico', 'titulo: Novo gráfico\nx: {var: x, valores: [1, 2, 3]}\ny: {expr: "f(x)"}')) });
   });
   useEffect(() => () => CELL_CMDS.forEach((id) => register(id, { run: undefined })), []);
 
   const pick = (it: OutlineItem) => {
     setSelStart(it.start);
-    document.querySelector(`[data-start="${it.start}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const el = document.querySelector(`[data-start="${it.start}"]`) ?? [...document.querySelectorAll<HTMLElement>('[data-text-start]')].find((e) => Number(e.dataset.textStart) <= it.start && it.start < Number(e.dataset.textEnd));
+    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   };
-
   const openNote = (target: string) => {
     const f = resolveLink(target, doc.path);
-    if (f) void openFile(f); else set({ status: `Arquivo não encontrado: ${decodeURIComponent(target.split('#')[0])}` });
+    if (f) void openFile(f); else set({ status: `Arquivo não encontrado: ${target.split('#')[0]}` });
   };
 
-  const commitText = (it: Extract<OutlineItem, { kind: 'text' }>, value: string) => {
-    setEditing(null);
-    if (value === it.raw) return;
-    if (!value.trim()) {
-      const extra = /^(\r?\n){0,2}/.exec(doc.text.slice(it.end))![0].length; // leva junto a linha em branco
-      edit(doc.id, it.start, it.end + extra, '');
-    } else edit(doc.id, it.start, it.end, value);
-  };
+  const lineEl = (it: BlockItem, raw: string, i: number, size: number) => (
+    <MathLine key={i} raw={raw} isCheck={it.block.type === 'verificar'} result={result?.blocks[it.key]?.[i]} stale={stale} ctx={ctx} theme="paper" size={size}
+      focused={focus?.key === it.key && focus.line === i}
+      onWrite={(r) => writeLine(it.key, i, r)}
+      onEnter={() => newLineAfter(it.key, i)}
+      onBackspaceEmpty={() => deleteEmpty(it.key, i)}
+      onFocus={() => { setSelStart(it.start); setFocus({ key: it.key, line: i }); }}
+      onExit={() => setFocus((f) => (f?.key === it.key && f.line === i ? null : f))} />
+  );
 
-  const commitLine = (it: BlockItem, i: number, value: string, newLine: boolean) => {
-    const v = greek(value);
-    const sp = lineSpan(it, i);
-    if (!v.trim()) { // linha vazia: apaga
-      edit(doc.id, sp.start, sp.end + sp.nl, '');
-      setEditing(null);
-      return;
-    }
-    if (v !== sp.raw || newLine) edit(doc.id, sp.start, sp.end, newLine ? `${v}\n` : v);
-    setEditing(newLine ? { kind: 'line', key: it.key, line: i + 1, isNew: true } : null);
-  };
-
-  const cancelLine = (it: BlockItem, i: number) => {
-    const sp = lineSpan(it, i);
-    if (editing?.kind === 'line' && editing.isNew && !sp.raw.trim()) edit(doc.id, sp.start, sp.end + sp.nl, '');
-    setEditing(null);
-  };
-
-  const addLine = (it: BlockItem) => {
-    const at = it.bodyStart + it.block.body.length;
-    edit(doc.id, at, at, '\n');
-    setEditing({ kind: 'line', key: it.key, line: lines(it.block.body).length, isNew: true });
-  };
-
-  const lineView = (it: BlockItem, raw: string, i: number): ReactNode => {
-    const ed = editing?.kind === 'line' && editing.key === it.key && editing.line === i;
-    if (ed) return <LineInput key={`ed${i}`} initial={raw} onCommit={(v, nl) => commitLine(it, i, v, nl)} onCancel={() => cancelLine(it, i)} />;
-    const c = classify(raw, it.block.type === 'verificar');
-    const r = result?.blocks[it.key]?.[i];
-    const open = () => setEditing({ kind: 'line', key: it.key, line: i });
-    if (isComment(raw)) return <span key={i} className={s.lineComment} onClick={open}>{raw.trim().replace(/^#\s*/, '')}</span>;
-    if (c.kind === 'empty') return null;
-    const err = r?.error;
-    return (
-      <span key={i} className={err ? s.lineError : s.line} onClick={open} title="Clique para editar">
-        {err ? <span className="mono">{raw.trim()}</span> : <MathView src={c.src} user={user} />}
-        {!err && c.kind === 'eval' && <> = <b>{r?.text ?? '…'}</b></>}
-        {!err && c.kind === 'check' && r?.status && (
-          <Badge kind={r.status}>{r.status === 'ok' ? `APROVADO · limite ${r.limit ?? ''}` : r.status === 'warn' ? 'ATENÇÃO · perto do limite' : `REPROVADO · limite ${r.limit ?? ''}`}</Badge>
-        )}
-        {err && <span className={s.errMsg}>{err}</span>}
-      </span>
-    );
-  };
-
-  const blockView = (it: BlockItem, selected: boolean): ReactNode => {
+  const blockView = (it: BlockItem): ReactNode => {
     const b = it.block;
     const fn = b.type === 'funcao';
     const lib = b.attrs.salvar ?? b.attrs.biblioteca;
     const label = `${blockLabel(b.type).toUpperCase()}${lib ? ` · ${lib.toUpperCase()}` : ''}`;
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
-
+    const selected = it === sel;
     let body: ReactNode;
     if (!EVALUATED.has(b.type)) body = <pre className={s.blockBody}>{b.body}</pre>;
-    else if (fn) body = <div className={`m ${s.fnMath}`}>{ls.map((raw, i) => lineView(it, raw, i))}</div>;
+    else if (ls.length === 0) body = <div className={s.calcLines}>{lineEl(it, '', 0, fn ? 24 : 19)}</div>;
+    else if (fn) body = <div className={`${s.fnMath}`}>{ls.map((raw, i) => lineEl(it, raw, i, 24))}</div>;
     else {
-      // entradas (:=) em grade de 4 colunas; resultados e verificações embaixo, depois de uma linha tracejada
+      // entradas (≔) em grade de 4 colunas; resultados e verificações embaixo, depois de uma linha tracejada
       const groups: { out: boolean; idx: number[] }[] = [];
       ls.forEach((raw, i) => {
-        const editingThis = editing?.kind === 'line' && editing.key === it.key && editing.line === i;
-        const k = classify(raw, b.type === 'verificar').kind;
-        if (k === 'empty' && !editingThis && !isComment(raw)) return;
-        const out = editingThis ? groups.at(-1)?.out ?? false : k === 'eval' || k === 'check';
-        if (groups.at(-1)?.out === out) groups.at(-1)!.idx.push(i); else groups.push({ out, idx: [i] });
+        const t = raw.replace(/#.*$/, '').trim();
+        const out = !t || /=\s*\?/.test(t) || b.type === 'verificar' ? true : !/:=/.test(t);
+        const wide = !t; // linha nova (vazia): linha inteira
+        if (!wide && groups.at(-1)?.out === out) groups.at(-1)!.idx.push(i); else groups.push({ out, idx: [i] });
       });
       body = groups.map((g, gi) => (
-        <div key={gi} className={`m ${g.out ? s.calcResults : s.calcInputs} ${gi > 0 ? s.dashed : ''}`}>{g.idx.map((i) => lineView(it, ls[i], i))}</div>
+        <div key={gi} className={`${g.out ? s.calcResults : s.calcInputs} ${gi > 0 ? s.dashed : ''}`}>{g.idx.map((i) => lineEl(it, ls[i], i, g.out ? 20 : 19))}</div>
       ));
     }
     return (
-      <div key={it.key} data-start={it.start} className={[fn ? s.fnBlock : s.calcBlock, selected && s.selectedBlock].filter(Boolean).join(' ')} onClick={() => setSelStart(it.start)}>
+      <div key={it.key} data-start={it.start} className={[fn ? s.fnBlock : s.calcBlock, selected && s.selectedBlock].filter(Boolean).join(' ')} onMouseDown={() => setSelStart(it.start)}>
         <span className={fn ? s.fnLabel : s.blockLabel}>{label}</span>
         {body}
-        {selected && EVALUATED.has(b.type) && <button type="button" className={s.addLine} onClick={(e) => { e.stopPropagation(); addLine(it); }}>Adicionar linha</button>}
+        {selected && b.type === 'calc' && <button type="button" className={s.addLine} onClick={(e) => { e.stopPropagation(); addLine(it); }}>Adicionar linha</button>}
       </div>
     );
   };
+
+  const page = (
+    <div className={s.workspace}>
+      <article className={s.page}>
+        {parsed.metaError && <p className={s.paperError}>Frontmatter inválido: {parsed.metaError}</p>}
+        {result?.libErrors.map((e) => <p key={e} className={s.paperError}>{e}</p>)}
+        {parsed.segments.map((seg, si) => {
+          if (seg.kind === 'block') {
+            const it = items.find((x): x is BlockItem => x.kind === 'block' && x.key === `b${si}`);
+            return it ? blockView(it) : null;
+          }
+          const tr = texts[si];
+          if (!tr) return null;
+          return (
+            <div key={`t${si}`} data-text-start={tr.start} data-text-end={tr.end} className={s.prose}>
+              <TextEditor markdown={tr.md}
+                resolveLink={(t) => resolveLink(t, doc.path)} onOpenLink={openNote}
+                onChange={(md) => {
+                  const cur = textRanges(useWorkspace.getState().openDocs.find((x) => x.id === doc.id)?.text ?? '')[si];
+                  if (cur && md !== cur.md) edit(doc.id, cur.start, cur.end, md);
+                }} />
+            </div>
+          );
+        })}
+      </article>
+    </div>
+  );
 
   return (
     <>
@@ -221,7 +260,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
         <div className={s.list}>
           {items.map((it) => (
             <Row key={it.key} active={it === sel} onClick={() => pick(it)}>
-              <Tag tone={it === sel ? 'selected' : undefined}>{it.tag}</Tag><span className={s.ellipsis}>{it.label}</span>
+              <Tag tone={it === sel ? 'selected' : undefined}>{it.tag}</Tag><span className={s.ellipsis}>{it.kind === 'block' ? it.label : it.label.replace(/[*_`#]/g, '')}</span>
             </Row>
           ))}
         </div>
@@ -241,36 +280,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
       </LeftPanel>
 
       <main className={s.center}>
-        <div className={s.workspace}>
-          <article className={s.page}>
-            {parsed.metaError && <p className={s.paperError}>Frontmatter inválido: {parsed.metaError}</p>}
-            {result?.libErrors.map((e) => <p key={e} className={s.paperError}>{e}</p>)}
-            {items.map((it) => {
-              const selected = it === sel;
-              if (it.kind === 'block') return blockView(it, selected);
-              if (editing?.kind === 'text' && editing.start === it.start)
-                return <TextInput key={it.key} initial={it.raw} onCommit={(v) => commitText(it, v)} onCancel={() => setEditing(null)} />;
-              return (
-                <div key={it.key} data-start={it.start} className={[s.prose, selected && s.selectedBlock].filter(Boolean).join(' ')}
-                  onClick={() => { setSelStart(it.start); setEditing({ kind: 'text', start: it.start }); }} title="Clique para editar">
-                  <Markdown remarkPlugins={[remarkGfm]} urlTransform={urlTransform}
-                    components={{
-                      a: ({ href, children }) => {
-                        const internal = href?.startsWith('prisma:');
-                        const broken = internal && !resolveLink(href!.slice(7), doc.path);
-                        return (
-                          <a href={href} target="_blank" rel="noreferrer" className={broken ? s.brokenLink : undefined} title={broken ? 'Arquivo não encontrado' : undefined}
-                            onClick={(e) => { e.stopPropagation(); if (internal) { e.preventDefault(); openNote(href!.slice(7)); } }}>{children}</a>
-                        );
-                      },
-                    }}>
-                    {wiki(it.raw)}
-                  </Markdown>
-                </div>
-              );
-            })}
-          </article>
-        </div>
+        {showSource ? <div className={s.withSource}>{page}<SourceView doc={doc} /></div> : page}
       </main>
 
       <aside className={s.right}>
@@ -279,40 +289,5 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
         {result && <div className={s.note}>Calculado em {result.ms.toFixed(1).replace('.', ',')} ms</div>}
       </aside>
     </>
-  );
-}
-
-/** Linha de cálculo em edição: Enter confirma e abre a próxima, Ctrl+Enter só confirma, Esc cancela. */
-function LineInput({ initial, onCommit, onCancel }: { initial: string; onCommit: (v: string, newLine: boolean) => void; onCancel: () => void }) {
-  const [v, setV] = useState(initial);
-  const done = useRef(false);
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { ref.current?.focus(); ref.current?.select(); }, []);
-  return (
-    <input ref={ref} className={s.lineInput} value={v} spellCheck={false} aria-label="Linha de cálculo"
-      onChange={(e) => setV(e.target.value)}
-      onClick={(e) => e.stopPropagation()}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') { e.preventDefault(); done.current = true; onCommit(v, !e.ctrlKey && !e.metaKey); }
-        else if (e.key === 'Escape') { done.current = true; onCancel(); }
-      }}
-      onBlur={() => { if (!done.current) { done.current = true; onCommit(v, false); } }} />
-  );
-}
-
-/** Texto em edição (Markdown cru): Ctrl+Enter ou sair do campo confirma, Esc cancela. */
-function TextInput({ initial, onCommit, onCancel }: { initial: string; onCommit: (v: string) => void; onCancel: () => void }) {
-  const [v, setV] = useState(initial);
-  const done = useRef(false);
-  const ref = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => { ref.current?.focus(); }, []);
-  return (
-    <textarea ref={ref} className={s.textInput} value={v} rows={Math.max(2, v.split('\n').length + 1)} aria-label="Texto em Markdown"
-      onChange={(e) => setV(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); done.current = true; onCommit(v); }
-        else if (e.key === 'Escape') { done.current = true; onCancel(); }
-      }}
-      onBlur={() => { if (!done.current) { done.current = true; onCommit(v); } }} />
   );
 }

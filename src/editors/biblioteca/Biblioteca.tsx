@@ -5,6 +5,11 @@ import { libFunctions } from '../../format/views';
 import { fmtUnit } from '../../format/display';
 import type { OpenDoc } from '../../store/workspace';
 import { LeftPanel } from '../../shell/ProjectPanel';
+import { MathMarkup } from '../../math/MathField';
+import { toLatex } from '../../format/mathlinear';
+
+/** Linear do arquivo -> matemática na tela; se não der para ler, mostra o texto. */
+const tex = (linear: string) => { try { return toLatex(linear); } catch { return `\text{${linear.replace(/[\{}]/g, '')}}`; } };
 import s from '../editors.module.css';
 
 // Fase 1: lê as seções ## do .prsl. Fase 4 roda os testes e grava funções vindas do caderno.
@@ -36,7 +41,7 @@ export function Biblioteca({ doc }: { doc: OpenDoc }) {
             <div className={s.crumb}>{nome}</div>
             <h2 className={s.sig}>{sel.sig}</h2>
             {sel.description && <div className={s.colBody2}>{sel.description}</div>}
-            <div className={s.formula}><div className="m v">{sel.formula || 'sem bloco funcao nesta seção'}</div></div>
+            <div className={s.formula}>{sel.formula ? <MathMarkup latex={tex(sel.formula)} theme="paper" size={22} /> : 'sem bloco funcao nesta seção'}</div>
             <div className={s.twoCol}>
               <div><div className={s.colTitle}>Parâmetros</div><div className={s.colBody}>{(sel.fields['Parâmetros'] ?? '').split(/;\s*/).join('\n')}</div></div>
               <div><div className={s.colTitle}>Por que e quando usar</div><div className={s.colBody2}>{sel.fields['Por que e quando usar']}</div></div>
@@ -46,7 +51,7 @@ export function Biblioteca({ doc }: { doc: OpenDoc }) {
               {sel.tests.length === 0 && <div className={s.testsRow}><span>Nenhum teste</span><span /><span /></div>}
               {sel.tests.map((t) => {
                 const [expr, expected = ''] = t.split('≈').map((x) => x.trim());
-                return <div key={t} className={s.testsRow}><span>{expr}</span><span>{expected}</span><span className={s.mutedCell}>não executado</span></div>;
+                return <div key={t} className={s.testsRow}><span><MathMarkup latex={tex(expr)} theme="dark" /></span><span><MathMarkup latex={tex(expected.replace(/^(S+)s+(.+)$/, '$1 $2'))} theme="dark" /></span><span className={s.mutedCell}>não executado</span></div>;
               })}
             </div>
           </div>

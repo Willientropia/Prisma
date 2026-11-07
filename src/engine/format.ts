@@ -2,7 +2,7 @@
 export type FormatOpts = { decimals: number; sep: string };
 export const DEFAULT_FORMAT: FormatOpts = { decimals: 2, sep: ',' };
 
-/** |x| >= 0,1: casas fixas sem zeros à direita (1,79; 712,8). Menor: 3 algarismos (0,0214). Extremos: notação científica. */
+/** |x| >= 0,1: casas fixas (1,79; 2,20; 712,80). Menor: 3 algarismos (0,0214). Extremos: notação científica. */
 export function fmtNum(x: number, { decimals, sep }: FormatOpts = DEFAULT_FORMAT): string {
   if (!Number.isFinite(x)) return String(x);
   const a = Math.abs(x);
@@ -11,7 +11,7 @@ export function fmtNum(x: number, { decimals, sep }: FormatOpts = DEFAULT_FORMAT
   else if (a >= 0.1 || a === 0) {
     // arredonda no decimal (2,685 vira 2,69), não no binário (onde 2,685 é 2,68499...)
     const r = Math.sign(x) * Number(`${Math.round(Number(`${Number(a.toPrecision(12))}e${decimals}`))}e-${decimals}`);
-    s = r.toFixed(decimals).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+    s = r.toFixed(decimals); // casas fixas: 2,20 V (ADENDO 02, B10.7)
   }
   else s = String(Number(x.toPrecision(3)));
   return s.replace('.', sep);

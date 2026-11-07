@@ -41,6 +41,7 @@ type State = {
   ribbonTab: RibbonTab;
   menuOpen: boolean;
   exportOpen: boolean;
+  showSource: boolean; // Exibir > Código-fonte (ADENDO 02, B1)
   status: string | null;
   results: Record<string, EvalResult>;
   calculating: boolean;
@@ -155,6 +156,7 @@ export const useWorkspace = create<State>((set, get) => {
     ribbonTab: 'inicio',
     menuOpen: false,
     exportOpen: false,
+    showSource: false,
     status: null,
     results: {},
     calculating: false,

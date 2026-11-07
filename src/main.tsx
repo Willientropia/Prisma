@@ -42,6 +42,15 @@ if (isTauri) {
   });
 }
 
+// modo navegador (testes e2e): abrir arquivo e ler o texto do documento ativo pelo console
+if (!isTauri) {
+  Object.assign((window as unknown as { prismaDev: object }).prismaDev, {
+    open: (p: string) => ws().openPaths([p]),
+    newDoc: (t: 'caderno' | 'folha' | 'tex' | 'lib') => ws().newDoc(t).id,
+    text: () => ws().openDocs.find((d) => d.id === ws().active)?.text,
+  });
+}
+
 void ws().init();
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);

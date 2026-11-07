@@ -17,6 +17,7 @@ export const RIBBONS: Record<DocType, Record<RibbonTab, RibbonGroup[]>> = {
   caderno: {
     inicio: g([
       ['Células', [['caderno.texto', 'Texto', 'text'], ['caderno.calculo', 'Cálculo', 'calc'], ['caderno.funcao', 'Função', 'fn'], ['caderno.grafico', 'Gráfico', 'plot'], ['caderno.verificacao', 'Verificação', 'check']]],
+      ['Texto', [['texto.negrito', 'Negrito', 'bold'], ['texto.italico', 'Itálico', 'italic'], ['texto.titulo', 'Título', 'heading'], ['texto.lista', 'Lista', 'list'], ['texto.link', 'Link', 'link']]],
       ['Biblioteca', [['funcao.inserir', 'Inserir função', 'lib'], ['caderno.salvarNaBiblioteca', 'Salvar na biblioteca', 'import']]],
       ['Cálculo', [['calc.tudo', 'Calcular tudo', 'run'], ['calc.interromper', 'Interromper', 'stop']]],
       ['Unidades', [['unidades.sistema', 'Sistema', 'ruler'], ['unidades.converter', 'Converter', 'calc']]],
@@ -26,7 +27,7 @@ export const RIBBONS: Record<DocType, Record<RibbonTab, RibbonGroup[]>> = {
       ['Matemática', [['inserir.matriz', 'Matriz', 'grid'], ['inserir.somatorio', 'Somatório', 'sigma']]],
     ]),
     exibir: g([
-      ['Exibição', [['exibir.justificativas', 'Justificativas', 'eye'], ['exibir.soResultados', 'Só resultados', 'check']]],
+      ['Exibição', [['exibir.justificativas', 'Justificativas', 'eye'], ['exibir.soResultados', 'Só resultados', 'check'], ['exibir.codigo', 'Código-fonte', 'code']]],
       ['Navegação', [['exibir.estrutura', 'Estrutura', 'section'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom']]],
     ]),
     saida: g([
@@ -42,7 +43,7 @@ export const RIBBONS: Record<DocType, Record<RibbonTab, RibbonGroup[]>> = {
       ['Cálculo', [['calc.tudo', 'Calcular', 'run'], ['calc.interromper', 'Interromper', 'stop']]],
     ]),
     inserir: g([['Conteúdo', [['inserir.tabela', 'Tabela', 'table'], ['inserir.imagem', 'Imagem', 'image'], ['inserir.link', 'Link', 'link']]]]),
-    exibir: g([['Exibição', [['folha.grade', 'Grade', 'grid'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom']]]]),
+    exibir: g([['Exibição', [['folha.grade', 'Grade', 'grid'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom'], ['exibir.codigo', 'Código-fonte', 'code']]]]),
     saida: g([['Saída', [['app.exportar', 'Exportar', 'export'], ['app.imprimir', 'Imprimir', 'print'], ['folha.promover', 'Promover a caderno', 'file']]]]),
   },
   tex: {

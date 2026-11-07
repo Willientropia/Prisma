@@ -1,5 +1,6 @@
 // Avaliação pura e síncrona (roda no worker e nos testes). Ordem: bibliotecas, depois blocos na ordem dada.
 import type { MathNode, Unit } from 'mathjs';
+import { parse as parseYaml } from 'yaml';
 import { math } from './math';
 import { classify, toMath, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, fmtNum, prettyUnit, type FormatOpts } from './format';
@@ -13,6 +14,8 @@ export type LineResult = {
   text?: string; // valor formatado, ex.: "1,79 V"
   value?: number; // número na unidade exibida
   unit?: string; // unidade exibida, ex.: "V"
+  numText?: string; // só o número formatado, ex.: "1,79"
+  unitRaw?: string; // unidade do math.js, ex.: "(ohm mm^2) / m" (a tela converte para LaTeX)
   error?: string;
   status?: 'ok' | 'warn' | 'fail';
   limit?: string;
@@ -20,36 +23,39 @@ export type LineResult = {
 };
 /** Biblioteca efetivamente usada (preenchido fora do worker, por engine/run.ts). */
 export type LibInfo = { id: string; nome: string; versao: string; origem: 'projeto' | 'usuário' | 'fábrica'; path: string; duplicate?: string };
-export type EvalResult = { blocks: Record<string, LineResult[]>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[] };
+/** Gráfico (bloco grafico): pontos já convertidos para as unidades pedidas. */
+export type PlotResult = { titulo: string; xs: number[]; ys: (number | null)[]; xUnit: string; yUnit: string; limite?: { valor: number; rotulo: string }; error?: string };
+export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[] };
 
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const isUnit = (v: unknown): v is Unit => math.isUnit(v);
 
-type Shown = { text: string; value?: number; unit?: string };
+type Shown = { text: string; value?: number; unit?: string; numText?: string; unitRaw?: string };
+const cannot = (from: string, to: string) => new Error(`Não é possível converter ${from} em ${to}`);
 
 export function show(v: unknown, target: string | undefined, fmt: FormatOpts): Shown {
   if (typeof v === 'boolean') return { text: v ? 'verdadeiro' : 'falso' };
   if (typeof v === 'function') return { text: 'função' };
   if (target === '%') {
-    if (isUnit(v)) throw new Error(`Unidades incompatíveis: ${prettyUnit(v.formatUnits())} não vira %`);
+    if (isUnit(v)) throw cannot(prettyUnit(v.formatUnits()), '%');
     const n = Number(v) * 100;
-    return { text: `${fmtNum(n, fmt)} %`, value: n, unit: '%' };
+    return { text: `${fmtNum(n, fmt)} %`, value: n, unit: '%', numText: fmtNum(n, fmt), unitRaw: '%' };
   }
   if (typeof v === 'number') {
-    if (target) throw new Error(`Unidades incompatíveis: número sem unidade não vira ${prettyUnit(target)}`);
-    return { text: fmtNum(v, fmt), value: v };
+    if (target) throw cannot('número sem unidade', prettyUnit(target));
+    return { text: fmtNum(v, fmt), value: v, numText: fmtNum(v, fmt) };
   }
   if (isUnit(v)) {
     let u = v;
     if (target) {
       const want = math.unit(target);
-      if (!u.equalBase(want)) throw new Error(`Unidades incompatíveis: ${prettyUnit(u.formatUnits())} não vira ${prettyUnit(target)}`);
+      if (!u.equalBase(want)) throw cannot(prettyUnit(u.formatUnits()), prettyUnit(target));
       u = u.to(target);
     } else u = u.simplify();
     const units = u.formatUnits();
     const n = units ? u.toNumber(units) : (u.value ?? 0);
     const unit = prettyUnit(units);
-    return { text: unit ? `${fmtNum(n, fmt)} ${unit}` : fmtNum(n, fmt), value: n, unit };
+    return { text: unit ? `${fmtNum(n, fmt)} ${unit}` : fmtNum(n, fmt), value: n, unit, numText: fmtNum(n, fmt), unitRaw: units };
   }
   return { text: math.format(v as never, { precision: 4 }).replace(/\./g, fmt.sep === ',' ? ',' : '.') };
 }
@@ -74,6 +80,7 @@ function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   let m: RegExpExecArray | null;
   if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${m[1]}`;
   if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${m[1]}`;
+  if (msg.startsWith('Não é possível converter')) return msg;
   if (/Units do not match|Unidades incompatíveis/.test(msg)) {
     if (msg.startsWith('Unidades')) return msg;
     try { const d = diagnose(math.parse(src), scope); if (d) return `Unidades incompatíveis: ${d}`; } catch { /* sem detalhe */ }
@@ -112,12 +119,12 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
 
   for (const lib of input.libs) {
     for (const [name, expr] of lib.constants) {
-      try { scope.set(name, math.evaluate(toMath(expr), scope)); } catch (e) { libErrors.push(`${lib.id}: constante ${name}: ${message(e, toMath(expr), scope)}`); }
+      try { scope.set(name, math.evaluate(toMath(expr), scope)); defined.add(name); } catch (e) { libErrors.push(`${lib.id}: constante ${name}: ${message(e, toMath(expr), scope)}`); }
     }
     for (const l of lib.functions) {
       const c = classify(l);
       if (c.kind === 'empty') continue;
-      try { math.evaluate(c.src, scope); } catch (e) { libErrors.push(`${lib.id}: ${l.trim()}: ${message(e, c.src, scope)}`); }
+      try { math.evaluate(c.src, scope); if (c.name) defined.add(c.name); } catch (e) { libErrors.push(`${lib.id}: ${l.trim()}: ${message(e, c.src, scope)}`); }
     }
   }
 
@@ -149,5 +156,38 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
       }
     });
   }
-  return { blocks, libErrors, defined: [...defined], ms: performance.now() - t0 };
+  const plots: Record<string, PlotResult> = {};
+  for (const b of input.blocks) if (b.type === 'grafico') plots[b.key] = plot(b.lines.join(''), scope, fmt);
+  return { blocks, plots, libErrors, defined: [...defined], ms: performance.now() - t0 };
+}
+
+type PlotSpec = { titulo?: unknown; x?: { var?: unknown; valores?: unknown; unidade?: unknown }; y?: { expr?: unknown; unidade?: unknown }; limite?: { valor?: unknown; rotulo?: unknown } };
+
+/** Bloco grafico (SPEC 3.6): varia x.var pelos valores e avalia y.expr em cada um. */
+export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts): PlotResult {
+  let spec: PlotSpec;
+  try { spec = (parseYaml(body) ?? {}) as PlotSpec; } catch (e) { return { titulo: 'Gráfico', xs: [], ys: [], xUnit: '', yUnit: '', error: `YAML inválido: ${e instanceof Error ? e.message : e}` }; }
+  const titulo = String(spec.titulo ?? 'Gráfico');
+  const xVar = String(spec.x?.var ?? '');
+  const xUnit = String(spec.x?.unidade ?? '');
+  const yUnit = String(spec.y?.unidade ?? '');
+  const valores = Array.isArray(spec.x?.valores) ? spec.x!.valores.map(Number) : [];
+  const limite = spec.limite && Number.isFinite(Number(spec.limite.valor)) ? { valor: Number(spec.limite.valor), rotulo: String(spec.limite.rotulo ?? '') } : undefined;
+  const base = { titulo, xs: valores, xUnit, yUnit, limite };
+  if (!xVar || !spec.y?.expr) return { ...base, ys: [], error: 'Gráfico precisa de x.var, x.valores e y.expr' };
+  const expr = toMath(String(spec.y.expr));
+  const ys: (number | null)[] = [];
+  let error: string | undefined;
+  for (const v of valores) {
+    const local = new Map(scope);
+    try {
+      local.set(xVar, math.evaluate(xUnit ? `${v} ${toMath(xUnit)}` : String(v)));
+      const r = show(math.evaluate(expr, local), yUnit ? (yUnit === '%' ? '%' : toMath(yUnit)) : undefined, fmt);
+      ys.push(r.value ?? null);
+    } catch (e) {
+      ys.push(null);
+      error ??= message(e, expr, local);
+    }
+  }
+  return { ...base, ys, error };
 }
