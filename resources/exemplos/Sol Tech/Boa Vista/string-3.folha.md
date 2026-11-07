@@ -1,0 +1,33 @@
+---
+tipo: folha
+titulo: "String 3: teste de bitola"
+bibliotecas: [eletrica]
+pagina: {largura: 1200, altura: 1600, grade: 20}
+versao_formato: 1
+---
+
+```texto {#t1 x=40 y=30}
+**String 3: teste de bitola**
+```
+
+```calc {#entradas x=40 y=80}
+L := 32 m
+I := 11.5 A
+V_mp := 400 V
+```
+
+```calc {#s x=230 y=76}
+S := 4 mm^2
+```
+
+```calc {#resultado x=40 y=230}
+ΔV(L, I, S) = ? V
+ΔV(L, I, S)/V_mp = ? %
+```
+
+```grafico {#dv-por-secao x=420 y=70 largura=400 altura=200}
+titulo: ΔV % × seção do cabo
+x: {var: S, valores: [2.5, 4, 6, 10], unidade: mm^2}
+y: {expr: "ΔV(L, I, S)/V_mp", unidade: "%"}
+limite: {valor: 1, rotulo: "limite 1 %"}
+```

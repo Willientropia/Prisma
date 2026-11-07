@@ -4,7 +4,7 @@ import { Logo, Tag } from '../components/ui';
 import { APP_NAME, APP_YEAR, TYPE_INFO } from '../constants';
 import { all, run } from '../commands/registry';
 import { useApp, activeDoc } from '../store/app';
-import { FORMATS, STATUS } from '../mock';
+import { FORMATS } from '../mock';
 import { RIBBONS, RIBBON_TABS } from './ribbons';
 import s from './shell.module.css';
 
@@ -81,14 +81,14 @@ export function Ribbon() {
 }
 
 export function DocTabs() {
-  const { openDocs, active, open } = useApp();
+  const { openDocs, active, activate } = useApp();
   return (
     <div className={s.dtabs} role="tablist" aria-label="Documentos abertos">
-      <button type="button" role="tab" aria-selected={active === 'home'} className={active === 'home' ? s.dtOn : s.dt} onClick={() => open('home')}>
+      <button type="button" role="tab" aria-selected={active === 'home'} className={active === 'home' ? s.dtOn : s.dt} onClick={() => activate('home')}>
         <Tag color={active === 'home' ? 'var(--type-inicio)' : undefined}>INI</Tag>Início
       </button>
       {openDocs.map((d) => (
-        <button key={d.id} type="button" role="tab" aria-selected={active === d.id} className={active === d.id ? s.dtOn : s.dt} onClick={() => open(d.id)}>
+        <button key={d.id} type="button" role="tab" title={d.id} aria-selected={active === d.id} className={active === d.id ? s.dtOn : s.dt} onClick={() => activate(d.id)}>
           <Tag color={active === d.id ? TYPE_INFO[d.type].color : undefined}>{TYPE_INFO[d.type].tag}</Tag>{d.name}
         </button>
       ))}
@@ -97,13 +97,13 @@ export function DocTabs() {
 }
 
 export function StatusBar() {
-  const doc = useApp(activeDoc);
   const status = useApp((x) => x.status);
+  const units = useApp((x) => x.config.unidades);
   return (
     <footer className={s.statusbar}>
-      <span className={s.statusMsg}>{status ?? STATUS[doc ? doc.type : 'home']}</span>
+      <span className={s.statusMsg}>{status ?? 'Pronto'}</span>
       <span className={s.spacer} />
-      <span>Unidades: SI</span><span>Cálculo: automático</span><span>Zoom 100 %</span>
+      <span>Unidades: {typeof units === 'string' ? units : 'SI'}</span><span>Cálculo: automático</span><span>Zoom 100 %</span>
     </footer>
   );
 }

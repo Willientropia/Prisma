@@ -7,78 +7,74 @@
 .mono { font-family: 'JetBrains Mono', monospace; }
 .muted { margin-left: auto; color: var(--text-muted); }
 .note { padding: 8px 10px; color: var(--text-muted); line-height: 1.5; }
+.ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.indent { padding-left: 26px; }
+.fnRow { padding-left: 22px; font-family: 'JetBrains Mono', monospace; }
 
-/* caderno */
+/* caderno: página branca */
 .workspace { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 28px; background: var(--bg-workspace); }
 .page {
   width: 100%; max-width: 760px; padding: 44px 52px; display: flex; flex-direction: column; gap: 14px;
   background: var(--paper); color: var(--paper-text); box-shadow: var(--shadow-page);
 }
 .page h1 { margin: 0; font: 700 24px Inter, sans-serif; }
+.page .pageH2 { margin: 6px 0 0; font: 600 18px Inter, sans-serif; }
 .page p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--paper-prose); }
 .page a { color: var(--paper-accent); }
-.fnBlock { position: relative; border: 1.5px solid var(--paper-accent); border-radius: 3px; }
-.fnLabel {
+.prose { white-space: pre-wrap; }
+.paperError { color: var(--paper-error); }
+.fnBlock, .calcBlock { position: relative; border-radius: 3px; }
+.fnBlock { border: 1.5px solid var(--paper-accent); }
+.calcBlock { border: 1px solid var(--paper-border); }
+.fnLabel, .blockLabel {
   position: absolute; top: -9px; left: 10px; padding: 0 6px; background: var(--paper);
-  font: 600 10px Inter, sans-serif; letter-spacing: 0.5px; color: var(--paper-accent);
+  font: 600 10px Inter, sans-serif; letter-spacing: 0.5px;
 }
-.fnMath { padding: 20px 22px; font-size: 24px; display: flex; align-items: center; flex-wrap: wrap; }
-.calcBlock { border: 1px solid var(--paper-border); border-radius: 3px; }
-.calcInputs { padding: 14px 22px; font-size: 19px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.calcResults { padding: 12px 22px 16px; font-size: 20px; border-top: 1px dashed var(--paper-border); display: flex; flex-wrap: wrap; gap: 10px 36px; align-items: center; }
-.calcResults b { font-weight: 600; }
+.fnLabel { color: var(--paper-accent); }
+.blockLabel { color: var(--paper-text-2); }
+.blockBody { margin: 0; padding: 16px 22px 14px; font: 13px/1.75 'JetBrains Mono', monospace; color: var(--paper-text); white-space: pre-wrap; }
 .selectedBlock { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 
 /* folha livre */
 .sheet {
-  position: relative; flex: 1; min-height: 560px; overflow: hidden;
+  position: relative; flex: 1; min-height: 560px; overflow: auto;
   background-color: var(--bg-grid);
   background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 .region { position: absolute; color: var(--text-btn); }
+.regionOff { border: 1px solid transparent; padding: 4px 8px; }
+.regionOn { border: 1px solid var(--accent-light); background: var(--region-selected-bg); padding: 4px 8px; }
 .regionTitle { font: 600 16px Inter, sans-serif; color: var(--text-strong); }
-.regionStack { display: flex; flex-direction: column; gap: 12px; font-size: 20px; }
-.regionSel { padding: 4px 8px; font-size: 20px; border: 1px solid var(--accent-light); background: var(--region-selected-bg); color: var(--text-strong); }
-.plot { margin: 0; width: 400px; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); }
+.regionCode { margin: 0; font: 13px/1.7 'JetBrains Mono', monospace; white-space: pre; }
+.plot { margin: 0; padding: 10px 12px; background: var(--bg-panel); border: 1px solid var(--border); }
 .plot figcaption { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-.axis { stroke: var(--border-strong); }
-.limit { stroke: var(--limit-line); stroke-width: 1.2; stroke-dasharray: 5 4; }
-.limitText { fill: var(--limit-label); font: 10px Inter, sans-serif; }
-.series { fill: none; stroke: var(--plot-line); stroke-width: 2; }
-.dot { fill: var(--plot-line); }
-.dotSel { fill: var(--bg-panel); stroke: var(--plot-line); stroke-width: 2; }
-.tick { fill: var(--text-muted); font: 10px Inter, sans-serif; }
+.plotEmpty { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); color: var(--text-muted); }
 .cmdline { display: flex; flex-direction: column; gap: 3px; padding: 6px 12px; flex: none; background: var(--bg-titlebar); border-top: 1px solid var(--border); font: 12px 'JetBrains Mono', monospace; color: var(--text-muted); }
 .cmdline label { display: flex; gap: 8px; align-items: center; color: var(--text-btn); }
 .cmdline input { flex: 1; border: none; outline: none; background: transparent; color: var(--text-btn); font: inherit; }
 .varsHead, .varsRow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .varsHead { font: 11px Inter, sans-serif; color: var(--text-muted); background: var(--bg-input); border-bottom: 1px solid var(--border-faint); }
-.varsRow { font: 12px 'JetBrains Mono', monospace; border-bottom: 1px solid var(--bg-ribbon); }
-.varsHead > span, .varsRow > span { padding: 6px 10px; }
-.varsRow > span:first-child { color: var(--text-strong); }
+.varsRow, .varsRow2 { font: 12px 'JetBrains Mono', monospace; border-bottom: 1px solid var(--bg-ribbon); }
+.varsRow2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.varsHead > span, .varsRow > span, .varsRow2 > span { padding: 6px 10px; }
+.varsRow > span:first-child, .varsRow2 > span:first-child { color: var(--text-strong); }
 .varsRow > span:last-child { color: var(--text-muted); }
 
 /* LaTeX */
 .split { display: flex; flex: 1; min-height: 0; }
 .code { flex: 1 1 420px; min-width: 0; display: flex; padding: 16px 0; overflow: auto; background: var(--bg-code); border-right: 1px solid var(--border); }
-.lineNums { width: 40px; flex: none; padding-right: 10px; text-align: right; white-space: pre-line; font: 12.5px/1.75 'JetBrains Mono', monospace; color: var(--text-linenum); }
-.code pre { flex: 1; margin: 0; padding-right: 16px; font: 12.5px/1.75 'JetBrains Mono', monospace; white-space: pre-wrap; color: var(--tex-text); }
+.codeLines { flex: 1; min-width: 0; }
+.codeRow { display: flex; font: 12.5px/1.75 'JetBrains Mono', monospace; }
+.ln { width: 40px; flex: none; padding-right: 10px; text-align: right; color: var(--text-linenum); user-select: none; }
+.codeText { flex: 1; min-width: 0; padding-right: 16px; white-space: pre-wrap; color: var(--tex-text); }
 .kw { color: var(--tex-keyword); }
 .cm { color: var(--tex-comment); }
-.inserted { display: block; background: var(--tex-inserted-bg); color: var(--tex-inserted-text); }
+.inserted { background: var(--tex-inserted-bg); }
+.inserted .codeText { color: var(--tex-inserted-text); }
 .pdfPane { flex: 1 1 400px; min-width: 0; display: flex; justify-content: center; align-items: flex-start; padding: 22px; overflow: auto; background: var(--bg-workspace); }
-.pdf { width: 100%; max-width: 470px; padding: 42px 46px; background: var(--paper); color: var(--pdf-text); font-family: 'STIX Two Text', Georgia, serif; box-shadow: var(--shadow-page); }
-.pdfHead { display: flex; justify-content: space-between; margin-bottom: 22px; padding-bottom: 5px; border-bottom: 0.5px solid var(--pdf-rule); font-size: 10.5px; color: var(--pdf-text-2); }
-.pdf h2 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
-.pdf h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
-.pdf p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.6; text-align: justify; }
-.pdfEq { position: relative; display: flex; justify-content: center; align-items: center; margin: 14px 0; font-size: 16px; }
-.pdfEqNum { position: absolute; right: 0; }
-.pdfFig { height: 90px; display: flex; align-items: center; justify-content: center; border: 0.5px solid var(--pdf-rule); font: 11px Inter, sans-serif; color: var(--pdf-text-2); }
+.pdfEmpty { margin-top: 40px; color: var(--text-muted); }
 .compileOut { padding: 8px 10px; font: 11.5px/1.6 'JetBrains Mono', monospace; color: var(--text-muted); }
-.ok { color: var(--ok-text); }
-.warn { color: var(--warn-text); }
 
 /* biblioteca */
 .libView { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 26px 32px; background: var(--bg-app); }
@@ -93,6 +89,4 @@
 .testsHead { padding: 8px 12px; background: var(--bg-ribbon); font: 600 11px Inter, sans-serif; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
 .testsRow { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); font: 12px 'JetBrains Mono', monospace; }
 .testsRow > span { padding: 7px 12px; border-top: 1px solid var(--border-subtle); }
-.groupLabel { color: var(--text-muted); font-weight: 600; }
-.fnRow { padding-left: 22px; font-family: 'JetBrains Mono', monospace; }
-.indent { padding-left: 26px; }
+.mutedCell { color: var(--text-muted); }

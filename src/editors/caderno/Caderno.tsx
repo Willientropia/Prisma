@@ -1,68 +1,88 @@
-import { useState } from 'react';
-import { Badge, PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
-import { CELLS } from '../../mock';
-import { useApp } from '../../store/app';
+import { useMemo, useState } from 'react';
+import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
+import { parse, type BlockSegment } from '../../format/doc';
+import { outline, type OutlineItem } from '../../format/views';
+import type { OpenDoc } from '../../store/app';
 import s from '../editors.module.css';
 
-// Fase 0: página estática do protótipo. Fase 2 troca por blocos reais do .caderno.md.
-export function Caderno() {
-  const [cell, setCell] = useState('f1');
-  const open = useApp((x) => x.open);
-  const cur = CELLS.find((c) => c.id === cell) ?? CELLS[2];
-  const sel = (id: string) => (cell === id ? s.selectedBlock : undefined);
+export const BLOCK_LABEL: Record<string, string> = {
+  funcao: 'Função', calc: 'Cálculo', verificar: 'Verificação', grafico: 'Gráfico', tabela: 'Tabela', texto: 'Texto', teste: 'Teste',
+};
+export const blockLabel = (t: string) => BLOCK_LABEL[t] ?? (t || 'Bloco');
+
+export function blockProps(b: BlockSegment): [string, string][] {
+  return [
+    ['Tipo', blockLabel(b.type)],
+    ['Id', b.id ? `#${b.id}` : 'sem id'],
+    ...Object.entries(b.attrs),
+    ['Linhas', String(b.body.split('\n').filter((l) => l.trim()).length)],
+  ];
+}
+
+const props = (it: OutlineItem): [string, string][] =>
+  it.kind === 'block' ? blockProps(it.block)
+    : it.tag === 'TIT' ? [['Tipo', 'Título'], ['Nível', String(it.level)]]
+    : [['Tipo', 'Texto'], ['Palavras', String(it.text.split(/\s+/).length)]];
+
+const scrollTo = (key: string) => document.querySelector(`[data-key="${key}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+// Fase 1: mostra o arquivo como está (texto cru e corpo dos blocos). Fase 2 renderiza Markdown, matemática e resultados.
+export function Caderno({ doc }: { doc: OpenDoc }) {
+  const parsed = useMemo(() => parse(doc.text), [doc.text]);
+  const items = useMemo(() => outline(parsed), [parsed]);
+  const [selKey, setSel] = useState<string | null>(null);
+  const sel = items.find((i) => i.key === selKey) ?? items.find((i) => i.kind === 'block') ?? items[0];
+  const libs = Array.isArray(parsed.meta.bibliotecas) ? (parsed.meta.bibliotecas as unknown[]).map(String) : [];
+  const pick = (key: string) => { setSel(key); scrollTo(key); };
 
   return (
     <>
       <aside className={s.left}>
-        <PanelHeader title="Estrutura do caderno" />
+        <PanelHeader title="Estrutura do caderno" aside={items.length} />
         <div className={s.list}>
-          {CELLS.map((c) => (
-            <Row key={c.id} active={c.id === cell} onClick={() => setCell(c.id)}>
-              <Tag tone={c.id === cell ? 'selected' : undefined}>{c.tag}</Tag>{c.label}
+          {items.map((it) => (
+            <Row key={it.key} active={it === sel} onClick={() => pick(it.key)}>
+              <Tag tone={it === sel ? 'selected' : undefined}>{it.tag}</Tag><span className={s.ellipsis}>{it.label}</span>
             </Row>
           ))}
         </div>
         <PanelHeader title="Bibliotecas em uso" />
         <div className={s.list}>
-          <Row>Elétrica <span className={s.muted}>v1.4</span></Row>
-          <Row>Nativas <span className={s.muted}>v2.0</span></Row>
+          {libs.map((l) => <Row key={l}>{l}</Row>)}
+          <Row>Nativas <span className={s.muted}>sempre carregada</span></Row>
         </div>
       </aside>
 
       <main className={s.center}>
         <div className={s.workspace}>
           <article className={s.page}>
-            <h1 className={sel('h1')}>Queda de tensão nos cabos CC</h1>
-            <p className={sel('t1')}>Verificação da queda entre as strings e o inversor. Critério do projeto: abaixo de 1 % para não perder geração no trecho CC.</p>
-            <div className={[s.fnBlock, sel('f1')].join(' ')}>
-              <span className={s.fnLabel}>FUNÇÃO · ELÉTRICA</span>
-              <div className={`m ${s.fnMath}`}>
-                <span className="v">ΔV</span>(<span className="v">L</span>, <span className="v">I</span>, <span className="v">S</span>)
-                <span style={{ margin: '0 12px' }}>≔</span>
-                <span className="fr"><span>2 · <span className="v">ρ</span> · <span className="v">L</span> · <span className="v">I</span></span><span><span className="v">S</span></span></span>
-              </div>
-            </div>
-            <p className={sel('t2')}>O fator 2 é ida e volta (positivo e negativo). <span className="m v">ρ</span> é a resistividade do cobre a 20 °C.</p>
-            <div className={[s.calcBlock, sel('c1'), sel('v1')].join(' ')}>
-              <div className={`m ${s.calcInputs}`}>
-                <span><span className="v">L</span> ≔ 25 m</span><span><span className="v">I</span> ≔ 12 A</span>
-                <span><span className="v">S</span> ≔ 6 mm²</span><span><span className="v">V</span><sub>mp</sub> ≔ 400 V</span>
-              </div>
-              <div className={`m ${s.calcResults}`}>
-                <span><span className="v">ΔV</span>(<span className="v">L</span>, <span className="v">I</span>, <span className="v">S</span>) = <b>1,79 V</b></span>
-                <span><span className="fr"><span><span className="v">ΔV</span></span><span><span className="v">V</span><sub>mp</sub></span></span> = <b>0,45 %</b></span>
-                <Badge kind="ok">APROVADO · limite 1 %</Badge>
-              </div>
-            </div>
-            <p className={sel('t3')}>Com 6 mm² sobra margem. O teste com 4 mm² na string mais longa está na folha{' '}
-              <a href="#string-3" onClick={(e) => { e.preventDefault(); open('string3'); }}>String 3</a>.</p>
+            {parsed.metaError && <p className={s.paperError}>Frontmatter inválido: {parsed.metaError}</p>}
+            {items.map((it) => {
+              const cls = (base?: string) => [base, it === sel && s.selectedBlock].filter(Boolean).join(' ') || undefined;
+              const common = { 'data-key': it.key, onClick: () => setSel(it.key) };
+              if (it.kind === 'text') {
+                if (it.tag === 'TIT') return it.level === 1
+                  ? <h1 key={it.key} {...common} className={cls()}>{it.text}</h1>
+                  : <h2 key={it.key} {...common} className={cls(s.pageH2)}>{it.text}</h2>;
+                return <p key={it.key} {...common} className={cls(s.prose)}>{it.text}</p>;
+              }
+              const b = it.block;
+              const fn = b.type === 'funcao';
+              const lib = b.attrs.salvar ?? b.attrs.biblioteca;
+              return (
+                <div key={it.key} {...common} className={cls(fn ? s.fnBlock : s.calcBlock)}>
+                  <span className={fn ? s.fnLabel : s.blockLabel}>{blockLabel(b.type).toUpperCase()}{lib ? ` · ${lib.toUpperCase()}` : ''}{b.id ? ` · #${b.id}` : ''}</span>
+                  <pre className={s.blockBody}>{b.body}</pre>
+                </div>
+              );
+            })}
           </article>
         </div>
       </main>
 
       <aside className={s.right}>
-        <PanelHeader title="Propriedades" aside={cur.tag} />
-        <PropGrid rows={cur.props} />
+        <PanelHeader title="Propriedades" aside={sel?.tag} />
+        {sel && <PropGrid rows={props(sel)} />}
       </aside>
     </>
   );

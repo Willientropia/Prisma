@@ -1,41 +1,60 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
-import { FNS } from '../../mock';
+import { parse } from '../../format/doc';
+import { libFunctions } from '../../format/views';
+import { fmtUnit } from '../../format/display';
+import type { OpenDoc } from '../../store/app';
 import s from '../editors.module.css';
 
-// Fase 0: funções do protótipo. Fase 4 lê o .lib.md e roda os testes.
-export function Biblioteca() {
-  const [fn, setFn] = useState('dv');
-  const sel = FNS.find((f) => f.id === fn) ?? FNS[0];
+// Fase 1: lê as seções ## do .lib.md. Fase 4 roda os testes e grava funções vindas do caderno.
+export function Biblioteca({ doc }: { doc: OpenDoc }) {
+  const parsed = useMemo(() => parse(doc.text), [doc.text]);
+  const fns = useMemo(() => libFunctions(parsed), [parsed]);
+  const [i, setI] = useState(0);
+  const sel = fns[Math.min(i, fns.length - 1)];
+  const nome = String(parsed.meta.nome ?? doc.name);
+  const consts = parsed.meta.constantes && typeof parsed.meta.constantes === 'object' ? Object.entries(parsed.meta.constantes) : [];
+
   return (
     <>
       <aside className={s.left}>
-        <PanelHeader title="Funções" aside="Elétrica" />
+        <PanelHeader title="Funções" aside={nome} />
         <div className={s.list}>
-          <Row className={s.groupLabel}>Queda de tensão</Row>
-          {FNS.map((f) => <Row key={f.id} active={f.id === fn} onClick={() => setFn(f.id)} className={s.fnRow}>{f.sig}</Row>)}
+          {fns.map((f, k) => <Row key={f.sig + k} active={f === sel} onClick={() => setI(k)} className={s.fnRow}>{f.sig}</Row>)}
+          {fns.length === 0 && <div className={s.note}>Nenhuma função. Cada seção ## do arquivo é uma função.</div>}
         </div>
+        {consts.length > 0 && <>
+          <PanelHeader title="Constantes" aside={consts.length} />
+          {consts.map(([k, v]) => <div key={k} className={s.varsRow2}><span>{k}</span><span>{fmtUnit(String(v))}</span></div>)}
+        </>}
       </aside>
 
       <main className={s.center}>
-        <div className={s.libView}>
-          <div className={s.crumb}>Elétrica · Queda de tensão</div>
-          <h2 className={s.sig}>{sel.sig}</h2>
-          <div className={s.formula}><div className="m v">{sel.formula}</div></div>
-          <div className={s.twoCol}>
-            <div><div className={s.colTitle}>Parâmetros</div><div className={s.colBody}>{sel.params}</div></div>
-            <div><div className={s.colTitle}>Por que e quando usar</div><div className={s.colBody2}>{sel.note}</div></div>
+        {sel ? (
+          <div className={s.libView}>
+            <div className={s.crumb}>{nome}</div>
+            <h2 className={s.sig}>{sel.sig}</h2>
+            {sel.description && <div className={s.colBody2}>{sel.description}</div>}
+            <div className={s.formula}><div className="m v">{sel.formula || 'sem bloco funcao nesta seção'}</div></div>
+            <div className={s.twoCol}>
+              <div><div className={s.colTitle}>Parâmetros</div><div className={s.colBody}>{(sel.fields['Parâmetros'] ?? '').split(/;\s*/).join('\n')}</div></div>
+              <div><div className={s.colTitle}>Por que e quando usar</div><div className={s.colBody2}>{sel.fields['Por que e quando usar']}</div></div>
+            </div>
+            <div className={s.tests}>
+              <div className={s.testsHead}>Testes da função</div>
+              {sel.tests.length === 0 && <div className={s.testsRow}><span>Nenhum teste</span><span /><span /></div>}
+              {sel.tests.map((t) => {
+                const [expr, expected = ''] = t.split('≈').map((x) => x.trim());
+                return <div key={t} className={s.testsRow}><span>{expr}</span><span>{expected}</span><span className={s.mutedCell}>não executado</span></div>;
+              })}
+            </div>
           </div>
-          <div className={s.tests}>
-            <div className={s.testsHead}>Testes da função</div>
-            <div className={s.testsRow}><span>{sel.test}</span><span>{sel.res}</span><span className={s.ok}>aprovado</span></div>
-          </div>
-        </div>
+        ) : <div className={s.libView}><div className={s.note}>Esta biblioteca ainda não tem funções.</div></div>}
       </main>
 
       <aside className={s.right}>
         <PanelHeader title="Metadados" />
-        <PropGrid rows={[['Biblioteca', 'Elétrica'], ['Versão', '1.4'], ['Retorna', sel.ret], ['Fonte', sel.src], ['Uso', sel.uses]]} />
+        <PropGrid rows={[['Biblioteca', nome], ['Versão', String(parsed.meta.versao ?? '')], ['Retorna', sel?.fields['Retorna'] ?? ''], ['Fonte', sel?.fields['Fonte'] ?? ''], ['Origem', sel?.fields['Origem'] ?? '']]} />
       </aside>
     </>
   );

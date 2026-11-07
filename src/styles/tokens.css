@@ -81,6 +81,7 @@
   --text-shortcut: #8b849c;     /* atalho no menu do app */
   --limit-label: #f0ab85;       /* rótulo da linha de limite */
   --paper-prose: #363042;       /* parágrafo de caderno na página */
+  --paper-error: #b42318;       /* erro sobre página branca */
   --pdf-text: #111111;
   --pdf-text-2: #4b4458;
   --pdf-rule: #9ca3af;          /* filetes do PDF e título da miniatura */

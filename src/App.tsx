@@ -24,13 +24,13 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const Editor = doc ? EDITORS[doc.type] : Home;
+  const Editor = doc && EDITORS[doc.type];
   return (
     <div className={s.app}>
       <TitleBar />
       <Ribbon />
       <DocTabs />
-      <div className={s.body}><Editor key={doc?.id} /></div>
+      <div className={s.body}>{doc && Editor ? <Editor key={doc.id} doc={doc} /> : <Home />}</div>
       <StatusBar />
       <AppMenu />
       <ExportDialog />
