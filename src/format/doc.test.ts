@@ -38,7 +38,14 @@ describe('leitura dos blocos', () => {
     expect(d.meta).toMatchObject({ tipo: 'caderno', bibliotecas: ['eletrica'], versao_formato: 1 });
     expect(blocks(d).map((b) => [b.type, b.id])).toEqual([['funcao', 'dv'], ['calc', 'trecho'], ['verificar', 'criterio']]);
     expect(blocks(d)[0].attrs).toEqual({ nome: 'ΔV', salvar: 'eletrica' });
-    expect(outline(d).map((o) => o.tag)).toEqual(['TIT', 'TXT', 'FUN', 'TXT', 'CAL', 'VER', 'TXT']);
+    const items = outline(d);
+    expect(items.map((o) => o.tag)).toEqual(['TIT', 'TXT', 'FUN', 'TXT', 'CAL', 'VER', 'TXT']);
+    // cada item aponta para o trecho exato do arquivo
+    const text = serialize(d);
+    expect(text.slice(items[0].start, items[0].end)).toBe('# Queda de tensão nos cabos CC');
+    expect(text.slice(items[2].start, items[2].end)).toBe('```funcao {#dv nome=ΔV salvar=eletrica}\nΔV(L, I, S) := 2*ρ_cu*L*I/S\n```');
+    const fn = items[2];
+    expect(fn.kind === 'block' && text.slice(fn.bodyStart, fn.bodyStart + fn.block.body.length)).toBe('ΔV(L, I, S) := 2*ρ_cu*L*I/S\n');
     expect(assignments(blocks(d)).map((a) => `${a.name}=${a.value} ${a.unit}`)).toEqual(['L=25 m', 'I=12 A', 'S=6 mm^2', 'V_mp=400 V']);
   });
 

@@ -56,6 +56,7 @@
   --warn-badge-bg: #4a3a14;
   --warn-badge-text: #f3cf7a;
   --warn-text: #f3cf7a;
+  --fail-badge-bg: #fbe4e4; --fail-badge-text: #8f1d1d;   /* REPROVADO sobre página branca (extra, fora da SPEC) */
   --error-text: #f19a9a;
   --limit-line: #e58a57;
   --plot-line: #a78bfa;
@@ -82,6 +83,7 @@
   --limit-label: #f0ab85;       /* rótulo da linha de limite */
   --paper-prose: #363042;       /* parágrafo de caderno na página */
   --paper-error: #b42318;       /* erro sobre página branca */
+  --paper-hover: #f3f0fa;       /* linha de cálculo em hover na página */
   --pdf-text: #111111;
   --pdf-text-2: #4b4458;
   --pdf-rule: #9ca3af;          /* filetes do PDF e título da miniatura */

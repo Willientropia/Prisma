@@ -41,6 +41,6 @@ export function Row({ children, active, onClick, height = 28, className }: RowPr
   return <button type="button" className={cls} style={{ minHeight: height }} onClick={onClick}>{children}</button>;
 }
 
-export function Badge({ kind, children }: { kind: 'ok' | 'warn'; children: ReactNode }) {
-  return <span className={kind === 'ok' ? s.badgeOk : s.badgeWarn}>{children}</span>;
+export function Badge({ kind, children }: { kind: 'ok' | 'warn' | 'fail'; children: ReactNode }) {
+  return <span className={kind === 'ok' ? s.badgeOk : kind === 'warn' ? s.badgeWarn : s.badgeFail}>{children}</span>;
 }

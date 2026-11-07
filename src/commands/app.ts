@@ -1,6 +1,7 @@
 // Handlers dos comandos. Os sem handler avisam na barra de status.
 import { register, onUnhandled } from './registry';
 import { useApp } from '../store/app';
+import { interrupt, recalc } from '../engine/run';
 import '../shell/ribbons'; // registra os rótulos do ribbon
 
 const st = useApp.getState;
@@ -23,6 +24,9 @@ register('app.configuracoes', { label: 'Configurações' });
 register('home.modelos', { label: 'Modelos' });
 register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });
+
+register('calc.tudo', { shortcut: 'Ctrl+Enter', run: () => void recalc(st().active) });
+register('calc.interromper', { run: interrupt });
 
 register('tex.exportarPdf', { run: () => st().set({ exportOpen: true }) });
 register('tex.exportarTex', { run: () => st().set({ exportOpen: true }) });

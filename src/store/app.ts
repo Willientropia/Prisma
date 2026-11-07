@@ -6,8 +6,12 @@ import { docType } from '../format/views';
 import { basename, dirname, vaultName } from '../format/display';
 import { vault, type Entry, type Recent } from '../vault';
 import type { RibbonTab } from '../shell/ribbons';
+import type { EvalResult } from '../engine/evaluate';
 
 export type OpenDoc = { id: string; name: string; type: DocType; folder: string; text: string; dirty: boolean };
+
+export const AUTOSAVE_MS = 2000;
+const autosave = new Map<string, number>();
 
 type AppState = {
   vaultRoot: string | null;
@@ -20,12 +24,16 @@ type AppState = {
   menuOpen: boolean;
   exportOpen: boolean;
   status: string | null; // mensagem temporária; null = status padrão
+  results: Record<string, EvalResult>; // por documento; só na memória, o arquivo guarda "= ?"
+  calculating: boolean;
   set: (patch: Partial<AppState>) => void;
   activate: (id: string) => void;
   close: (id: string) => void;
   openVault: (root?: string) => Promise<boolean>;
   openFile: (path: string, root?: string) => Promise<void>;
-  save: () => Promise<void>;
+  /** Troca o trecho [start, end) do texto; marca alteração pendente e agenda o autossalvar. */
+  edit: (id: string, start: number, end: number, insert: string) => void;
+  save: (id?: string, quiet?: boolean) => Promise<void>;
   newDoc: (type: DocType) => Promise<void>;
   externalChange: (paths: string[]) => Promise<void>;
 };
@@ -54,7 +62,15 @@ export const useApp = create<AppState>((set, get) => {
     menuOpen: false,
     exportOpen: false,
     status: null,
+    results: {},
+    calculating: false,
     set: (patch) => set(patch),
+
+    edit: (id, start, end, insert) => {
+      set({ openDocs: get().openDocs.map((d) => (d.id === id ? { ...d, text: d.text.slice(0, start) + insert + d.text.slice(end), dirty: true } : d)) });
+      clearTimeout(autosave.get(id));
+      autosave.set(id, window.setTimeout(() => void get().save(id, true), AUTOSAVE_MS));
+    },
 
     activate: (id) => set({ active: id, ribbonTab: 'inicio', menuOpen: false, status: null }),
 
@@ -97,14 +113,17 @@ export const useApp = create<AppState>((set, get) => {
       }
     },
 
-    save: async () => {
-      const doc = get().openDocs.find((d) => d.id === get().active);
+    save: async (id, quiet) => {
+      const doc = get().openDocs.find((d) => d.id === (id ?? get().active));
       if (!doc) return;
+      clearTimeout(autosave.get(doc.id));
       // .md passa pelo serializador; sem edição, devolve os mesmos bytes
       const text = doc.type === 'tex' ? doc.text : serialize(parse(doc.text));
       try {
         await vault.write(doc.id, text);
-        set({ openDocs: get().openDocs.map((d) => (d.id === doc.id ? { ...d, text, dirty: false } : d)), status: `Salvo: ${doc.name}` });
+        // se o texto mudou enquanto gravava, continua pendente
+        set({ openDocs: get().openDocs.map((d) => (d.id === doc.id && d.text === text ? { ...d, dirty: false } : d)) });
+        if (!quiet) say(`Salvo: ${doc.name}`);
       } catch (e) {
         say(`Erro ao salvar ${doc.name}: ${errMsg(e)}`);
       }
@@ -139,6 +158,7 @@ export const useApp = create<AppState>((set, get) => {
         const cur = get().openDocs.find((d) => d.id === doc.id);
         if (!cur || text === cur.text) continue; // inclui o eco das nossas próprias gravações
         if (cur.dirty && !confirm(`"${cur.name}" mudou fora do ${APP_NAME}. Descartar suas alterações e carregar a versão do disco?`)) continue;
+        clearTimeout(autosave.get(doc.id));
         set({ openDocs: get().openDocs.map((d) => (d.id === doc.id ? { ...d, text, dirty: false } : d)), status: `${doc.name} atualizado: mudou fora do ${APP_NAME}` });
       }
     },

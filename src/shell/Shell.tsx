@@ -99,9 +99,21 @@ export function DocTabs() {
 export function StatusBar() {
   const status = useApp((x) => x.status);
   const units = useApp((x) => x.config.unidades);
+  const result = useApp((x) => x.results[x.active]);
+  const calculating = useApp((x) => x.calculating);
+  let summary = 'Pronto';
+  if (calculating) summary = 'Calculando';
+  else if (result) {
+    const all = Object.values(result.blocks).flat();
+    const evals = all.filter((l) => l.kind === 'eval' && !l.error).length;
+    const checks = all.filter((l) => l.kind === 'check');
+    const passed = checks.filter((l) => l.status === 'ok' || l.status === 'warn').length;
+    const errors = all.filter((l) => l.error).length + result.libErrors.length;
+    summary = [`Pronto · ${evals} resultados`, checks.length && `${passed} de ${checks.length} verificações aprovadas`, errors && `${errors} erros`].filter(Boolean).join(' · ');
+  }
   return (
     <footer className={s.statusbar}>
-      <span className={s.statusMsg}>{status ?? 'Pronto'}</span>
+      <span className={s.statusMsg}>{status ?? summary}</span>
       <span className={s.spacer} />
       <span>Unidades: {typeof units === 'string' ? units : 'SI'}</span><span>Cálculo: automático</span><span>Zoom 100 %</span>
     </footer>

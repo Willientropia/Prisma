@@ -13,23 +13,49 @@ export function docType(path: string): DocType | null {
 const TAGS: Record<string, string> = { funcao: 'FUN', calc: 'CAL', verificar: 'VER', grafico: 'GRA', tabela: 'TAB', texto: 'TXT', teste: 'TST' };
 export const blockTag = (type: string) => TAGS[type] ?? 'BLO';
 
+// start/end: posição no texto do arquivo (end sem a quebra de linha final), para editar só aquele trecho.
 export type OutlineItem =
-  | { kind: 'text'; key: string; tag: 'TIT' | 'TXT'; label: string; text: string; level: number }
-  | { kind: 'block'; key: string; tag: string; label: string; block: BlockSegment };
+  | { kind: 'text'; key: string; tag: 'TIT' | 'TXT'; label: string; raw: string; text: string; level: number; start: number; end: number }
+  | { kind: 'block'; key: string; tag: string; label: string; block: BlockSegment; start: number; end: number; bodyStart: number };
+
+const noNl = (s: string) => s.replace(/\r?\n$/, '');
 
 /** Estrutura do caderno: títulos, parágrafos e blocos, na ordem do arquivo. */
 export function outline(doc: PrismaDoc): OutlineItem[] {
   const out: OutlineItem[] = [];
+  const full = doc.frontmatterRaw + doc.segments.map((s) => s.raw).join('');
+  let pos = doc.frontmatterRaw.length;
   doc.segments.forEach((seg, si) => {
+    const segStart = pos;
+    pos += seg.raw.length;
     if (seg.kind === 'block') {
-      out.push({ kind: 'block', key: `b${si}`, tag: blockTag(seg.type), label: seg.id ?? seg.type, block: seg });
+      const bodyStart = segStart + (lines(seg.raw)[0]?.length ?? 0);
+      out.push({ kind: 'block', key: `b${si}`, tag: blockTag(seg.type), label: seg.id ?? seg.type, block: seg, start: segStart, end: segStart + noNl(seg.raw).length, bodyStart });
       return;
     }
-    seg.raw.split(/\r?\n\s*\r?\n/).map((p) => p.trim()).filter(Boolean).forEach((p, pi) => {
-      const h = /^(#{1,6})\s+(.*)$/.exec(p);
-      const text = h ? h[2] : p;
-      out.push({ kind: 'text', key: `t${si}.${pi}`, tag: h ? 'TIT' : 'TXT', label: text.length > 42 ? text.slice(0, 40) + '…' : text, text, level: h ? h[1].length : 0 });
-    });
+    // parágrafo = linhas não vazias seguidas; título (#) é sempre um item sozinho
+    let at = segStart;
+    let para: { start: number; end: number } | null = null;
+    let pi = 0;
+    const flush = () => {
+      if (!para) return;
+      const text = full.slice(para.start, para.end);
+      const h = /^(#{1,6})\s+(.*)$/.exec(text);
+      const shown = h ? h[2] : text;
+      out.push({ kind: 'text', key: `t${si}.${pi++}`, tag: h ? 'TIT' : 'TXT', label: shown.length > 42 ? shown.slice(0, 40) + '…' : shown, raw: text, text: shown, level: h ? h[1].length : 0, ...para });
+      para = null;
+    };
+    for (const l of lines(seg.raw)) {
+      const content = noNl(l);
+      if (!content.trim()) flush();
+      else {
+        if (/^#{1,6}\s/.test(content)) flush();
+        para = para ? { start: para.start, end: at + content.length } : { start: at, end: at + content.length };
+        if (/^#{1,6}\s/.test(content)) flush();
+      }
+      at += l.length;
+    }
+    flush();
   });
   return out;
 }
