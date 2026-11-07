@@ -1,5 +1,12 @@
 // Registro único: ribbon, menu, atalhos, busca e linha de comando chamam daqui (SPEC seção 10).
-export type Command = { id: string; label: string; shortcut?: string; run?: () => void };
+export type Command = {
+  id: string;
+  label: string;
+  shortcut?: string;
+  run?: () => void;
+  enabled?: () => boolean; // ausente = sempre habilitado
+  hint?: string; // dica quando desabilitado
+};
 
 const commands = new Map<string, Command>();
 let fallback: (cmd: Command) => void = () => {};
@@ -18,6 +25,7 @@ export function onUnhandled(fn: (cmd: Command) => void): void {
 export function run(id: string): void {
   const cmd = commands.get(id);
   if (!cmd) throw new Error(`Comando desconhecido: ${id}`);
+  if (cmd.enabled && !cmd.enabled()) return;
   if (cmd.run) cmd.run();
   else fallback(cmd);
 }

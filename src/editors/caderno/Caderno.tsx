@@ -4,13 +4,14 @@ import remarkGfm from 'remark-gfm';
 import { Badge, PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
 import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
 import { outline, type OutlineItem } from '../../format/views';
-import { basename } from '../../format/display';
+import { dirname, displayPath, joinPath } from '../../format/display';
+import { LeftPanel } from '../../shell/ProjectPanel';
 import { classify, greek } from '../../engine/syntax';
 import { MathView } from '../../engine/render';
 import { recalc } from '../../engine/run';
 import type { LineResult } from '../../engine/evaluate';
 import { register } from '../../commands/registry';
-import { useApp, type OpenDoc } from '../../store/app';
+import { useWorkspace, type OpenDoc } from '../../store/workspace';
 import s from '../editors.module.css';
 
 export const BLOCK_LABEL: Record<string, string> = {
@@ -58,19 +59,28 @@ const urlTransform = (u: string) => (u.startsWith('prisma:') ? u : defaultUrlTra
 export function Caderno({ doc }: { doc: OpenDoc }) {
   const parsed = useMemo(() => parse(doc.text), [doc.text]);
   const items = useMemo(() => outline(parsed), [parsed]);
-  const result = useApp((x) => x.results[doc.id]);
-  const files = useApp((x) => x.files);
-  const { edit, openFile, set } = useApp.getState();
+  const result = useWorkspace((x) => x.results[doc.id]);
+  const projectPath = useWorkspace((x) => x.project?.path);
+  useWorkspace((x) => x.dirFiles); // redesenha quando a pasta for listada (links)
+  const { edit, openFile, set, resolveLink, loadDir } = useWorkspace.getState();
   const [selStart, setSelStart] = useState<number | null>(null);
   const [editing, setEditing] = useState<Editing>(null);
   const [pending, setPending] = useState<{ offset: number } | null>(null);
 
   // cálculo automático: reavalia logo depois de cada mudança
-  useEffect(() => { const t = setTimeout(() => void recalc(doc.id), 150); return () => clearTimeout(t); }, [doc.id, doc.text, files]);
+  useEffect(() => { const t = setTimeout(() => void recalc(doc.id), 150); return () => clearTimeout(t); }, [doc.id, doc.text, projectPath]);
+
+  // [[links]]: lista a pasta do arquivo e a de cada caminho relativo explícito
+  useEffect(() => {
+    if (!doc.path) return;
+    const here = dirname(doc.path);
+    void loadDir(here);
+    for (const m of doc.text.matchAll(/\[\[([^\]|#]+)/g)) if (m[1].includes('/')) void loadDir(dirname(joinPath(here, m[1])));
+  }, [doc.path, doc.text, loadDir]);
 
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];
   const user = useMemo(() => new Set(result?.defined ?? []), [result]);
-  const libs = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
+  const libIds = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
 
   // depois de inserir uma célula: seleciona e abre a edição
   useEffect(() => {
@@ -113,9 +123,8 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   };
 
   const openNote = (target: string) => {
-    const name = decodeURIComponent(target.split('#')[0]);
-    const f = files.find((x) => basename(x.path).startsWith(name + '.'));
-    if (f) void openFile(f.path); else set({ status: `Nota "${name}" não encontrada no cofre` });
+    const f = resolveLink(target, doc.path);
+    if (f) void openFile(f); else set({ status: `Arquivo não encontrado: ${decodeURIComponent(target.split('#')[0])}` });
   };
 
   const commitText = (it: Extract<OutlineItem, { kind: 'text' }>, value: string) => {
@@ -207,7 +216,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
 
   return (
     <>
-      <aside className={s.left}>
+      <LeftPanel doc={doc} className={s.left}>
         <PanelHeader title="Estrutura do caderno" aside={items.length} />
         <div className={s.list}>
           {items.map((it) => (
@@ -218,10 +227,18 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
         </div>
         <PanelHeader title="Bibliotecas em uso" />
         <div className={s.list}>
-          {libs.map((l) => <Row key={l}>{l}</Row>)}
+          {libIds.map((id) => {
+            const info = result?.libs?.find((l) => l.id === id);
+            return (
+              <div key={id} title={info ? displayPath(info.path) : undefined}>
+                <Row>{info?.nome ?? id}<span className={s.muted}>{info ? `v${info.versao} · ${info.origem}` : 'não encontrada'}</span></Row>
+                {info?.duplicate && <div className={s.libWarn}>{info.duplicate}</div>}
+              </div>
+            );
+          })}
           <Row>Nativas <span className={s.muted}>sempre carregada</span></Row>
         </div>
-      </aside>
+      </LeftPanel>
 
       <main className={s.center}>
         <div className={s.workspace}>
@@ -238,10 +255,14 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
                   onClick={() => { setSelStart(it.start); setEditing({ kind: 'text', start: it.start }); }} title="Clique para editar">
                   <Markdown remarkPlugins={[remarkGfm]} urlTransform={urlTransform}
                     components={{
-                      a: ({ href, children }) => (
-                        <a href={href} target="_blank" rel="noreferrer"
-                          onClick={(e) => { e.stopPropagation(); if (href?.startsWith('prisma:')) { e.preventDefault(); openNote(href.slice(7)); } }}>{children}</a>
-                      ),
+                      a: ({ href, children }) => {
+                        const internal = href?.startsWith('prisma:');
+                        const broken = internal && !resolveLink(href!.slice(7), doc.path);
+                        return (
+                          <a href={href} target="_blank" rel="noreferrer" className={broken ? s.brokenLink : undefined} title={broken ? 'Arquivo não encontrado' : undefined}
+                            onClick={(e) => { e.stopPropagation(); if (internal) { e.preventDefault(); openNote(href!.slice(7)); } }}>{children}</a>
+                        );
+                      },
                     }}>
                     {wiki(it.raw)}
                   </Markdown>

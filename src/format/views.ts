@@ -2,12 +2,39 @@
 import type { DocType } from '../constants';
 import { lines, type BlockSegment, type PrismaDoc } from './doc';
 
-export function docType(path: string): DocType | null {
-  if (path.endsWith('.caderno.md')) return 'caderno';
-  if (path.endsWith('.folha.md')) return 'folha';
-  if (path.endsWith('.lib.md')) return 'lib';
-  if (path.endsWith('.tex')) return 'tex';
-  return null;
+/** Valor de `tipo` no cabeçalho (ADENDO 01, A1). */
+export type Tipo = 'caderno' | 'folha' | 'biblioteca' | 'modelo' | 'projeto' | 'tex';
+
+export const EXT_TIPO: Record<string, Tipo> = { prsm: 'caderno', prsf: 'folha', prsl: 'biblioteca', prst: 'modelo', prsp: 'projeto', tex: 'tex' };
+export const TIPO_EXT: Record<Tipo, string> = { caderno: 'prsm', folha: 'prsf', biblioteca: 'prsl', modelo: 'prst', projeto: 'prsp', tex: 'tex' };
+/** Editor que abre cada tipo. Modelo abre no editor do tipo-base (modelo_de). */
+export const TIPO_EDITOR: Partial<Record<Tipo, DocType>> = { caderno: 'caderno', folha: 'folha', biblioteca: 'lib', tex: 'tex' };
+export const EDITOR_TIPO: Record<DocType, Tipo> = { caderno: 'caderno', folha: 'folha', lib: 'biblioteca', tex: 'tex' };
+
+export const extOf = (path: string) => (/\.([^./\\]+)$/.exec(path)?.[1] ?? '').toLowerCase();
+/** Tipo pela extensão (para recentes, árvore e diálogos); null se não for do Prisma nem .tex. */
+export const tipoByExt = (path: string): Tipo | null => EXT_TIPO[extOf(path)] ?? null;
+
+export type Opened = { tipo: Tipo; editor: DocType | null; warnings: string[]; readOnly: boolean };
+export const SUPPORTED_FORMAT = 1;
+
+/** Decide como abrir: o `tipo` do cabeçalho manda; se não bater com a extensão, avisa (A1). */
+export function classifyFile(path: string, meta: Record<string, unknown>): Opened {
+  const ext = extOf(path);
+  const byExt = EXT_TIPO[ext];
+  if (byExt === 'tex') return { tipo: 'tex', editor: 'tex', warnings: [], readOnly: false };
+  const warnings: string[] = [];
+  const head = typeof meta.tipo === 'string' && meta.tipo in TIPO_EXT ? (meta.tipo as Tipo) : undefined;
+  const tipo = head ?? byExt;
+  if (!tipo) return { tipo: 'caderno', editor: null, warnings: [`Arquivo sem tipo reconhecido: .${ext}`], readOnly: true };
+  if (head && byExt && head !== byExt) warnings.push(`O tipo do arquivo (${head}) não corresponde à extensão .${ext}.`);
+  if (!head) warnings.push('Cabeçalho sem o campo tipo; aberto pela extensão.');
+  let readOnly = false;
+  const v = Number(meta.versao_formato);
+  if (meta.versao_formato === undefined) warnings.push('Cabeçalho sem versao_formato.');
+  else if (v > SUPPORTED_FORMAT) { readOnly = true; warnings.push(`Formato versão ${v} é mais novo que o suportado (${SUPPORTED_FORMAT}): aberto em somente leitura.`); }
+  const base = tipo === 'modelo' && typeof meta.modelo_de === 'string' ? (meta.modelo_de as Tipo) : tipo;
+  return { tipo, editor: TIPO_EDITOR[base] ?? null, warnings, readOnly };
 }
 
 const TAGS: Record<string, string> = { funcao: 'FUN', calc: 'CAL', verificar: 'VER', grafico: 'GRA', tabela: 'TAB', texto: 'TXT', teste: 'TST' };

@@ -18,7 +18,9 @@ export type LineResult = {
   limit?: string;
   writes?: string;
 };
-export type EvalResult = { blocks: Record<string, LineResult[]>; libErrors: string[]; defined: string[]; ms: number };
+/** Biblioteca efetivamente usada (preenchido fora do worker, por engine/run.ts). */
+export type LibInfo = { id: string; nome: string; versao: string; origem: 'projeto' | 'usuário' | 'fábrica'; path: string; duplicate?: string };
+export type EvalResult = { blocks: Record<string, LineResult[]>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[] };
 
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const isUnit = (v: unknown): v is Unit => math.isUnit(v);

@@ -109,3 +109,13 @@
 .btn { padding: 0 14px; border: 1px solid var(--border-strong); background: var(--hover-btn); color: var(--text-btn); }
 .btn:hover { background: var(--hover-strong); }
 .btnPrimary { padding: 0 16px; border: none; background: var(--accent); color: var(--text-strong); font-weight: 600; }
+
+.rb:disabled { opacity: 0.45; cursor: default; }
+.rb:disabled:hover { background: transparent; border-color: transparent; }
+
+/* diálogo de escolha */
+.choice { width: 440px; margin-top: 60px; }
+.choiceBody { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.choiceBody p { margin: 0; color: var(--text); font-size: 13px; line-height: 1.5; }
+.choiceInput { height: 30px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text); outline: none; }
+.choiceInput:focus { outline: 2px solid var(--focus-ring); outline-offset: 1px; }

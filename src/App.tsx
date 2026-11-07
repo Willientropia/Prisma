@@ -1,22 +1,22 @@
 import { useEffect } from 'react';
-import { AppMenu, DocTabs, ExportDialog, Ribbon, StatusBar, TitleBar } from './shell/Shell';
+import { AppMenu, ChoiceDialog, DocTabs, ExportDialog, Ribbon, StatusBar, TitleBar } from './shell/Shell';
 import { Home } from './home/Home';
 import { Caderno } from './editors/caderno/Caderno';
 import { Folha } from './editors/folha/Folha';
 import { Latex } from './editors/latex/Latex';
 import { Biblioteca } from './editors/biblioteca/Biblioteca';
 import { byShortcut, shortcutOf } from './commands/registry';
-import { useApp, activeDoc } from './store/app';
+import { useWorkspace, activeDoc } from './store/workspace';
 import s from './App.module.css';
 
 const EDITORS = { caderno: Caderno, folha: Folha, tex: Latex, lib: Biblioteca };
 
 export function App() {
-  const doc = useApp(activeDoc);
+  const doc = useWorkspace(activeDoc);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { useApp.getState().set({ menuOpen: false, exportOpen: false }); return; }
+      if (e.key === 'Escape') { useWorkspace.getState().set({ menuOpen: false, exportOpen: false }); return; }
       const cmd = byShortcut(shortcutOf(e));
       if (cmd?.run) { e.preventDefault(); cmd.run(); }
     };
@@ -34,6 +34,7 @@ export function App() {
       <StatusBar />
       <AppMenu />
       <ExportDialog />
+      <ChoiceDialog />
     </div>
   );
 }

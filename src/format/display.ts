@@ -1,7 +1,45 @@
-// Formatação para a tela (o arquivo guarda ponto decimal e unidades em ASCII).
-export const basename = (p: string) => p.slice(p.lastIndexOf('/') + 1);
-export const dirname = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
-export const vaultName = (root: string) => root.split(/[\\/]/).filter(Boolean).pop() ?? root;
+// Caminhos e formatação para a tela. Internamente todo caminho usa "/" (o Windows aceita);
+// na tela, caminho com letra de unidade aparece com "\".
+
+export const normPath = (p: string) => p.replace(/\\/g, '/');
+export const basename = (p: string) => normPath(p).replace(/\/+$/, '').split('/').pop() ?? p;
+export const dirname = (p: string) => { const n = normPath(p); const i = n.lastIndexOf('/'); return i < 0 ? '' : i === 0 ? '/' : n.slice(0, i); };
+/** Nome sem extensão: "cabos-cc.prsm" -> "cabos-cc". */
+export const stem = (p: string) => basename(p).replace(/\.[^.]+$/, '');
+
+/** Junta pasta + caminho relativo, resolvendo "." e "..". */
+export function joinPath(dir: string, rel: string): string {
+  const r = normPath(rel);
+  if (/^([A-Za-z]:)?\//.test(r)) return r; // já é absoluto
+  const out = normPath(dir).split('/');
+  for (const part of r.split('/')) {
+    if (part === '' || part === '.') continue;
+    if (part === '..') { if (out.length > 1) out.pop(); } else out.push(part);
+  }
+  return out.join('/');
+}
+
+/** Caminho de `to` relativo à pasta `fromDir`, com "/" (o que vai no .prsp). Outra unidade: devolve absoluto. */
+export function relativePath(fromDir: string, to: string): string {
+  const a = normPath(fromDir).split('/').filter(Boolean);
+  const b = normPath(to).split('/').filter(Boolean);
+  if (a[0]?.toLowerCase() !== b[0]?.toLowerCase()) return normPath(to);
+  let i = 0;
+  while (i < a.length && i < b.length && a[i].toLowerCase() === b[i].toLowerCase()) i++;
+  return [...Array(a.length - i).fill('..'), ...b.slice(i)].join('/');
+}
+
+export const samePath = (a: string, b: string) => normPath(a).toLowerCase() === normPath(b).toLowerCase();
+
+export const displayPath = (p: string) => (/^[A-Za-z]:\//.test(normPath(p)) ? normPath(p).replace(/\//g, '\\') : normPath(p));
+
+/** "...\Sol Tech\Boa Vista\calculos": as últimas pastas, com o caminho completo no title. */
+export function shortenPath(p: string, keep = 3): string {
+  const d = displayPath(p);
+  const sep = d.includes('\\') ? '\\' : '/';
+  const parts = d.split(sep).filter(Boolean);
+  return parts.length <= keep ? d : `...${sep}${parts.slice(-keep).join(sep)}`;
+}
 
 export const fmtNumber = (v: string, sep = ',') => v.replace('.', sep);
 export const fmtUnit = (u: string) => u.replace(/\^2\b/g, '²').replace(/\^3\b/g, '³').replace(/\*/g, '·');

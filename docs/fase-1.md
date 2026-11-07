@@ -1,6 +1,8 @@
 # Fase 1: cofre e formato
 
-## Plano
+> **Substituída pelo [ADENDO 01](../ADENDO-01-formatos-e-arquivos.md).** O cofre saiu; o Prisma passou a funcionar como programa CAD (extensões `.prsm/.prsf/.prsl/.prst/.prsp`, projetos, pastas do sistema, instalador). O que foi feito para o adendo está na seção "Refeito pelo ADENDO 01" no fim deste arquivo. O texto abaixo dela é o histórico da primeira versão.
+
+## Plano (versão original, com cofre)
 
 - **Rust** (`src-tauri/src/vault.rs`, `recent.rs`): abrir pasta como cofre, criar `.prisma/config.yaml`, `.prisma/cache/` e `.gitignore` quando faltarem, listar arquivos, ler e gravar (gravação atômica: arquivo temporário e renomear), observar mudanças com `notify` e emitir `vault-changed`. Caminhos sempre relativos ao cofre, sem `..`. Recentes em `recent.json` no diretório de dados do app.
 - **Seletor de pasta:** `tauri-plugin-dialog`.
@@ -31,3 +33,37 @@ Os exemplos da seção 3 abrem e salvam sem alterar nenhum byte; editar o arquiv
 - Markdown renderizado (remark) e `[[links]]` clicáveis: fase 2.
 - Gerar `#id` quando o bloco não tem: só faz sentido quando o app editar blocos (fase 2), para não mudar bytes ao salvar.
 - Versão das bibliotecas em uso no caderno: fase 4.
+
+---
+
+## Refeito pelo ADENDO 01
+
+### O que mudou no código
+
+- **Rust:** `vault.rs` saiu. Entraram:
+  - `files.rs`: ler, gravar (atômico), `stat`, listar pasta, renomear, observar os arquivos abertos (observa a pasta de cada um, sem recursão). Só aceita caminho absoluto com extensão conhecida (`.prs*`, `.tex`, `.bib`, `.cls`, `.sty`, `.md`, `.txt`, `.gitignore`).
+  - `project.rs`: criar projeto (pasta, `.prsp`, `calculos/`, `memorial/`, `bibliotecas/`, `.gitignore` com `.prisma-cache/`).
+  - `appdata.rs`: `%APPDATA%\Prisma\config.yaml`, `%LOCALAPPDATA%\Prisma\recuperacao\`, `Documentos\Prisma\{Bibliotecas,Modelos,Skills}` na primeira execução, bibliotecas do usuário e de fábrica, arquivos passados na linha de comando.
+  - `recent.rs`: `%APPDATA%\Prisma\recentes.json`, caminho absoluto, tipo e data, até 30.
+  - `lib.rs`: `tauri-plugin-single-instance` (segundo duplo clique vira aba na janela aberta), `tauri-plugin-opener` (Mostrar no Explorador).
+- **`tauri.conf.json`:** alvo `nsis`, `installMode: perMachine`, as 5 associações de arquivo, recursos `bibliotecas/` e `modelos/` de fábrica.
+- **Formato:** `normalizeForSave` (UTF-8 sem BOM, LF), BOM aceito na leitura, `classifyFile` (tipo pelo cabeçalho; aviso se não bate com a extensão; `versao_formato` maior que 1 abre em somente leitura; modelo abre no editor do `modelo_de`).
+- **Exemplos:** `resources/exemplos/Usina Boa Vista/` (projeto `.prsp`, `calculos/*.prsm|.prsf`, `memorial/memorial.tex`), `resources/bibliotecas/eletrica.prsl` (fábrica), `resources/modelos/dimensionamento-fv.prst`.
+- **Store:** `store/app.ts` virou `store/workspace.ts` (`useWorkspace`): abas, documento ativo, projeto ativo opcional. `src/vault/` virou `src/platform.ts`.
+- **Interface:** tela inicial sem cofre (5 cards com Projeto, Abrir... e Abrir projeto..., arquivos recuperados, projeto aberto, recentes com projetos e "não encontrado"); guias Estrutura/Projeto no painel esquerdo; árvore do projeto com menu de contexto; título com o projeto; caminho do arquivo na barra de status; diálogo Salvar / Não salvar / Cancelar; Inserir/Atualizar resultados desabilitados fora de projeto; `[[links]]` resolvidos pela regra do A6.
+
+### Critérios A9
+
+| # | Critério | Situação |
+|---|---|---|
+| 1 | Instalador NSIS em `C:\Program Files\Prisma\`, menu Iniciar | `npm run tauri build` gera `src-tauri/target/release/bundle/nsis/Prisma_0.1.0_x64-setup.exe` (3 MB, `perMachine`). Não instalado nesta máquina. |
+| 2 | Duplo clique abre em aba; segundo duplo clique na mesma janela | Implementado (argumentos + single-instance). Só dá para testar instalado. |
+| 3 | 5 tipos no Explorador com descrição e ícone | Configurado em `fileAssociations`. Só dá para testar instalado. |
+| 4 | Novo → `Caderno1` sem gravar; Ctrl+S abre Salvar como com `.prsm` | Verificado no navegador. |
+| 5 | Abrir e salvar os 5 exemplos sem mudar bytes | Teste automático (`doc.test.ts`) e no navegador. |
+| 6 | CRLF + BOM abre e salva em UTF-8 sem BOM com LF | Teste automático e no navegador. |
+| 7 | Criar projeto gera `.prsp`, pastas e `.gitignore`; mover a pasta continua funcionando | Criação: teste Rust e navegador. Portabilidade: o `.prsp` só guarda caminhos relativos; não testado movendo a pasta no Explorador. |
+| 8 | Arquivo apagado aparece "não encontrado" no painel Projeto | Verificado no navegador. |
+| 9 | Tela inicial sem "cofre"; recentes com projetos e arquivos sumidos | Verificado no navegador. |
+| 10 | Primeira execução cria `Documentos\Prisma\...` | Implementado em `appdata::first_run`. Não executado nesta máquina. |
+| 11 | `.prsm` legível no Bloco de Notas | Os arquivos são texto UTF-8 (YAML + Markdown); ver `resources/exemplos`. |

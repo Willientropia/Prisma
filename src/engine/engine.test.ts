@@ -8,7 +8,8 @@ import { math } from './math';
 import { blocks, lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
 
-const EX = join(import.meta.dirname, '../../resources/exemplos');
+const RES = join(import.meta.dirname, '../../resources');
+const EX = join(RES, 'exemplos/Usina Boa Vista');
 const ELETRICA: LibInput = { id: 'eletrica', constants: [['ρ_cu', '0.0179 Ω*mm^2/m'], ['α_cu', '0.00393 1/°C']], functions: ['ΔV(L, I, S) := 2*ρ_cu*L*I/S'] };
 
 /** Avalia linhas soltas num bloco calc e devolve o resultado de cada uma. */
@@ -120,11 +121,11 @@ describe('funções nativas', () => {
   });
 });
 
-// Lê o arquivo de exemplo como o app lê: blocos em ordem, bibliotecas do cofre.
+// Lê o arquivo de exemplo como o app lê: blocos em ordem, biblioteca de fábrica.
 function inputFrom(rel: string, order: (b: ReturnType<typeof blocks>) => ReturnType<typeof blocks> = (b) => b): EvalInput {
   const doc = parse(readFileSync(join(EX, rel), 'utf8'));
   const bs: BlockInput[] = order(blocks(doc)).map((b) => ({ key: b.id ?? '', type: b.type, lines: lines(b.body) }));
-  const lib = parse(readFileSync(join(EX, 'bibliotecas/eletrica.lib.md'), 'utf8'));
+  const lib = parse(readFileSync(join(RES, 'bibliotecas/eletrica.prsl'), 'utf8'));
   const constants = Object.entries(lib.meta.constantes as object).map(([k, x]) => [k, String(x)] as [string, string]);
   const functions = blocks(lib).filter((b) => b.type === 'funcao').flatMap((b) => lines(b.body));
   return { libs: [{ id: 'eletrica', constants, functions }], blocks: bs };
@@ -132,14 +133,14 @@ function inputFrom(rel: string, order: (b: ReturnType<typeof blocks>) => ReturnT
 
 describe('exemplos da seção 3', () => {
   it('cabos-cc: 1,79 V, 0,45 % e APROVADO', () => {
-    const r = evaluate(inputFrom('Sol Tech/Boa Vista/cabos-cc.caderno.md'));
+    const r = evaluate(inputFrom('calculos/cabos-cc.prsm'));
     expect(r.libErrors).toEqual([]);
     expect(r.blocks.trecho.filter((l) => l.kind === 'eval').map((l) => l.text)).toEqual(['1,79 V', '0,45 %']);
     expect(r.blocks.criterio[0]).toMatchObject({ status: 'ok', text: '0,45 %', limit: '1 %' });
   });
 
   it('string-3 (ordem y, x): 3,29 V, 0,82 %', () => {
-    const r = evaluate(inputFrom('Sol Tech/Boa Vista/string-3.folha.md', byPosition));
+    const r = evaluate(inputFrom('calculos/string-3.prsf', byPosition));
     expect(r.blocks.resultado.map((l) => l.text)).toEqual(['3,29 V', '0,82 %']);
   });
 });

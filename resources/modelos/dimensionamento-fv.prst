@@ -1,0 +1,23 @@
+---
+tipo: modelo
+modelo_de: caderno
+nome: Dimensionamento FV
+descricao: Da fatura do cliente ao número de módulos e strings.
+cor: "#6d28d9"
+campos:
+  - {id: cliente, rotulo: Cliente}
+  - {id: potencia, rotulo: Potência instalada, unidade: kWp}
+bibliotecas: [eletrica]
+versao_formato: 1
+---
+
+# Dimensionamento FV: {{cliente}}
+
+Potência instalada prevista: {{potencia}} kWp.
+
+```calc {#geracao}
+P := {{potencia}} kWp
+HSP := 5.4 h/dia
+PR := 0.8
+P*HSP*PR*30 dia = ? kWh
+```

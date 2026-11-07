@@ -28,7 +28,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,6 +40,64 @@
     ],
     "android": {
       "debugApplicationIdSuffix": ".debug"
-    }
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "perMachine"
+      }
+    },
+    "resources": {
+      "../resources/bibliotecas/": "bibliotecas/",
+      "../resources/modelos/": "modelos/"
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "prsm"
+        ],
+        "name": "Caderno Prisma",
+        "description": "Caderno Prisma",
+        "mimeType": "application/x-prisma-caderno",
+        "role": "Editor"
+      },
+      {
+        "ext": [
+          "prsf"
+        ],
+        "name": "Folha livre Prisma",
+        "description": "Folha livre Prisma",
+        "mimeType": "application/x-prisma-folha",
+        "role": "Editor"
+      },
+      {
+        "ext": [
+          "prsl"
+        ],
+        "name": "Biblioteca Prisma",
+        "description": "Biblioteca Prisma",
+        "mimeType": "application/x-prisma-biblioteca",
+        "role": "Editor"
+      },
+      {
+        "ext": [
+          "prst"
+        ],
+        "name": "Modelo Prisma",
+        "description": "Modelo Prisma",
+        "mimeType": "application/x-prisma-modelo",
+        "role": "Editor"
+      },
+      {
+        "ext": [
+          "prsp"
+        ],
+        "name": "Projeto Prisma",
+        "description": "Projeto Prisma",
+        "mimeType": "application/x-prisma-projeto",
+        "role": "Editor"
+      }
+    ],
+    "publisher": "Prisma",
+    "shortDescription": "Cálculo de engenharia"
   }
 }

@@ -49,10 +49,15 @@
 .linkBtn { border: none; background: none; padding: 0; color: var(--accent-light); font: 12px Inter, sans-serif; }
 .linkBtn:hover { color: var(--accent-lighter); }
 
-.tree { border: 1px solid var(--border-soft); border-radius: 6px; overflow: hidden; background: var(--bg-tabsbar); padding: 4px 0; }
-.treeDir, .treeFile, .treeOther { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 28px; padding-right: 14px; font: 12px Inter, sans-serif; }
-.treeDir { color: var(--text-muted); }
-.treeFile { border: none; background: transparent; color: var(--text); text-align: left; }
-.treeFile:hover { background: var(--hover); }
-.treeOther { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
-.treeWhen { margin-left: auto; color: var(--text-muted); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.secondary {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 14px;
+  border: 1px solid var(--border-strong); border-radius: 4px; background: var(--hover-btn); color: var(--text-btn); font: 500 12px Inter, sans-serif;
+}
+.secondary:hover { background: var(--hover-strong); }
+.key { margin-left: 6px; color: var(--text-muted); font-size: 11px; font-weight: 400; }
+.trow.missing, .trow.missing > .tname { color: var(--text-dim); }
+.recRow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; padding: 6px 14px; background: var(--bg-tabsbar); border-top: 1px solid var(--border-subtle); }
+.recRow:first-child { border-top: none; }
+.dim { color: var(--text-muted); }
+.projectBox { border: 1px solid var(--border-soft); border-radius: 6px; background: var(--bg-panel); }

@@ -3,8 +3,9 @@ import { parse as parseYaml } from 'yaml';
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
 import { blocks, parse, type BlockSegment } from '../../format/doc';
 import { assignments, byPosition } from '../../format/views';
-import { basename, fmtNumber, fmtUnit } from '../../format/display';
-import { useApp, type OpenDoc } from '../../store/app';
+import { fmtNumber, fmtUnit } from '../../format/display';
+import { LeftPanel } from '../../shell/ProjectPanel';
+import { useWorkspace, type OpenDoc } from '../../store/workspace';
 import { run } from '../../commands/registry';
 import { blockLabel, blockProps } from '../caderno/Caderno';
 import s from '../editors.module.css';
@@ -20,20 +21,20 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [selId, setSel] = useState<string | null>(null);
   const sel = regions.find((b) => (b.id ?? b.raw) === selId);
   const [msg, setMsg] = useState(`${regions.length} regiões lidas de ${doc.name}.`);
-  const { files, openFile, set } = useApp();
+  const { openFile, set, resolveLink } = useWorkspace();
 
   const command = (v: string) => {
     const ir = /^ir\s+(.+)$/.exec(v);
     if (v === 'calcular') run('calc.tudo');
     else if (ir) {
-      const f = files.find((x) => basename(x.path).startsWith(ir[1]));
-      if (f) void openFile(f.path); else setMsg(`Arquivo "${ir[1]}" não encontrado no cofre.`);
+      const f = resolveLink(ir[1].trim(), doc.path); // mesma regra dos [[links]]: projeto, mesma pasta, caminho relativo
+      if (f) void openFile(f); else setMsg(`Arquivo "${ir[1]}" não encontrado.`);
     } else set({ status: `Comando "${v}": ainda não disponível nesta versão` });
   };
 
   return (
     <>
-      <aside className={s.left}>
+      <LeftPanel doc={doc} className={s.left}>
         <PanelHeader title="Variáveis" aside={vars.length} />
         <div className={s.varsHead}><span>Nome</span><span>Valor</span><span>Unid.</span></div>
         {vars.map((v, i) => <div key={v.name + i} className={s.varsRow}><span>{v.name}</span><span>{fmtNumber(v.value)}</span><span>{fmtUnit(v.unit)}</span></div>)}
@@ -43,7 +44,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
           {fns.length === 0 && <div className={s.note}>Nenhuma função definida aqui.</div>}
           {fns.map((f) => <Row key={f.raw} className={s.mono}>{f.body.split(':=')[0].trim()}</Row>)}
         </div>
-      </aside>
+      </LeftPanel>
 
       <main className={s.center}>
         <div className={s.sheet} onClick={(e) => e.target === e.currentTarget && setSel(null)}>

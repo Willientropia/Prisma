@@ -1,4 +1,4 @@
-// Dados que ainda não vêm do cofre: modelos de fábrica (fase 7) e formatos de exportação (fase 6).
+// Dados que ainda não vêm de arquivos: modelos de fábrica (fase 7) e formatos de exportação (fase 6).
 
 export const MODELS: { name: string; kind: string; color: string }[] = [
   { name: 'Memorial de cálculo FV', kind: 'Documento LaTeX · ABNT', color: 'var(--type-folha)' },

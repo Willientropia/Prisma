@@ -3,10 +3,11 @@ import { PanelHeader, PropGrid, Row } from '../../components/ui';
 import { parse } from '../../format/doc';
 import { libFunctions } from '../../format/views';
 import { fmtUnit } from '../../format/display';
-import type { OpenDoc } from '../../store/app';
+import type { OpenDoc } from '../../store/workspace';
+import { LeftPanel } from '../../shell/ProjectPanel';
 import s from '../editors.module.css';
 
-// Fase 1: lê as seções ## do .lib.md. Fase 4 roda os testes e grava funções vindas do caderno.
+// Fase 1: lê as seções ## do .prsl. Fase 4 roda os testes e grava funções vindas do caderno.
 export function Biblioteca({ doc }: { doc: OpenDoc }) {
   const parsed = useMemo(() => parse(doc.text), [doc.text]);
   const fns = useMemo(() => libFunctions(parsed), [parsed]);
@@ -17,7 +18,7 @@ export function Biblioteca({ doc }: { doc: OpenDoc }) {
 
   return (
     <>
-      <aside className={s.left}>
+      <LeftPanel doc={doc} className={s.left}>
         <PanelHeader title="Funções" aside={nome} />
         <div className={s.list}>
           {fns.map((f, k) => <Row key={f.sig + k} active={f === sel} onClick={() => setI(k)} className={s.fnRow}>{f.sig}</Row>)}
@@ -27,7 +28,7 @@ export function Biblioteca({ doc }: { doc: OpenDoc }) {
           <PanelHeader title="Constantes" aside={consts.length} />
           {consts.map(([k, v]) => <div key={k} className={s.varsRow2}><span>{k}</span><span>{fmtUnit(String(v))}</span></div>)}
         </>}
-      </aside>
+      </LeftPanel>
 
       <main className={s.center}>
         {sel ? (

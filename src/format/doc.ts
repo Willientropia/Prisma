@@ -1,4 +1,4 @@
-// Parse/serialize comum a .caderno.md, .folha.md e .lib.md (SPEC 3.2 a 3.7).
+// Parse/serialize comum a .prsm, .prsf, .prsl, .prst e .prsp (SPEC 3.2 a 3.7, ADENDO 01).
 // Todo segmento guarda o texto original: serialize(parse(t)) === t, byte a byte.
 import { parse as parseYaml } from 'yaml';
 
@@ -28,17 +28,23 @@ export function lines(text: string): string[] {
 const strip = (l: string) => l.replace(/\r?\n$/, '');
 const OPEN = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 
-export function parse(text: string): PrismaDoc {
+/** Como os arquivos Prisma são gravados (ADENDO 01, A1): UTF-8 sem BOM e quebra LF. */
+export const normalizeForSave = (text: string) => text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+
+export function parse(input: string): PrismaDoc {
+  // BOM (de outro editor) fica guardado no frontmatterRaw: serialize devolve os mesmos bytes
+  const bom = input.startsWith('﻿') ? '﻿' : '';
+  const text = input.slice(bom.length);
   const ls = lines(text);
   let i = 0;
-  let frontmatterRaw = '';
+  let frontmatterRaw = bom;
   let meta: Record<string, unknown> = {};
   let metaError: string | undefined;
 
   if (ls.length && strip(ls[0]) === '---') {
     const end = ls.findIndex((l, k) => k > 0 && /^(---|\.\.\.)\s*$/.test(strip(l)));
     if (end > 0) {
-      frontmatterRaw = ls.slice(0, end + 1).join('');
+      frontmatterRaw = bom + ls.slice(0, end + 1).join('');
       try {
         const v = parseYaml(ls.slice(1, end).join(''));
         if (v && typeof v === 'object' && !Array.isArray(v)) meta = v as Record<string, unknown>;

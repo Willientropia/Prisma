@@ -1,0 +1,33 @@
+/* guias do painel esquerdo: 32 px, mesmo estilo das guias do ribbon */
+.tabs { display: flex; flex: none; padding: 0 6px; background: var(--bg-tabsbar); border-bottom: 1px solid var(--border); }
+.tab, .tabOn {
+  height: 32px; padding: 0 14px; border: none; border-bottom: 2px solid transparent;
+  background: transparent; color: var(--text-3); font: 500 12px Inter, sans-serif;
+}
+.tab:hover { color: var(--text-strong); }
+.tabOn { border-bottom-color: var(--accent-light); background: var(--bg-ribbon); color: var(--text-strong); font-weight: 600; }
+
+.tree { flex: 1; padding: 4px 0 10px; min-height: 120px; }
+.group {
+  display: flex; align-items: center; justify-content: space-between; min-height: 28px; padding: 0 10px;
+  font: 600 11px Inter, sans-serif; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-muted);
+}
+.count { font-weight: 400; letter-spacing: 0; }
+.empty { padding: 0 10px 4px 20px; min-height: 24px; color: var(--text-muted); }
+.item, .missing {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 28px; padding: 0 10px 0 20px;
+  border: none; background: transparent; color: var(--text-2); font: 12px Inter, sans-serif; text-align: left;
+}
+.item:hover, .missing:hover { background: var(--hover); }
+.missing { color: var(--error-text); }
+.name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notFound { margin-left: auto; font-size: 11px; }
+.hint { padding: 10px 10px 0; color: var(--text-muted); font-size: 11px; }
+
+.backdrop { position: fixed; inset: 0; z-index: 7; }
+.menu {
+  position: fixed; z-index: 8; min-width: 220px; padding: 6px 0;
+  background: var(--bg-raised); border: 1px solid var(--border-strong); box-shadow: var(--shadow-menu);
+}
+.mi { display: flex; align-items: center; width: 100%; min-height: 30px; padding: 0 14px; border: none; background: transparent; color: var(--text); font: 12px Inter, sans-serif; text-align: left; }
+.mi:hover { background: var(--selection); }

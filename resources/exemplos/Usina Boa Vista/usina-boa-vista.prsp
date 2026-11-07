@@ -1,0 +1,14 @@
+---
+tipo: projeto
+nome: Usina Boa Vista
+cliente: Sol Tech
+arquivos:
+  - calculos/cabos-cc.prsm
+  - calculos/string-3.prsf
+documentos:
+  - memorial/memorial.tex
+bibliotecas: []
+versao_formato: 1
+---
+
+Usina de 75 kWp em Boa Vista. Cálculos de cabos CC e o memorial para a concessionária.

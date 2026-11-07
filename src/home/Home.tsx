@@ -1,12 +1,14 @@
+import { useEffect } from 'react';
 import { Icon, type IconName } from '../components/Icon';
 import { Row, Tag, Wordmark } from '../components/ui';
-import { TYPE_INFO, type DocType } from '../constants';
+import { APP_NAME, TIPO_INFO, TYPE_INFO, type DocType } from '../constants';
 import { MODELS } from '../mock';
-import { useApp } from '../store/app';
+import { OPEN_FILTERS, useWorkspace } from '../store/workspace';
+import { platform } from '../platform';
 import { run } from '../commands/registry';
-import { docType } from '../format/views';
-import { basename, dirname, fmtWhen, vaultName } from '../format/display';
-import type { Entry } from '../vault';
+import { basename, dirname, displayPath, fmtWhen, shortenPath } from '../format/display';
+import { ProjectTree } from '../shell/ProjectPanel';
+import type { RecentItem } from '../platform';
 import s from './home.module.css';
 
 const NEW: { type: DocType; name: string; desc: string; icon: IconName }[] = [
@@ -17,17 +19,28 @@ const NEW: { type: DocType; name: string; desc: string; icon: IconName }[] = [
 ];
 
 export function Home() {
-  const { vaultRoot, files, recents, openVault, openFile, newDoc } = useApp();
-  const firstLib = files.find((f) => docType(f.path) === 'lib');
+  const ws = useWorkspace();
+  const { recents, recovered, project, paths } = ws;
+  // relê os recentes ao mostrar a tela inicial: arquivo apagado fora do app aparece como "não encontrado"
+  useEffect(() => { void platform.recent().then((r) => useWorkspace.setState({ recents: r })).catch(() => {}); }, []);
+
+  const openRecent = async (r: RecentItem) => {
+    if (r.modified !== null) return void ws.openPaths([r.path]);
+    const a = await ws.ask({
+      title: APP_NAME, message: `${basename(r.path)} não foi encontrado em ${displayPath(dirname(r.path))}.`,
+      buttons: [{ id: 'remove', label: 'Remover da lista', primary: true }, { id: 'cancel', label: 'Cancelar' }],
+    });
+    if (a.id === 'remove') await ws.removeRecent(r.path);
+  };
 
   return (
     <div className={s.home}>
       <nav aria-label="Início" className={s.nav}>
         <div className={s.brand}><Wordmark size={28} fontSize={18} /></div>
         <Row height={34} active>Início</Row>
-        <Row height={34} onClick={() => void openVault()}>Abrir</Row>
+        <Row height={34} onClick={() => run('app.abrir')}>Abrir</Row>
         <Row height={34} onClick={() => run('home.modelos')}>Modelos</Row>
-        <Row height={34} onClick={() => (firstLib ? void openFile(firstLib.path) : run('lib.novaFuncao'))}>Bibliotecas</Row>
+        <Row height={34} onClick={() => void platform.openDialog(OPEN_FILTERS.filter((f) => f.extensions[0] === 'prsl'), true, paths?.libraries).then(ws.openPaths)}>Bibliotecas</Row>
         <Row height={34} onClick={() => run('app.gerarSkill')}>Formato e skills</Row>
         <div className={s.grow} />
         <Row height={34} onClick={() => run('app.configuracoes')}>Configurações</Row>
@@ -37,14 +50,49 @@ export function Home() {
           <h2 className={s.h2}>Novo</h2>
           <div className={s.cards}>
             {NEW.map((n) => (
-              <button key={n.type} type="button" className={s.card} onClick={() => void newDoc(n.type)}>
+              <button key={n.type} type="button" className={s.card} onClick={() => ws.newDoc(n.type)}>
                 <span className={s.cardIcon} style={{ background: TYPE_INFO[n.type].color }}><Icon name={n.icon} size={22} stroke={1.7} /></span>
                 <span className={s.cardName}>{n.name}</span>
                 <span className={s.cardDesc}>{n.desc}</span>
               </button>
             ))}
+            <button type="button" className={s.card} onClick={() => void ws.newProject()}>
+              <span className={s.cardIcon} style={{ background: 'var(--type-inicio)' }}><Icon name="tree" size={22} stroke={1.7} /></span>
+              <span className={s.cardName}>Projeto</span>
+              <span className={s.cardDesc}>Agrupa arquivos que se referenciam, como um memorial e seus cálculos.</span>
+            </button>
+          </div>
+          <div className={s.actions}>
+            <button type="button" className={s.secondary} onClick={() => run('app.abrir')}><Icon name="open" size={16} stroke={1.7} />Abrir...<span className={s.key}>Ctrl+O</span></button>
+            <button type="button" className={s.secondary} onClick={() => run('app.abrirProjeto')}><Icon name="tree" size={16} stroke={1.7} />Abrir projeto...</button>
           </div>
         </section>
+
+        {recovered.length > 0 && (
+          <section aria-label="Arquivos recuperados" className={s.section}>
+            <h2 className={s.h2}>Arquivos recuperados</h2>
+            <div className={s.table}>
+              {recovered.map((r) => (
+                <div key={r.name} className={s.recRow}>
+                  <span className={s.tname}>{r.name.replace(/^\d+-/, '')}</span>
+                  <span className={s.dim}>{fmtWhen(r.modified)}</span>
+                  <button type="button" className={s.secondary} onClick={() => void ws.openRecovered(r.name)}>Abrir</button>
+                  <button type="button" className={s.secondary} onClick={() => void ws.discardRecovered(r.name)}>Descartar</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {project && (
+          <section aria-label="Projeto" className={s.section}>
+            <div className={s.sectionHead}>
+              <h2 className={s.h2}>Projeto: {project.nome}</h2>
+              <button type="button" className={s.linkBtn} onClick={ws.closeProject}>Fechar projeto</button>
+            </div>
+            <div className={s.projectBox} title={displayPath(project.path)}><ProjectTree /></div>
+          </section>
+        )}
 
         <section aria-label="Recentes" className={s.section}>
           <div className={s.sectionHead}><h2 className={s.h2}>Recentes</h2>{recents.length > 0 && <span className={s.hint}>Clique para abrir</span>}</div>
@@ -52,28 +100,17 @@ export function Home() {
             <div className={s.table}>
               <div className={s.thead}><span>Nome</span><span>Tipo</span><span>Pasta</span><span>Modificado</span></div>
               {recents.map((r) => {
-                const t = docType(r.path);
-                const folder = [vaultName(r.vault), ...dirname(r.path).split('/')].filter(Boolean).join(' / ');
+                const info = TIPO_INFO[r.tipo];
+                const missing = r.modified === null;
                 return (
-                  <button key={r.vault + r.path} type="button" className={s.trow} title={`${r.vault} / ${r.path}`} onClick={() => void openFile(r.path, r.vault)}>
-                    <span className={s.tname}>{t && <Tag color={TYPE_INFO[t].color}>{TYPE_INFO[t].tag}</Tag>}{basename(r.path)}</span>
-                    <span>{t ? TYPE_INFO[t].label : ''}</span><span>{folder}</span><span>{r.modified === null ? 'não encontrado' : fmtWhen(r.modified)}</span>
+                  <button key={r.path} type="button" className={missing ? `${s.trow} ${s.missing}` : s.trow} onClick={() => void openRecent(r)}>
+                    <span className={s.tname}>{info && <Tag color={missing ? undefined : info.color}>{info.tag}</Tag>}{basename(r.path)}</span>
+                    <span>{info?.label ?? r.tipo}</span>
+                    <span title={displayPath(dirname(r.path))}>{shortenPath(dirname(r.path))}</span>
+                    <span>{missing ? 'não encontrado' : fmtWhen(r.modified)}</span>
                   </button>
                 );
               })}
-            </div>
-          )}
-        </section>
-
-        <section aria-label="Cofre" className={s.section}>
-          <div className={s.sectionHead}>
-            <h2 className={s.h2}>{vaultRoot ? `Cofre: ${vaultName(vaultRoot)}` : 'Cofre'}</h2>
-            {vaultRoot && <button type="button" className={s.linkBtn} onClick={() => void openVault()}>Trocar cofre</button>}
-          </div>
-          {vaultRoot ? <Tree files={files} onOpen={(p) => void openFile(p)} /> : (
-            <div className={s.empty}>
-              Os arquivos ficam numa pasta comum, em texto puro.
-              <button type="button" className={s.primary} onClick={() => void openVault()}><Icon name="open" size={16} stroke={1.7} />Abrir pasta como cofre</button>
             </div>
           )}
         </section>
@@ -94,31 +131,4 @@ export function Home() {
       </main>
     </div>
   );
-}
-
-/** Árvore do cofre: pastas como cabeçalhos recuados, arquivos do Prisma clicáveis. */
-function Tree({ files, onOpen }: { files: Entry[]; onOpen: (path: string) => void }) {
-  if (files.length === 0) return <div className={s.empty}>Pasta vazia. Crie um arquivo em Novo.</div>;
-  const rows: JSX.Element[] = [];
-  let prev: string[] = [];
-  const key = (p: string) => `${dirname(p)}/\u0000${basename(p)}`.toLowerCase(); // arquivos antes das subpastas
-  for (const f of [...files].sort((a, b) => (key(a.path) < key(b.path) ? -1 : 1))) {
-    const parts = f.path.split('/');
-    const dirs = parts.slice(0, -1);
-    let same = 0;
-    while (same < dirs.length && dirs[same] === prev[same]) same++;
-    for (let d = same; d < dirs.length; d++)
-      rows.push(<div key={dirs.slice(0, d + 1).join('/') + '/'} className={s.treeDir} style={{ paddingLeft: 14 + d * 18 }}><Icon name="open" size={14} stroke={1.7} />{dirs[d]}</div>);
-    prev = dirs;
-    const t = docType(f.path);
-    const pad = { paddingLeft: 14 + dirs.length * 18 };
-    rows.push(t ? (
-      <button key={f.path} type="button" className={s.treeFile} style={pad} onClick={() => onOpen(f.path)}>
-        <Tag color={TYPE_INFO[t].color}>{TYPE_INFO[t].tag}</Tag>{parts[parts.length - 1]}<span className={s.treeWhen}>{fmtWhen(f.modified)}</span>
-      </button>
-    ) : (
-      <div key={f.path} className={s.treeOther} style={pad}>{parts[parts.length - 1]}</div>
-    ));
-  }
-  return <div className={s.tree}>{rows}</div>;
 }

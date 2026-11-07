@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon, type IconName } from '../components/Icon';
 import { Logo, Tag } from '../components/ui';
 import { APP_NAME, APP_YEAR, TYPE_INFO } from '../constants';
 import { all, run } from '../commands/registry';
-import { useApp, activeDoc } from '../store/app';
+import { useWorkspace, activeDoc } from '../store/workspace';
 import { FORMATS } from '../mock';
+import { displayPath, shortenPath } from '../format/display';
 import { RIBBONS, RIBBON_TABS } from './ribbons';
 import s from './shell.module.css';
 
@@ -13,9 +14,10 @@ const QUICK: [string, IconName][] = [['app.novo', 'file'], ['app.abrir', 'open']
 const label = (id: string) => all().find((c) => c.id === id)?.label ?? id;
 
 export function TitleBar() {
-  const doc = useApp(activeDoc);
-  const menuOpen = useApp((x) => x.menuOpen);
-  const set = useApp((x) => x.set);
+  const doc = useWorkspace(activeDoc);
+  const project = useWorkspace((x) => x.project);
+  const menuOpen = useWorkspace((x) => x.menuOpen);
+  const set = useWorkspace((x) => x.set);
   const [query, setQuery] = useState('');
 
   const submit = () => {
@@ -36,7 +38,11 @@ export function TitleBar() {
           </button>
         ))}
       </div>
-      <div className={s.title}>{APP_NAME} {APP_YEAR} <span className={s.sep}>|</span> {doc ? doc.name : 'Início'}</div>
+      <div className={s.title}>
+        {APP_NAME} {APP_YEAR}
+        {project && <> <span className={s.sep}>|</span> {project.nome}</>}
+        {' '}<span className={s.sep}>|</span> {doc ? doc.name : 'Início'}
+      </div>
       <label className={s.search}>
         <Icon name="zoom" size={14} stroke={2} />
         <span className="sr-only">Buscar</span>
@@ -50,10 +56,12 @@ export function TitleBar() {
 }
 
 export function Ribbon() {
-  const doc = useApp(activeDoc);
-  const tab = useApp((x) => x.ribbonTab);
-  const set = useApp((x) => x.set);
+  const doc = useWorkspace(activeDoc);
+  const tab = useWorkspace((x) => x.ribbonTab);
+  const set = useWorkspace((x) => x.set);
+  useWorkspace((x) => x.project); // botões que dependem do projeto mudam de estado
   if (!doc) return null;
+  const cmds = all();
   return (
     <div className={s.ribbon}>
       <div role="tablist" aria-label="Guias da faixa de opções" className={s.rtabs}>
@@ -66,11 +74,15 @@ export function Ribbon() {
         {RIBBONS[doc.type][tab].map((g) => (
           <div key={g.title} className={s.group}>
             <div className={s.groupBtns}>
-              {g.buttons.map((b) => (
-                <button key={b.cmd + b.label} type="button" className={s.rb} onClick={() => run(b.cmd)}>
-                  <Icon name={b.icon} size={24} stroke={1.6} className={s.rbIcon} /><span>{b.label}</span>
-                </button>
-              ))}
+              {g.buttons.map((b) => {
+                const c = cmds.find((x) => x.id === b.cmd);
+                const off = !!c?.enabled && !c.enabled();
+                return (
+                  <button key={b.cmd + b.label} type="button" className={s.rb} disabled={off} title={off ? c?.hint : undefined} onClick={() => run(b.cmd)}>
+                    <Icon name={b.icon} size={24} stroke={1.6} className={s.rbIcon} /><span>{b.label}</span>
+                  </button>
+                );
+              })}
             </div>
             <div className={s.groupTitle}>{g.title}</div>
           </div>
@@ -81,15 +93,15 @@ export function Ribbon() {
 }
 
 export function DocTabs() {
-  const { openDocs, active, activate } = useApp();
+  const { openDocs, active, activate } = useWorkspace();
   return (
     <div className={s.dtabs} role="tablist" aria-label="Documentos abertos">
       <button type="button" role="tab" aria-selected={active === 'home'} className={active === 'home' ? s.dtOn : s.dt} onClick={() => activate('home')}>
         <Tag color={active === 'home' ? 'var(--type-inicio)' : undefined}>INI</Tag>Início
       </button>
       {openDocs.map((d) => (
-        <button key={d.id} type="button" role="tab" title={d.id} aria-selected={active === d.id} className={active === d.id ? s.dtOn : s.dt} onClick={() => activate(d.id)}>
-          <Tag color={active === d.id ? TYPE_INFO[d.type].color : undefined}>{TYPE_INFO[d.type].tag}</Tag>{d.name}
+        <button key={d.id} type="button" role="tab" title={d.path ? displayPath(d.path) : 'Ainda não salvo'} aria-selected={active === d.id} className={active === d.id ? s.dtOn : s.dt} onClick={() => activate(d.id)}>
+          <Tag color={active === d.id ? TYPE_INFO[d.type].color : undefined}>{TYPE_INFO[d.type].tag}</Tag>{d.name}{d.dirty ? '*' : ''}{d.readOnly ? ' (somente leitura)' : ''}
         </button>
       ))}
     </div>
@@ -97,10 +109,11 @@ export function DocTabs() {
 }
 
 export function StatusBar() {
-  const status = useApp((x) => x.status);
-  const units = useApp((x) => x.config.unidades);
-  const result = useApp((x) => x.results[x.active]);
-  const calculating = useApp((x) => x.calculating);
+  const status = useWorkspace((x) => x.status);
+  const units = useWorkspace((x) => x.config.unidades);
+  const result = useWorkspace((x) => x.results[x.active]);
+  const calculating = useWorkspace((x) => x.calculating);
+  const doc = useWorkspace(activeDoc);
   let summary = 'Pronto';
   if (calculating) summary = 'Calculando';
   else if (result) {
@@ -115,6 +128,7 @@ export function StatusBar() {
     <footer className={s.statusbar}>
       <span className={s.statusMsg}>{status ?? summary}</span>
       <span className={s.spacer} />
+      {doc && <span title={doc.path ? displayPath(doc.path) : undefined}>{doc.path ? shortenPath(doc.path) : 'Não salvo'}</span>}
       <span>Unidades: {typeof units === 'string' ? units : 'SI'}</span><span>Cálculo: automático</span><span>Zoom 100 %</span>
     </footer>
   );
@@ -126,7 +140,7 @@ const MENU: [string, IconName][] = [
 ];
 
 export function AppMenu() {
-  const { menuOpen, set } = useApp();
+  const { menuOpen, set } = useWorkspace();
   if (!menuOpen) return null;
   const cmds = all();
   return (
@@ -148,7 +162,7 @@ export function AppMenu() {
 }
 
 export function ExportDialog() {
-  const { exportOpen, set } = useApp();
+  const { exportOpen, set } = useWorkspace();
   const [fmt, setFmt] = useState('pdf');
   if (!exportOpen) return null;
   const close = () => set({ exportOpen: false });
@@ -178,6 +192,41 @@ export function ExportDialog() {
         <div className={s.dlgFoot}>
           <button type="button" className={s.btn} onClick={close}>Cancelar</button>
           <button type="button" className={s.btnPrimary} onClick={close}>Exportar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Diálogo de escolha (Salvar / Não salvar / Cancelar, renomear...). Esc escolhe o último botão. */
+export function ChoiceDialog() {
+  const dialog = useWorkspace((x) => x.dialog);
+  const [value, setValue] = useState('');
+  const first = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!dialog) return;
+    setValue(dialog.input ?? '');
+    setTimeout(() => (dialog.input !== undefined ? input.current?.select() : first.current?.focus()), 0);
+  }, [dialog]);
+  if (!dialog) return null;
+  const pick = (id: string) => dialog.resolve({ id, value });
+  const cancel = dialog.buttons[dialog.buttons.length - 1].id;
+  return (
+    <div className={s.overlay} onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); pick(cancel); } }}>
+      <div role="alertdialog" aria-modal="true" aria-label={dialog.title} className={`${s.dialog} ${s.choice}`}>
+        <div className={s.dlgHead}><span>{dialog.title}</span></div>
+        <div className={s.choiceBody}>
+          <p>{dialog.message}</p>
+          {dialog.input !== undefined && (
+            <input ref={input} className={s.choiceInput} value={value} aria-label={dialog.message}
+              onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && pick(dialog.buttons[0].id)} />
+          )}
+        </div>
+        <div className={s.dlgFoot}>
+          {dialog.buttons.map((b, i) => (
+            <button key={b.id} ref={i === 0 ? first : undefined} type="button" className={b.primary ? s.btnPrimary : s.btn} onClick={() => pick(b.id)}>{b.label}</button>
+          ))}
         </div>
       </div>
     </div>
