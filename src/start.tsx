@@ -5,6 +5,7 @@ import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/global.css';
 import './commands/app';
+import './commands/library';
 import { App } from './App';
 import { RECOVERY_MS, useWorkspace } from './store/workspace';
 import { platform } from './platform';

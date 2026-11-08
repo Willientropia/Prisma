@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AppMenu, ChoiceDialog, DocTabs, ExportDialog, Ribbon, StatusBar, TitleBar } from './shell/Shell';
+import { AppMenu, ChoiceDialog, DocTabs, ExportDialog, FunctionSearch, Ribbon, StatusBar, TitleBar } from './shell/Shell';
 import { Home } from './home/Home';
 import { Caderno } from './editors/caderno/Caderno';
 import { Folha } from './editors/folha/Folha';
@@ -16,7 +16,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { useWorkspace.getState().set({ menuOpen: false, exportOpen: false }); return; }
+      if (e.key === 'Escape') { useWorkspace.getState().set({ menuOpen: false, exportOpen: false, fnSearchOpen: false }); return; }
       const cmd = byShortcut(shortcutOf(e));
       if (cmd?.run) { e.preventDefault(); cmd.run(); }
     };
@@ -36,6 +36,7 @@ export function App() {
       <AppMenu />
       <ExportDialog />
       <ChoiceDialog />
+      <FunctionSearch />
     </div>
   );
 }

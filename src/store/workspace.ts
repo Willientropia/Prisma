@@ -4,7 +4,7 @@ import { parse as parseYaml, parseDocument } from 'yaml';
 import { APP_NAME, type DocType } from '../constants';
 import { lines, normalizeForSave, parse, serialize } from '../format/doc';
 import { classifyFile, EDITOR_TIPO, extOf, TIPO_EXT, tipoByExt, type Tipo } from '../format/views';
-import { basename, dirname, joinPath, relativePath, samePath, stem } from '../format/display';
+import { basename, dirname, joinPath, normPath, relativePath, samePath, stem } from '../format/display';
 import { platform, type AppPaths, type Recovered, type RecentItem, type Filter } from '../platform';
 import type { RibbonTab } from '../shell/ribbons';
 import type { EvalResult } from '../engine/evaluate';
@@ -18,6 +18,7 @@ export type OpenDoc = {
   text: string;
   dirty: boolean;
   readOnly: boolean;
+  factory?: boolean; // arquivo de fábrica (recursos do programa): nunca é gravado
   recovery?: string; // arquivo em %LOCALAPPDATA%\Prisma\recuperacao
   addToProject?: boolean; // criado por "Novo arquivo no projeto": entra no .prsp ao salvar
 };
@@ -26,7 +27,8 @@ export type ProjectList = 'arquivos' | 'documentos' | 'bibliotecas';
 export type Project = { path: string; dir: string; nome: string; lists: Record<ProjectList, string[]>; exists: Record<string, boolean> };
 
 export type DialogButton = { id: string; label: string; primary?: boolean };
-export type DialogSpec = { title: string; message: string; buttons: DialogButton[]; input?: string };
+/** compare: definição antiga e nova lado a lado (Salvar na biblioteca, Fase 4). */
+export type DialogSpec = { title: string; message: string; buttons: DialogButton[]; input?: string; compare?: { before: string; after: string } };
 type OpenDialogState = DialogSpec & { resolve: (r: { id: string; value: string }) => void };
 
 type State = {
@@ -41,6 +43,8 @@ type State = {
   ribbonTab: RibbonTab;
   menuOpen: boolean;
   exportOpen: boolean;
+  fnSearchOpen: boolean; // busca de função (Ctrl+K, Inserir função)
+  libsVersion: number; // sobe a cada gravação de biblioteca (rótulos de função do caderno se atualizam)
   showSource: boolean; // Exibir > Código-fonte (ADENDO 02, B1)
   status: string | null;
   results: Record<string, EvalResult>;
@@ -72,6 +76,7 @@ type State = {
   openProject: (path: string) => Promise<void>;
   refreshProject: () => Promise<void>;
   closeProject: () => void;
+  isFactory: (path: string | null) => boolean; // arquivo dos recursos do programa (somente leitura)
   projectPathOf: (path: string | null) => string | null; // relativo, se o arquivo está no projeto
   projectAdd: (paths: string[]) => Promise<void>;
   projectAddExisting: () => Promise<void>;
@@ -81,6 +86,9 @@ type State = {
   projectRename: (rel: string) => Promise<void>;
 };
 
+/** Bibliotecas e modelos de fábrica nunca são gravados (Fase 4): as funções do usuário vão para a extensão. */
+export const FACTORY_MSG = 'Arquivo de fábrica: somente leitura. Suas funções vão para a extensão em Documentos';
+export const FACTORY_COPY_MSG = 'Arquivo de fábrica é somente leitura. Salve uma cópia.';
 export const AUTOSAVE_MS = 2000;
 export const RECOVERY_MS = 30000;
 const autosave = new Map<string, number>();
@@ -161,6 +169,8 @@ export const useWorkspace = create<State>((set, get) => {
     results: {},
     calculating: false,
     dialog: null,
+    fnSearchOpen: false,
+    libsVersion: 0,
     set: (patch) => set(patch),
 
     ask: (d) => new Promise((resolve) => set({ dialog: { ...d, resolve: (r) => { set({ dialog: null }); resolve(r); } } })),
@@ -175,6 +185,8 @@ export const useWorkspace = create<State>((set, get) => {
       set({ paths, config, recents, recovered });
       await get().openPaths(await platform.startupFiles().catch(() => []));
     },
+
+    isFactory: (path) => { const f = get().paths?.factory; return !!f && !!path && normPath(path).toLowerCase().startsWith(`${normPath(f).toLowerCase()}/`); },
 
     activate: (id) => set({ active: id, ribbonTab: 'inicio', menuOpen: false, status: null }),
 
@@ -204,7 +216,8 @@ export const useWorkspace = create<State>((set, get) => {
         const c = classifyFile(path, meta);
         if (c.tipo === 'projeto') return get().openProject(path);
         if (!c.editor) return say(c.warnings.join(' ') || `Não sei abrir ${basename(path)}`);
-        const doc: OpenDoc = { id: path, path, name: basename(path), ext, type: c.editor, text, dirty: false, readOnly: c.readOnly };
+        const factory = get().isFactory(path);
+        const doc: OpenDoc = { id: path, path, name: basename(path), ext, type: c.editor, text, dirty: false, readOnly: c.readOnly || factory, factory };
         set({ openDocs: [...get().openDocs, doc] });
         get().activate(path);
         if (c.warnings.length) say(c.warnings.join(' '));
@@ -224,7 +237,7 @@ export const useWorkspace = create<State>((set, get) => {
     edit: (id, start, end, insert) => {
       const doc = get().openDocs.find((d) => d.id === id);
       if (!doc) return;
-      if (doc.readOnly) return say('Arquivo em somente leitura (formato mais novo que esta versão do Prisma)');
+      if (doc.readOnly) return say(doc.factory ? FACTORY_MSG : 'Arquivo em somente leitura (formato mais novo que esta versão do Prisma)');
       updateDoc(id, { text: doc.text.slice(0, start) + insert + doc.text.slice(end), dirty: true });
       clearTimeout(autosave.get(id));
       if (doc.path) autosave.set(id, window.setTimeout(() => void get().save(id, true), AUTOSAVE_MS)); // só arquivo que já existe em disco
@@ -233,6 +246,8 @@ export const useWorkspace = create<State>((set, get) => {
     save: async (id, quiet) => {
       const doc = get().openDocs.find((d) => d.id === (id ?? get().active));
       if (!doc) return false;
+      // de fábrica: nunca grava ali; oferece salvar uma cópia em Documentos (F4-07c)
+      if (doc.factory) { const ok = await get().saveAs(doc.id); if (!ok) say(FACTORY_COPY_MSG); return ok; }
       if (doc.readOnly) { say('Arquivo em somente leitura'); return false; }
       if (!doc.path) return get().saveAs(doc.id);
       clearTimeout(autosave.get(doc.id));
@@ -254,12 +269,16 @@ export const useWorkspace = create<State>((set, get) => {
       const doc = get().openDocs.find((d) => d.id === (id ?? get().active));
       if (!doc) return false;
       const { project, paths } = get();
-      const baseDir = doc.path ? dirname(doc.path) : project ? joinPath(project.dir, SUBDIR[doc.type]) : paths?.docs ?? '';
+      // cópia de arquivo de fábrica: sugere Documentos/Prisma/Bibliotecas (ou /Modelos)
+      const factoryDir = doc.ext === 'prst' ? paths?.models : paths?.libraries;
+      const baseDir = doc.factory && factoryDir ? factoryDir : doc.path ? dirname(doc.path) : project ? joinPath(project.dir, SUBDIR[doc.type]) : paths?.docs ?? '';
+      if (doc.factory) say(FACTORY_COPY_MSG);
       const fileName = doc.path ? doc.name : `${doc.name}.${doc.ext}`;
       const tipo = tipoByExt(`x.${doc.ext}`) ?? 'caderno';
       let path = await platform.saveDialog(`${baseDir}/${fileName}`, [{ name: `${LABEL[tipo]} (*.${doc.ext})`, extensions: [doc.ext] }]);
       if (!path) return false;
       if (extOf(path) !== doc.ext) path = `${path}.${doc.ext}`;
+      if (get().isFactory(path)) { say(FACTORY_COPY_MSG); return false; } // nunca nos recursos do programa
       const text = isPrisma(doc.ext) ? normalizeForSave(serialize(parse(doc.text))) : doc.text;
       try {
         await platform.write(path, text);
@@ -268,7 +287,7 @@ export const useWorkspace = create<State>((set, get) => {
         return false;
       }
       if (doc.recovery) void platform.recoveryDelete(doc.recovery);
-      const fresh: OpenDoc = { ...doc, id: path, path, name: basename(path), text, dirty: false, recovery: undefined, addToProject: undefined };
+      const fresh: OpenDoc = { ...doc, id: path, path, name: basename(path), text, dirty: false, recovery: undefined, addToProject: undefined, factory: false, readOnly: doc.factory ? false : doc.readOnly };
       const { [doc.id]: res, ...results } = get().results;
       set({
         openDocs: get().openDocs.map((d) => (d.id === doc.id ? fresh : d)),

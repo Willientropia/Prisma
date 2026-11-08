@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { run } from 'node:test';
 
 const ROOT = join(import.meta.dirname, '..');
-const sh = (cmd: string) => { const r = spawnSync(cmd, { cwd: ROOT, shell: true, stdio: 'inherit' }); if (r.status !== 0) throw new Error(`falhou: ${cmd}`); };
+const sh = (cmd: string, env: NodeJS.ProcessEnv = process.env) => { const r = spawnSync(cmd, { cwd: ROOT, shell: true, stdio: 'inherit', env }); if (r.status !== 0) throw new Error(`falhou: ${cmd}`); };
 
 // 1. msedgedriver da mesma versão do Edge/WebView2 instalado
 const edge = spawnSync('powershell', ['-NoProfile', '-Command', '(Get-Item "${env:ProgramFiles(x86)}\\Microsoft\\Edge\\Application\\msedge.exe").VersionInfo.ProductVersion'], { encoding: 'utf8' }).stdout.trim();
@@ -28,8 +28,18 @@ const tauriDriver = join(process.env.USERPROFILE ?? '', '.cargo/bin/tauri-driver
 if (!existsSync(tauriDriver)) sh('cargo install tauri-driver --locked');
 
 // 2. binário de depuração (PRISMA_HOME só vale nele)
-if (!process.argv.includes('--sem-build')) sh('npx tauri build --debug --no-bundle');
-const app = join(ROOT, 'src-tauri/target/debug/prisma.exe');
+// O Prisma é instância única (pelo identificador): com outro Prisma aberto, o app de teste entregaria os
+// arquivos a ele e sairia. Melhor parar com uma mensagem clara.
+const others = spawnSync('powershell', ['-NoProfile', '-Command', '(Get-Process prisma -ErrorAction SilentlyContinue | ForEach-Object { $_.Path }) -join "|"'], { encoding: 'utf8' }).stdout.trim();
+if (others) {
+  console.error(`test:app: feche o Prisma que está aberto antes (${others}). Com ele aberto, a instância única desviaria os testes para a janela dele.`);
+  process.exit(1);
+}
+
+// pasta de compilação própria: não disputa o prisma.exe com um `npm run tauri dev` aberto
+const TARGET = join(ROOT, 'src-tauri/target/app-test');
+if (!process.argv.includes('--sem-build')) sh('npx tauri build --debug --no-bundle', { ...process.env, CARGO_TARGET_DIR: TARGET });
+const app = join(TARGET, 'debug/prisma.exe');
 
 // 3. pasta de teste com os arquivos de exemplo
 const home = mkdtempSync(join(tmpdir(), 'prisma-app-'));
@@ -50,7 +60,8 @@ try {
   await stream.toArray(); // consome o fluxo até o fim
 } finally {
   td.kill();
-  spawnSync('taskkill', ['/F', '/IM', 'prisma.exe'], { stdio: 'ignore' }); // segunda instância, se sobrou
+  // segunda instância, se sobrou: só o executável do teste, nunca o app que a pessoa tem aberto
+  spawnSync('powershell', ['-NoProfile', '-Command', `Get-Process prisma -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq '${app.replace(/'/g, "''")}' } | Stop-Process -Force`], { stdio: 'ignore' });
   rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 500 });
 }
 mkdirSync(join(ROOT, 'test-results'), { recursive: true });

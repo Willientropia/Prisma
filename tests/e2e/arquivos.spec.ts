@@ -17,10 +17,18 @@ test('[A9-04] Novo > Caderno cria Caderno1 sem gravar; Ctrl+S abre Salvar como c
   expect(await dev(page).read(`${DOCS}/Prisma/teste-queda.prsm`)).toMatch(/^---\ntipo: caderno\n/);
 });
 
-const SAMPLES = [`${CALC}/cabos-cc.prsm`, `${CALC}/string-3.prsf`, 'C:/Program Files/Prisma/bibliotecas/eletrica.prsl', 'C:/Program Files/Prisma/modelos/dimensionamento-fv.prst'];
+// .prsl e .prst de fábrica são somente leitura (Fase 4): a ida e volta roda sobre CÓPIAS numa pasta
+// gravável, como qualquer arquivo do usuário. O original de fábrica é coberto pelo F4-07b.
+const COPIES = `${DOCS}/copias`;
+const FACTORY_SAMPLES: Record<string, string> = {
+  [`${COPIES}/eletrica.prsl`]: 'C:/Program Files/Prisma/bibliotecas/eletrica.prsl',
+  [`${COPIES}/dimensionamento-fv.prst`]: 'C:/Program Files/Prisma/modelos/dimensionamento-fv.prst',
+};
+const SAMPLES = [`${CALC}/cabos-cc.prsm`, `${CALC}/string-3.prsf`, ...Object.keys(FACTORY_SAMPLES)];
 for (const file of SAMPLES) {
   test(`[A9-05] abrir e salvar sem editar devolve bytes idênticos: ${file.split('/').pop()}`, async ({ page }) => {
     await start(page);
+    if (FACTORY_SAMPLES[file]) await dev(page).write(file, (await dev(page).read(FACTORY_SAMPLES[file]))!);
     const before = await dev(page).read(file);
     await dev(page).open(file);
     await expect(tabs(page).last()).toContainText(file.split('/').pop()!);

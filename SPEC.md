@@ -131,7 +131,7 @@ Tudo que não é bloco é **texto de justificativa** (Markdown normal: títulos,
 
 | Bloco | Uso |
 |---|---|
-| ` ```funcao {#id nome=ΔV salvar=eletrica} ` | Define uma função. `salvar=` grava ou atualiza na biblioteca indicada |
+| ` ```funcao {#id nome=ΔV salvar=eletrica} ` | Define uma função. `salvar=` indica a biblioteca de destino; a gravação é explícita (botão "Salvar na biblioteca" ou clique no aviso do rótulo), nunca a cada Ctrl+S. Quando a definição difere da biblioteca, o rótulo mostra `FUNÇÃO · <ID> · ALTERADA, NÃO SALVA NA BIBLIOTECA` |
 | ` ```calc {#id} ` | Atribuições e avaliações, uma por linha |
 | ` ```verificar {#id} ` | Condição que vira APROVADO / REPROVADO |
 | ` ```grafico {#id} ` | Gráfico (YAML dentro do bloco) |

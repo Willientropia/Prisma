@@ -1,7 +1,8 @@
 // Liga o documento aberto + bibliotecas ao worker, e guarda o resultado na store.
 import { lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
-import { joinPath, stem } from '../format/display';
+import { joinPath } from '../format/display';
+import { resolveLibraries, type LibFile, type LibOrigin } from '../format/library';
 import { useWorkspace } from '../store/workspace';
 import { platform } from '../platform';
 import { evaluateAsync, LINE_LIMIT_MS, stop } from './client';
@@ -12,42 +13,35 @@ import { DEFAULT_FORMAT, parseMargin } from './format';
 export const blockKey = (segIndex: number) => `b${segIndex}`;
 
 /**
- * Busca de bibliotecas (ADENDO 01, A3): 1) do projeto, se o arquivo está num projeto aberto;
- * 2) Documentos\Prisma\Bibliotecas; 3) de fábrica. Mesmo id em dois lugares: vence o primeiro, com aviso.
+ * Arquivos de biblioteca na ordem de busca (ADENDO 01, A3): 1) do projeto, se o arquivo está num projeto
+ * aberto; 2) Documentos/Prisma/Bibliotecas (inclui as extensões <id>.usuario.prsl); 3) de fábrica.
  */
-async function loadLibs(ids: string[], inProject: boolean, errors: string[]): Promise<{ libs: LibInput[]; info: LibInfo[] }> {
-  if (!ids.length) return { libs: [], info: [] };
+export async function readLibraryFiles(inProject: boolean, errors: string[] = []): Promise<LibFile[]> {
   const { project } = useWorkspace.getState();
   const { user, factory } = await platform.libraryFiles().catch(() => ({ user: [] as string[], factory: [] as string[] }));
-  const candidates: { path: string; origem: LibInfo['origem'] }[] = [
+  const candidates: { path: string; origem: LibOrigin }[] = [
     ...(inProject && project ? project.lists.bibliotecas.map((r) => ({ path: joinPath(project.dir, r), origem: 'projeto' as const })) : []),
     ...user.map((path) => ({ path, origem: 'usuário' as const })),
     ...factory.map((path) => ({ path, origem: 'fábrica' as const })),
   ];
-  const byId = new Map<string, { path: string; origem: LibInfo['origem']; text: string }[]>();
+  const out: LibFile[] = [];
   for (const c of candidates) {
-    try {
-      const text = await platform.read(c.path);
-      const id = String(parse(text).meta.id ?? stem(c.path));
-      byId.set(id, [...(byId.get(id) ?? []), { ...c, text }]);
-    } catch (e) {
-      errors.push(`Erro ao ler ${c.path}: ${e instanceof Error ? e.message : String(e)}`);
-    }
+    try { out.push({ ...c, text: await platform.read(c.path) }); } catch (e) { errors.push(`Erro ao ler ${c.path}: ${e instanceof Error ? e.message : String(e)}`); }
   }
+  return out;
+}
+
+/** Bibliotecas importadas pelo documento, já com a extensão de cada uma mesclada (Fase 4). */
+async function loadLibs(ids: string[], inProject: boolean, errors: string[]): Promise<{ libs: LibInput[]; info: LibInfo[] }> {
+  if (!ids.length) return { libs: [], info: [] };
+  const all = resolveLibraries(await readLibraryFiles(inProject, errors));
   const libs: LibInput[] = [];
   const info: LibInfo[] = [];
   for (const id of ids) {
-    const found = byId.get(id);
-    if (!found) { errors.push(`Biblioteca não encontrada: ${id}`); continue; }
-    const lib = parse(found[0].text);
-    const c = lib.meta.constantes;
-    const constants = c && typeof c === 'object' ? Object.entries(c).map(([k, v]) => [k, String(v)] as [string, string]) : [];
-    const functions = lib.segments.flatMap((s) => (s.kind === 'block' && s.type === 'funcao' ? lines(s.body) : []));
-    libs.push({ id, constants, functions });
-    info.push({
-      id, nome: String(lib.meta.nome ?? id), versao: String(lib.meta.versao ?? ''), origem: found[0].origem, path: found[0].path,
-      duplicate: found[1] ? `Também existe em ${found[1].origem}: ${found[1].path}` : undefined,
-    });
+    const lib = all.get(id);
+    if (!lib) { errors.push(`Biblioteca não encontrada: ${id}`); continue; }
+    libs.push({ id, constants: lib.constants, functions: lib.defs });
+    info.push({ id, nome: lib.nome, versao: lib.versao, origem: lib.origem, path: lib.path, duplicate: lib.duplicate, readOnly: lib.readOnly, extension: lib.extension && { path: lib.extension.path, versao: lib.extension.versao } });
   }
   return { libs, info };
 }

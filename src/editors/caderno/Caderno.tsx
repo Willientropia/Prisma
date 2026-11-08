@@ -1,12 +1,15 @@
 // Caderno (SPEC 7.1 + ADENDO 02, B7): texto formatado (TipTap) e blocos com uma linha MathLive por linha de cálculo.
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Icon } from '../../components/Icon';
+import { fnName, resolveLibraries, sameDef } from '../../format/library';
+import { readLibraryFiles } from '../../engine/run';
 import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
 import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
 import { outline, type OutlineItem } from '../../format/views';
 import { dirname, displayPath } from '../../format/display';
 import { recalc } from '../../engine/run';
 import type { LineResult } from '../../engine/evaluate';
-import { register } from '../../commands/registry';
+import { register, run } from '../../commands/registry';
 import { useWorkspace, type OpenDoc } from '../../store/workspace';
 import { LeftPanel } from '../../shell/ProjectPanel';
 import { MathLine, isKnownUnit } from '../../math/MathLine';
@@ -99,6 +102,21 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   const ctx = useMemo(() => ({ defined: new Set(result?.defined ?? []), isUnit: isKnownUnit }), [result]);
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];
   const libIds = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
+
+  // Fase 4: salvar= só grava no clique; o rótulo avisa quando a função do caderno difere da biblioteca
+  const libsVersion = useWorkspace((x) => x.libsVersion);
+  const [libDefs, setLibDefs] = useState<Map<string, string[]> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void readLibraryFiles(!!projectPath).then((files) => { if (alive) setLibDefs(new Map([...resolveLibraries(files)].map(([id, l]) => [id, l.defs]))); });
+    return () => { alive = false; };
+  }, [doc.text, projectPath, libsVersion]);
+  /** true quando alguma definição do bloco não está igual na biblioteca de destino. */
+  const libState = (b: BlockSegment) => {
+    if (!libDefs) return false;
+    const defs = libDefs.get(b.attrs.salvar) ?? [];
+    return lines(b.body).map((l) => l.trim()).filter(Boolean).some((d) => !defs.some((x) => fnName(x) === fnName(d) && sameDef(x, d)));
+  };
 
   // estado atual do arquivo (a edição anterior pode ter mudado as posições)
   const fresh = () => {
@@ -198,6 +216,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     const fn = b.type === 'funcao';
     const lib = b.attrs.salvar ?? b.attrs.biblioteca;
     const label = `${blockLabel(b.type).toUpperCase()}${lib ? ` · ${lib.toUpperCase()}` : ''}`;
+    const unsaved = fn && !!b.attrs.salvar && libState(b);
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
     const selected = it === sel;
     let body: ReactNode;
@@ -219,7 +238,9 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     }
     return (
       <div key={it.key} data-start={it.start} className={[fn ? s.fnBlock : s.calcBlock, selected && s.selectedBlock].filter(Boolean).join(' ')} onMouseDown={() => setSelStart(it.start)}>
-        <span className={fn ? s.fnLabel : s.blockLabel}>{label}</span>
+        {unsaved
+          ? <button type="button" className={s.fnLabelWarn} title="Clique para salvar na biblioteca" onClick={(e) => { e.stopPropagation(); run('caderno.salvarNaBiblioteca'); }}>{label} · ALTERADA, NÃO SALVA NA BIBLIOTECA</button>
+          : <span className={fn ? s.fnLabel : s.blockLabel}>{label}</span>}
         {body}
         {selected && b.type === 'calc' && <button type="button" className={s.addLine} onClick={(e) => { e.stopPropagation(); addLine(it); }}>Adicionar linha</button>}
       </div>
@@ -270,7 +291,10 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
             const info = result?.libs?.find((l) => l.id === id);
             return (
               <div key={id} title={info ? displayPath(info.path) : undefined}>
-                <Row>{info?.nome ?? id}<span className={s.muted}>{info ? `v${info.versao} · ${info.origem}` : 'não encontrada'}</span></Row>
+                <Row className={s.libRow}><span className={s.libName}>{info?.nome ?? id}</span><span className={`${s.muted} ${s.libLine}`}>
+                  {!info ? 'não encontrada' : info.readOnly ? <><Icon name="lock" size={11} stroke={2} />{`v${info.versao} · fábrica · somente leitura`}</> : `v${info.versao} · ${info.origem}`}
+                </span></Row>
+                {info?.extension && <div className={s.libExt} title={displayPath(info.extension.path)}>+ minhas funções v{info.extension.versao}</div>}
                 {info?.duplicate && <div className={s.libWarn}>{info.duplicate}</div>}
               </div>
             );

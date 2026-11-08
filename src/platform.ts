@@ -7,7 +7,7 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { normPath } from './format/display';
 
 export type RecentItem = { path: string; tipo: string; data: number; modified: number | null };
-export type AppPaths = { docs: string; libraries: string; models: string; skills: string };
+export type AppPaths = { docs: string; libraries: string; models: string; skills: string; factory: string };
 export type Recovered = { name: string; modified: number };
 export type Filter = { name: string; extensions: string[] };
 

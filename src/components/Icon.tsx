@@ -34,6 +34,7 @@ export const ICONS = {
   clean: 'M4 20h16M7 16l9-9 3 3-9 9H7z',
   test: 'M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3',
   close: 'M6 6l12 12M18 6L6 18',
+  lock: 'M6 11h12v10H6zM8 11V7a4 4 0 018 0v4', // Fase 4: biblioteca de fábrica
   bold: 'M7 4h6a4 4 0 010 8H7zM7 12h7a4 4 0 010 8H7z',
   italic: 'M10 4h8M6 20h8M14 4l-4 16',
   heading: 'M6 4v16M18 4v16M6 12h12',

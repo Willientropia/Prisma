@@ -92,7 +92,7 @@ problems.push(...covProblems);
 if (perf.recalc == null || perf.open == null) problems.push('Desempenho não medido (testes C7-01/C7-02 não rodaram).');
 
 // resultado
-const failedIds = new Set(titles.filter((t) => !t.ok && !t.skipped).flatMap((t) => [...t.title.matchAll(/\[([A-Z][A-Z0-9]*-\d+)\]/g)].map((m) => m[1])));
+const failedIds = new Set(titles.filter((t) => !t.ok && !t.skipped).flatMap((t) => [...t.title.matchAll(/\[([A-Z][A-Z0-9]*-\d+[a-z]?)\]/g)].map((m) => m[1])));
 const prefix = (id: string) => id.slice(0, id.lastIndexOf('-'));
 const origins = new Map<string, Origin>();
 for (const r of matriz.rows) {

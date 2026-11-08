@@ -18,7 +18,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Adendo 03: testes | C9, C7 | concluída |
 | Bugs corrigidos | BUG | concluída |
 | Fase 3: folha livre | F3 | concluída |
-| Fase 4: bibliotecas | F4 | futura |
+| Fase 4: bibliotecas | F4 | concluída |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -82,11 +82,23 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F3-11 | Limite zero, negativo ou sem limite numérico (=, ≠, duas expressões variáveis): nunca ATENÇÃO | tests/golden/calculos.yaml | unit | ok |
 | F3-12 | Texto do selo "<ESTADO> · limite <limite>" no caderno e na folha | tests/e2e/caderno.spec.ts, tests/e2e/folha.spec.ts | e2e | ok |
 | F4-01 | Bibliotecas .prsl são carregadas e usadas no cálculo | tests/e2e/caderno.spec.ts | e2e | ok |
-| F4-02 | `salvar=` grava a função na biblioteca indicada | | e2e | pendente |
-| F4-03 | Função salva no caderno aparece na biblioteca e na folha | | e2e | pendente |
-| F4-04 | Os testes de eletrica.prsl passam na guia Testes | | e2e | pendente |
+| F4-02 | `salvar=<id>` grava na biblioteca certa: projeto, depois Documentos, depois extensão da de fábrica, senão pergunta onde criar | tests/e2e/biblioteca.spec.ts, src/format/library.test.ts | e2e, unit | ok |
+| F4-03 | Função salva no caderno aparece na biblioteca e na folha | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-04 | Os testes de eletrica.prsl rodam e passam na tela da biblioteca (Testes) | tests/e2e/biblioteca.spec.ts | e2e | ok |
 | F4-05 | Tela de biblioteca com assinatura, fórmula, parâmetros e testes | tests/e2e/biblioteca.spec.ts | e2e | ok |
-| F4-06 | Busca de função (Ctrl+K e "Inserir função") | | e2e | pendente |
+| F4-06 | Busca de função (Ctrl+K e "Inserir função") lista as funções das bibliotecas e insere a escolhida | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-02a | salvar=eletrica sem extensão cria eletrica.usuario.prsl em Documentos e não toca no arquivo de fábrica (hash igual) | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-02b | A função salva aparece na tela da biblioteca eletrica e funciona numa folha sem import extra | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-02c | Função com o nome de uma de fábrica: vale a da extensão; sem a extensão, volta a de fábrica | tests/e2e/biblioteca.spec.ts, src/format/library.test.ts | e2e, unit | ok |
+| F4-02d | Base atualizada com função nova: ela aparece mesmo com a extensão existindo | src/format/library.test.ts | unit | ok |
+| F4-02e | salvar=<id inexistente> abre o diálogo de criação (Projeto atual só com projeto aberto) | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-02f | Redefinir com fórmula diferente abre a comparação; Substituir sobe a versão no último número e atualiza Origem | tests/e2e/biblioteca.spec.ts, src/format/library.test.ts | e2e, unit | ok |
+| F4-07 | Na biblioteca de fábrica, Nova função, Importar e Publicar versão ficam desabilitados com a dica certa | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-07a | Biblioteca de fábrica mostra "fábrica · somente leitura" com cadeado na tela e em Bibliotecas em uso | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-07b | Ctrl+S no arquivo de fábrica original não grava nada (hash igual) e avisa "somente leitura" | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-07c | Ctrl+S no arquivo de fábrica abre "Salvar como" em Documentos/Prisma/Bibliotecas (ou /Modelos) com "Arquivo de fábrica é somente leitura. Salve uma cópia." | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-08 | Função do caderno diferente da biblioteca: rótulo "FUNÇÃO · <ID> · ALTERADA, NÃO SALVA NA BIBLIOTECA"; clicar salva; iguais, o aviso some | tests/e2e/biblioteca.spec.ts | e2e | ok |
+| F4-09 | Base + extensão não dispara o aviso de id repetido; dois arquivos independentes com o mesmo id disparam | src/format/library.test.ts | unit | ok |
 | F5-01 | O memorial de exemplo compila | | app | pendente |
 | F5-02 | Mudar S no caderno não altera o PDF até clicar em Atualizar resultados | | e2e | pendente |
 | F5-03 | Inserir resultado põe \resultado{...} no cursor com o valor em comentário | | e2e | pendente |

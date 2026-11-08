@@ -64,12 +64,14 @@ pub struct AppPaths {
     libraries: String,
     models: String,
     skills: String,
+    factory: String, // recursos do programa: bibliotecas e modelos de fábrica, somente leitura
 }
 
 #[tauri::command]
 pub fn app_paths(app: AppHandle) -> Res<AppPaths> {
     let d = docs_dir(&app)?;
-    Ok(AppPaths { docs: slash(&d), libraries: slash(&d.join("Bibliotecas")), models: slash(&d.join("Modelos")), skills: slash(&d.join("Skills")) })
+    let factory = app.path().resource_dir().map(|r| slash(&r)).unwrap_or_default();
+    Ok(AppPaths { docs: slash(&d), libraries: slash(&d.join("Bibliotecas")), models: slash(&d.join("Modelos")), skills: slash(&d.join("Skills")), factory })
 }
 
 #[tauri::command]

@@ -125,3 +125,17 @@
 .choiceBody p { margin: 0; color: var(--text); font-size: 13px; line-height: 1.5; }
 .choiceInput { height: 30px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-input); color: var(--text); outline: none; }
 .choiceInput:focus { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+/* Fase 4: comparação de definições e busca de função */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.compare > div { padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-input); overflow-x: auto; }
+.compareHead { margin-bottom: 6px; color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.fnList { display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; }
+.fnItem, .fnItemOn {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; padding: 6px 10px; border: none;
+  border-bottom: 1px solid var(--border-subtle); background: transparent; color: var(--text); text-align: left; font: 12px Inter, sans-serif;
+}
+.fnItemOn, .fnItem:hover { background: var(--bg-raised); }
+.fnLib { color: var(--text-muted); font-size: 11px; }
+.fnDesc { grid-column: 1 / -1; color: var(--text-3); font-size: 11px; }
+.fnEmpty { padding: 10px; color: var(--text-muted); font-size: 12px; }

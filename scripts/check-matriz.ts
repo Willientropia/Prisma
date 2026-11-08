@@ -7,7 +7,8 @@ import { pathToFileURL } from 'node:url';
 export type Row = { id: string; tipo: string; status: string };
 export type Result = { errors: string[]; summary: string; rows: Row[]; cited: Map<string, string[]> };
 
-const ID = /^[A-Z][A-Z0-9]*-\d+$/;
+// ID: F4-02, BUG-006, e subitens com letra, como F4-02a
+const ID = /^[A-Z][A-Z0-9]*-\d+[a-z]?$/;
 const prefix = (id: string) => id.slice(0, id.lastIndexOf('-'));
 
 function walk(dir: string): string[] {
@@ -33,10 +34,10 @@ export function checkMatriz(root: string): Result {
   const cited = new Map<string, string[]>();
   const cite = (id: string, file: string) => cited.set(id, [...(cited.get(id) ?? []), relative(root, file).replace(/\\/g, '/')]);
   const testFiles = [...walk(join(root, 'src')), ...walk(join(root, 'tests'))].filter((f) => /\.(test|spec|e2e)\.tsx?$/.test(f));
-  for (const f of testFiles) for (const m of readFileSync(f, 'utf8').matchAll(/\[([A-Z][A-Z0-9]*-\d+)\]/g)) cite(m[1], f);
-  for (const f of walk(join(root, 'tests/golden')).filter((f) => f.endsWith('.yaml'))) for (const m of readFileSync(f, 'utf8').matchAll(/^\s*-?\s*id:\s*([A-Z][A-Z0-9]*-\d+)\s*$/gm)) cite(m[1], f);
+  for (const f of testFiles) for (const m of readFileSync(f, 'utf8').matchAll(/\[([A-Z][A-Z0-9]*-\d+[a-z]?)\]/g)) cite(m[1], f);
+  for (const f of walk(join(root, 'tests/golden')).filter((f) => f.endsWith('.yaml'))) for (const m of readFileSync(f, 'utf8').matchAll(/^\s*-?\s*id:\s*([A-Z][A-Z0-9]*-\d+[a-z]?)\s*$/gm)) cite(m[1], f);
   const manual = join(root, 'tests/MANUAL.md');
-  if (existsSync(manual)) for (const m of readFileSync(manual, 'utf8').matchAll(/^#+\s*\[([A-Z][A-Z0-9]*-\d+)\]/gm)) cite(m[1], manual);
+  if (existsSync(manual)) for (const m of readFileSync(manual, 'utf8').matchAll(/^#+\s*\[([A-Z][A-Z0-9]*-\d+[a-z]?)\]/gm)) cite(m[1], manual);
 
   const known = new Set(rows.map((r) => r.id));
   for (const r of rows) {

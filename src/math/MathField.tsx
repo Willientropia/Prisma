@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { MathfieldElement, convertLatexToMarkup } from 'mathlive';
 import 'mathlive/static.css'; // estilos da renderização estática e as fontes (empacotadas, sem internet)
+import { run } from '../commands/registry';
 import { greekLatex, LATIN_TO_GREEK, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
 
 MathfieldElement.fontsDirectory = null; // as @font-face já vêm de mathlive/static.css
@@ -92,6 +93,8 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     if (g) { mf.executeCommand('deleteBackward'); insert(greekLatex(g)); }
     return true;
   }
+  // Ctrl+K: busca de função (F4-06); o MathLive não deixa o atalho chegar à janela
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { run('funcao.inserir'); return true; }
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
 
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
@@ -159,6 +162,9 @@ function releaseKeys(): Key[] {
 }
 
 /** Um campo MathLive. O valor de fora (latex) só substitui o do campo quando ele não está em edição. */
+/** Último campo matemático que teve foco: "Inserir função" (Ctrl+K) escreve nele (Fase 4, F4-06). */
+export let lastMathField: (HTMLElement & { insert(s: string, o?: object): boolean; focus(): void }) | null = null;
+
 export function MathField(props: FieldProps) {
   const host = useRef<HTMLSpanElement>(null);
   const mfRef = useRef<MathfieldElement | null>(null);
@@ -189,7 +195,7 @@ export function MathField(props: FieldProps) {
     };
     mf.addEventListener('keydown', onKey, { capture: true });
     mf.addEventListener('input', () => { state.edited = true; p.current.onInput?.(mf.value); });
-    mf.addEventListener('focusin', () => { state.edited = false; p.current.onFocus?.(); });
+    mf.addEventListener('focusin', () => { state.edited = false; lastMathField = mf as unknown as typeof lastMathField; p.current.onFocus?.(); });
     mf.addEventListener('focusout', () => {
       state.script = null;
       // sair sem editar não grava nada (B10.11) e volta a mostrar o que está no arquivo:

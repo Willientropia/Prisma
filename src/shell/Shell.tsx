@@ -7,6 +7,9 @@ import { useWorkspace, activeDoc } from '../store/workspace';
 import { FORMATS } from '../mock';
 import { displayPath, shortenPath } from '../format/display';
 import { RIBBONS, RIBBON_TABS } from './ribbons';
+import { MathMarkup, lastMathField } from '../math/MathField';
+import { toLatex } from '../format/mathlinear';
+import { allFunctions } from '../commands/library';
 import s from './shell.module.css';
 
 const QUICK: [string, IconName][] = [['app.novo', 'file'], ['app.abrir', 'open'], ['app.salvar', 'save'], ['app.desfazer', 'undo'], ['app.refazer', 'redo']];
@@ -202,6 +205,58 @@ export function ExportDialog() {
 }
 
 /** Diálogo de escolha (Salvar / Não salvar / Cancelar, renomear...). Esc escolhe o último botão. */
+/** Linear -> LaTeX para mostrar definições (nunca ":=" na tela, ADENDO 02). */
+const texOf = (linear: string) => { try { return toLatex(linear); } catch { return `\\text{${linear.replace(/[{}\\]/g, '')}}`; } };
+
+/** Busca de função (F4-06): Ctrl+K ou "Inserir função". Enter insere a chamada no último campo matemático. */
+export function FunctionSearch() {
+  const open = useWorkspace((x) => x.fnSearchOpen);
+  const set = useWorkspace((x) => x.set);
+  const [q, setQ] = useState('');
+  const [fns, setFns] = useState<Awaited<ReturnType<typeof allFunctions>>>([]);
+  const [i, setI] = useState(0);
+  useEffect(() => { if (open) { setQ(''); setI(0); void allFunctions().then(setFns); } }, [open]);
+  if (!open) return null;
+  const norm = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  const shown = fns.filter((f) => norm(`${f.sig} ${f.lib} ${f.description}`).includes(norm(q)));
+  const close = () => set({ fnSearchOpen: false });
+  const choose = (f: (typeof fns)[number] | undefined) => {
+    close();
+    if (!f) return;
+    const mf = lastMathField;
+    if (!mf || !mf.isConnected) return set({ status: 'Clique numa expressão e use Inserir função de novo para escrever a chamada' });
+    mf.focus();
+    mf.insert(texOf(f.sig), { format: 'latex', mode: 'math' });
+    set({ status: `Inserido ${f.sig} (${f.lib})` });
+  };
+  return (
+    <div className={s.overlay} onMouseDown={(e) => e.target === e.currentTarget && close()}>
+      <div role="dialog" aria-modal="true" aria-label="Inserir função" className={`${s.dialog} ${s.choice}`}>
+        <div className={s.dlgHead}><span>Inserir função</span></div>
+        <div className={s.choiceBody}>
+          <input autoFocus className={s.choiceInput} placeholder="Buscar por nome, biblioteca ou descrição" aria-label="Buscar função" value={q}
+            onChange={(e) => { setQ(e.target.value); setI(0); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') { e.preventDefault(); setI(Math.min(i + 1, shown.length - 1)); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); setI(Math.max(i - 1, 0)); }
+              if (e.key === 'Enter') choose(shown[i]);
+              if (e.key === 'Escape') { e.stopPropagation(); close(); }
+            }} />
+          <div role="listbox" aria-label="Funções" className={s.fnList}>
+            {shown.length === 0 && <div className={s.fnEmpty}>Nenhuma função encontrada</div>}
+            {shown.map((f, k) => (
+              <button key={f.lib + f.sig} type="button" role="option" aria-selected={k === i} className={k === i ? s.fnItemOn : s.fnItem} onMouseDown={(e) => e.preventDefault()} onClick={() => choose(f)}>
+                <MathMarkup latex={texOf(f.sig)} theme="dark" /><span className={s.fnLib}>{f.lib}</span>
+                {f.description && <span className={s.fnDesc}>{f.description}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ChoiceDialog() {
   const dialog = useWorkspace((x) => x.dialog);
   const [value, setValue] = useState('');
@@ -221,6 +276,12 @@ export function ChoiceDialog() {
         <div className={s.dlgHead}><span>{dialog.title}</span></div>
         <div className={s.choiceBody}>
           <p>{dialog.message}</p>
+          {dialog.compare && (
+            <div className={s.compare}>
+              <div><div className={s.compareHead}>Na biblioteca</div><MathMarkup latex={texOf(dialog.compare.before)} theme="dark" /></div>
+              <div><div className={s.compareHead}>No caderno</div><MathMarkup latex={texOf(dialog.compare.after)} theme="dark" /></div>
+            </div>
+          )}
           {dialog.input !== undefined && (
             <input ref={input} className={s.choiceInput} value={value} aria-label={dialog.message}
               onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && pick(dialog.buttons[0].id)} />
