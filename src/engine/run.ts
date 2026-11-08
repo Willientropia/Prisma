@@ -7,7 +7,7 @@ import { useWorkspace } from '../store/workspace';
 import { platform } from '../platform';
 import { evaluateAsync, LINE_LIMIT_MS, stop } from './client';
 import type { BlockInput, EvalResult, LibInfo, LibInput } from './evaluate';
-import { DEFAULT_FORMAT, parseMargin } from './format';
+import { DEFAULT_FORMAT, parseMargin, type FormatOpts } from './format';
 
 /** Chave do bloco = índice do segmento no arquivo (a mesma usada na estrutura do caderno). */
 export const blockKey = (segIndex: number) => `b${segIndex}`;
@@ -46,6 +46,22 @@ async function loadLibs(ids: string[], inProject: boolean, errors: string[]): Pr
   return { libs, info };
 }
 
+/**
+ * "exibicao:" no cabeçalho (ADENDO 05, E4.2): casas, modo (decimais | significativos), zeros_a_direita e
+ * limite_exponencial. Sem ele, vale o formato de sempre do Prisma (arquivo novo não muda).
+ */
+export function exibicao(x: unknown, base: FormatOpts): FormatOpts {
+  if (!x || typeof x !== 'object') return base;
+  const o = x as Record<string, unknown>;
+  return {
+    ...base,
+    decimals: typeof o.casas === 'number' ? o.casas : base.decimals,
+    mode: o.modo === 'significativos' ? 'significativos' : 'decimais',
+    trailingZeros: o.zeros_a_direita === true,
+    expThreshold: typeof o.limite_exponencial === 'number' ? o.limite_exponencial : 5,
+  };
+}
+
 export async function recalc(docId: string): Promise<void> {
   const st = useWorkspace.getState();
   const doc = st.openDocs.find((d) => d.id === docId);
@@ -56,19 +72,22 @@ export async function recalc(docId: string): Promise<void> {
     const order = byPosition(bs.map((b) => b.seg));
     bs = order.map((seg) => bs.find((b) => b.seg === seg)!);
   }
-  const blocks: BlockInput[] = bs.map(({ seg, key }) => ({ key, type: seg.type, lines: lines(seg.body), atencao: parseMargin(seg.attrs.atencao) }));
+  bs = bs.filter(({ seg }) => !('desativado' in seg.attrs)); // E3.6: região desativada não é avaliada nem define nada
+  const casas = (v: string | undefined) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : undefined); // casas=2 na região
+  const blocks: BlockInput[] = bs.map(({ seg, key }) => ({ key, type: seg.type, lines: lines(seg.body), atencao: parseMargin(seg.attrs.atencao), casas: casas(seg.attrs.casas) }));
   const libErrors: string[] = [];
   const ids = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
   const { libs, info } = await loadLibs(ids, !!st.projectPathOf(doc.path), libErrors);
   const cfg = st.config;
-  const format = {
+  const base = {
     decimals: typeof cfg.casas_decimais === 'number' ? cfg.casas_decimais : DEFAULT_FORMAT.decimals,
     sep: typeof cfg.separador_decimal === 'string' ? cfg.separador_decimal : DEFAULT_FORMAT.sep,
   };
+  const format = exibicao(parsed.meta.exibicao, base);
 
   useWorkspace.setState({ calculating: true });
   const margem = parseMargin((cfg.verificacao as { margem_atencao?: unknown } | undefined)?.margem_atencao);
-  const out = await evaluateAsync({ libs, blocks, format, margem });
+  const out = await evaluateAsync({ libs, blocks, format, margem, symbolic: doc.type === 'folha' }); // folha: semântica do SMath (ADENDO 05)
   useWorkspace.setState({ calculating: false });
 
   let result: EvalResult;

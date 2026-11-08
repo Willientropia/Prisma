@@ -4,3 +4,4 @@
 *.icns binary
 *.woff2 binary
 tests/fixtures/crlf-bom.prsm -text
+tests/fixtures/smath/*.sm -text

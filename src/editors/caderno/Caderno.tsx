@@ -5,7 +5,7 @@ import { fnName, resolveLibraries, sameDef } from '../../format/library';
 import { readLibraryFiles } from '../../engine/run';
 import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
 import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
-import { outline, type OutlineItem } from '../../format/views';
+import { definedBefore, definedName, outline, type OutlineItem } from '../../format/views';
 import { dirname, displayPath } from '../../format/display';
 import { recalc } from '../../engine/run';
 import type { LineResult } from '../../engine/evaluate';
@@ -100,6 +100,12 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   useEffect(() => { if (doc.path) void loadDir(dirname(doc.path)); }, [doc.path, loadDir]);
 
   const ctx = useMemo(() => ({ defined: new Set(result?.defined ?? []), isUnit: isKnownUnit }), [result]);
+  // nomes definidos antes de cada linha, na ordem do arquivo (ADENDO 05, E2.1)
+  const before = useMemo(() => {
+    const ordered = items.flatMap((it) => (it.kind === 'block' ? [{ key: it.key, lines: lines(it.block.body).map((l) => l.replace(/\r?\n$/, '')) }] : []));
+    const own = new Set(ordered.flatMap((b) => b.lines.map(definedName).filter((x): x is string => !!x)));
+    return definedBefore(ordered, (result?.defined ?? []).filter((d) => !own.has(d)));
+  }, [items, result]);
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];
   const libIds = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
 
@@ -202,7 +208,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   };
 
   const lineEl = (it: BlockItem, raw: string, i: number, size: number) => (
-    <MathLine key={i} raw={raw} isCheck={it.block.type === 'verificar'} result={result?.blocks[it.key]?.[i]} stale={stale} ctx={ctx} theme="paper" size={size}
+    <MathLine key={i} raw={raw} isCheck={it.block.type === 'verificar'} result={result?.blocks[it.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(it.key, i) }} theme="paper" size={size}
       focused={focus?.key === it.key && focus.line === i}
       onWrite={(r) => writeLine(it.key, i, r)}
       onEnter={() => newLineAfter(it.key, i)}

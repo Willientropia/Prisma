@@ -42,7 +42,10 @@ export const RIBBONS: Record<DocType, Record<RibbonTab, RibbonGroup[]>> = {
       ['Organizar', [['folha.alinhar', 'Alinhar', 'align'], ['folha.grade', 'Grade', 'grid']]],
       ['Cálculo', [['calc.tudo', 'Calcular', 'run'], ['calc.interromper', 'Interromper', 'stop']]],
     ]),
-    inserir: g([['Conteúdo', [['inserir.tabela', 'Tabela', 'table'], ['inserir.imagem', 'Imagem', 'image'], ['inserir.link', 'Link', 'link']]]]),
+    inserir: g([
+      ['Conteúdo', [['inserir.tabela', 'Tabela', 'table'], ['inserir.imagem', 'Imagem', 'image'], ['inserir.link', 'Link', 'link']]],
+      ['Organizar', [['folha.area', 'Área', 'section']]], // ADENDO 05, E6
+    ]),
     exibir: g([['Exibição', [['folha.grade', 'Grade', 'grid'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom'], ['exibir.codigo', 'Código-fonte', 'code']]]]),
     saida: g([['Saída', [['app.exportar', 'Exportar', 'export'], ['app.imprimir', 'Imprimir', 'print'], ['folha.promover', 'Promover a caderno', 'file']]]]),
   },

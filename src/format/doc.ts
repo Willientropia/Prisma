@@ -89,12 +89,31 @@ export function parseInfo(info: string): { type: string; id?: string; attrs: Rec
   let id: string | undefined;
   const braces = /\{([^}]*)\}/.exec(t);
   if (braces) {
-    for (const m of braces[1].matchAll(/#([^\s}]+)|([^\s=]+)=(?:"([^"]*)"|(\S+))/g)) {
+    // atributo sem valor (desativado, moldura, recolhida, travada; ADENDO 05) vale ""
+    for (const m of braces[1].matchAll(/#([^\s}]+)|([^\s="]+)=(?:"([^"]*)"|(\S+))|([^\s="#]+)/g)) {
       if (m[1]) id = m[1];
+      else if (m[5]) attrs[m[5]] = '';
       else attrs[m[2]] = m[3] ?? m[4];
     }
   }
   return { type, id, attrs };
+}
+
+/**
+ * Liga, desliga ou troca um atributo na linha de abertura do bloco, sem mexer no resto:
+ * value true = atributo sem valor ("desativado"), null = remove, texto = nome="texto".
+ */
+export function withAttr(fenceLine: string, name: string, value: string | true | null): string {
+  const nl = /\r?\n$/.exec(fenceLine)?.[0] ?? '';
+  const head = fenceLine.slice(0, fenceLine.length - nl.length);
+  const m = /\{([^}]*)\}/.exec(head);
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\export const blocks = (doc: PrismaDoc) =>');
+  const re = new RegExp(`(^|\\s)${esc}(=(?:"[^"]*"|\\S+))?(?=\\s|$)`);
+  const piece = value === true ? name : value === null ? '' : `${name}="${value.replace(/"/g, "'")}"`;
+  if (!m) return value === null ? fenceLine : `${head} {${piece}}${nl}`;
+  let inner = m[1];
+  inner = re.test(inner) ? inner.replace(re, piece ? `$1${piece}` : '') : piece ? `${inner} ${piece}` : inner;
+  return head.replace(m[0], `{${inner.replace(/\s+/g, ' ').trim()}}`) + nl;
 }
 
 export const blocks = (doc: PrismaDoc) => doc.segments.filter((s): s is BlockSegment => s.kind === 'block');

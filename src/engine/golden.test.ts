@@ -15,9 +15,11 @@ export type CalcCase = {
   sem_unidade?: boolean;
   verificar?: string;
   margem?: string | number; // config.yaml verificacao.margem_atencao
+  folha?: boolean; // avalia como folha livre: nome indefinido fica simbólico (ADENDO 05, E3.3)
+  exibicao?: { casas?: number; modo?: 'decimais' | 'significativos'; zeros_a_direita?: boolean; limite_exponencial?: number }; // E4.2
   atencao?: string; // atributo atencao= do bloco verificar
   linha?: number;
-  esperado?: { valor?: number; unidade?: string; tolerancia?: number | string; texto?: string; estado?: 'ok' | 'warn' | 'fail' };
+  esperado?: { valor?: number; unidade?: string; tolerancia?: number | string; texto?: string; estado?: 'ok' | 'warn' | 'fail'; simbolico?: string; faltando?: string[] };
   erro?: string;
 };
 
@@ -30,7 +32,9 @@ export function runCase(c: CalcCase) {
   if (c.expr) lines.push(`${c.expr} = ?${target ? ` ${target}` : ''}`);
   const blocks: BlockInput[] = [{ key: 'calc', type: 'calc', lines }];
   if (c.verificar) blocks.push({ key: 'check', type: 'verificar', lines: [c.verificar], atencao: parseMargin(c.atencao) });
-  const r = evaluate({ libs: [], blocks, margem: parseMargin(c.margem) });
+  const x = c.exibicao;
+  const format = x ? { decimals: x.casas ?? 4, sep: ',', mode: x.modo ?? 'significativos', trailingZeros: x.zeros_a_direita ?? false, expThreshold: x.limite_exponencial ?? 5 } : undefined;
+  const r = evaluate({ libs: [], blocks, margem: parseMargin(c.margem), symbolic: c.folha, format });
   if (c.verificar) return r.blocks.check[0];
   return r.blocks.calc[c.linha ?? lines.length - 1];
 }
@@ -46,6 +50,8 @@ export function checkCase(c: CalcCase) {
   }
   if (e.unidade !== undefined) expect(r.unitRaw ? unitFromMathjs(r.unitRaw) : '').toBe(e.unidade);
   if (e.texto !== undefined) expect(r.text).toBe(e.texto);
+  if (e.simbolico !== undefined) expect(r.symbolic).toBe(e.simbolico);
+  if (e.faltando !== undefined) expect(r.missing).toEqual(e.faltando);
   if (e.estado !== undefined) expect(r.status).toBe(e.estado);
 }
 

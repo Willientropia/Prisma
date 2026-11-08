@@ -1,0 +1,2843 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Studio Desktop" version="1.1.8763.0"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="120">
+    <identity>
+      <id>99fa238a-0b63-4c75-a1dd-53da5622f2b8</id>
+      <revision>7</revision>
+    </identity>
+    <calculation>
+      <precision>4</precision>
+      <exponentialThreshold>5</exponentialThreshold>
+      <trailingZeros>false</trailingZeros>
+      <significantDigitsMode>false</significantDigitsMode>
+      <roundingMode>0</roundingMode>
+      <approximateEqualAccuracy>0</approximateEqualAccuracy>
+      <fractions>decimal</fractions>
+    </calculation>
+    <pageModel active="false" viewMode="1" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true">
+      <paper id="9" orientation="Portrait" width="827" height="1169" />
+      <margins left="39" right="39" top="49" bottom="49" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Studio Desktop" version="1.1.8763.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.11.8763.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="SpecialFunctions" version="1.12.8763.0" guid="2814e667-4e12-48b1-8d51-194e480eabc5" />
+      <assembly name="AreaRegion" version="1.11.8763.0" guid="4974b228-4974-44cf-8274-bf2936b4a766" />
+      <assembly name="Table Region" version="0.3.8770.23606" guid="51fec712-ec75-4551-a13e-478d375ae8d6" />
+      <assembly name="FFTPACK" version="1.1.7563.3712" guid="a2e19c35-336f-46e2-9669-25c2cf66b536" />
+      <assembly name="X-Y Plot Region (JXCharts)" version="0.2.8747.29954" guid="c12231ec-4873-43c1-a7d0-a167ebd17066" />
+      <assembly name="EXCEL (2003+) I/O with recalculation and PNG export" version="2.1.8225.33551" guid="e40eaef6-4622-4ef3-ad03-077e8f005bb1" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region top="0" color="#000000">
+      <area collapsed="true">
+        <title lang="por">
+          <content>
+            <p>Import de dados do Excel</p>
+          </content>
+        </title>
+      </area>
+      <region left="0" top="27" width="524" height="31" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">Led.V</e>
+            <e type="operand" style="string">Roteiro de Lab A012 DHT.xlsx</e>
+            <e type="operand" style="string">Led</e>
+            <e type="operand" style="string">A2:A128</e>
+            <e type="function" args="3">excel_OUT</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region left="0" top="63" width="524" height="31" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">Led.I</e>
+            <e type="operand" style="string">Roteiro de Lab A012 DHT.xlsx</e>
+            <e type="operand" style="string">Led</e>
+            <e type="operand" style="string">B2:B128</e>
+            <e type="function" args="3">excel_OUT</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region left="0" top="90" width="100" height="26" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">y</e>
+            <e type="operand">0</e>
+            <e type="operand">126</e>
+            <e type="function" args="2">range</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region top="126" color="#000000">
+        <area terminator="true" />
+      </region>
+    </region>
+    <region left="0" top="144" width="211" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.I</e>
+          <e type="operand">y</e>
+          <e type="operand">20</e>
+          <e type="operand">Led.I</e>
+          <e type="operator" args="2">*</e>
+          <e type="function" args="2">augment</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="846" top="144" width="92" height="26" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">x</e>
+          <e type="operand">1</e>
+          <e type="operand">10</e>
+          <e type="function" args="2">range</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="846" top="162" width="99" height="31" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">y.1</e>
+          <e type="operand">1</e>
+          <e type="operand">10</e>
+          <e type="function" args="2">range</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="171" width="186" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.V</e>
+          <e type="operand">y</e>
+          <e type="operand">Led.V</e>
+          <e type="function" args="2">augment</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="9" top="207" width="349" height="266" color="#000000" bgColor="#ffffff" fontSize="10">
+      <xyplot width="339" height="258" points="100" name="XYPlot">
+        <chartstyle backcolor="White" bordercolor="Black" />
+        <propertiessource index="1" sourcetype="PropertyGrid" />
+        <grid gridcolor="LightGray" gridpattern="Dash" gridthickness="1" isxgrid="true" isygrid="true" isy2grid="false" />
+        <xaxes xmin="-10.57575" xmax="155.6324" xtick="50" visible="True" decimalplaces="3" numberformat="General" />
+        <yaxes ymin="-458.2411" ymax="580.5598" ytick="500" visible="True" decimalplaces="3" numberformat="General" />
+        <y2axes isy2axis="false" y2min="-1" y2max="1" y2tick="0.5" visible="True" decimalplaces="3" numberformat="General" />
+        <title2d title="" titlefont="Arial, 10pt" titlefontcolor="Black" />
+        <xylabel labelfont="Arial, 10pt" labelfontcolor="Black" tickfont="Arial, 8pt" tickfontcolor="Black" xlabel="x" ylabel="y" y2label="y2" />
+        <legend isbordervisible="true" islegendvisible="false" legendbackcolor="White" legendbordercolor="Black" legendfont="Arial, 8pt" legendposition="NorthEast" textcolor="Black" />
+        <traces>
+          <trace seriesname="" isy2data="false" isvisible="true" plotmethod="Lines" lineantialias="true" linecolor="Blue" linethickness="1" linepattern="Solid" symbolantialias="true" symbolsize="8" symboltype="None" symbolborderthickness="1" symbolbordercolor="Black" symbolfillcolor="White" />
+          <trace seriesname="" isy2data="false" isvisible="true" plotmethod="Lines" lineantialias="true" linecolor="Red" linethickness="1" linepattern="Solid" symbolantialias="true" symbolsize="8" symboltype="None" symbolborderthickness="1" symbolbordercolor="Black" symbolfillcolor="White" />
+        </traces>
+        <input>
+          <e type="operand">Led.V</e>
+          <e type="operand">Led.I</e>
+          <e type="operand">2</e>
+          <e type="operand">1</e>
+          <e type="function" args="4">sys</e>
+        </input>
+      </xyplot>
+    </region>
+    <region left="378" top="216" width="165" height="301" color="#000000" fontSize="10" showInputData="false">
+      <table id="1" elementsOnDataSizeChange="10,10" focus="0,0;1,10" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">y</e>
+          <e regions="columns">Led.I</e>
+          <e regions="columns">Led.V</e>
+          <e regions="rows">y.1</e>
+          <e regions="rows">x</e>
+          <e regions="rows">y</e>
+          <e regions="rows">Led.I</e>
+          <e regions="rows">Led.V</e>
+          <e regions="units">y</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="127" cols="2" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>0</td>
+              <td>111.11</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>125.57</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>140.02</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>154.47</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>166.22</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>178.87</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>190.61</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>201.45</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>213.19</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>224.94</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>235.78</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>245.71</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>256.55</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>266.49</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>273.72</td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>280.95</td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>285.46</td>
+            </tr>
+            <tr>
+              <td>17</td>
+              <td>288.17</td>
+            </tr>
+            <tr>
+              <td>18</td>
+              <td>289.08</td>
+            </tr>
+            <tr>
+              <td>19</td>
+              <td>289.08</td>
+            </tr>
+            <tr>
+              <td>20</td>
+              <td>289.98</td>
+            </tr>
+            <tr>
+              <td>21</td>
+              <td>289.08</td>
+            </tr>
+            <tr>
+              <td>22</td>
+              <td>289.98</td>
+            </tr>
+            <tr>
+              <td>23</td>
+              <td>292.69</td>
+            </tr>
+            <tr>
+              <td>24</td>
+              <td>294.5</td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>297.21</td>
+            </tr>
+            <tr>
+              <td>26</td>
+              <td>298.11</td>
+            </tr>
+            <tr>
+              <td>27</td>
+              <td>298.11</td>
+            </tr>
+            <tr>
+              <td>28</td>
+              <td>298.11</td>
+            </tr>
+            <tr>
+              <td>29</td>
+              <td>298.11</td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>297.21</td>
+            </tr>
+            <tr>
+              <td>31</td>
+              <td>296.3</td>
+            </tr>
+            <tr>
+              <td>32</td>
+              <td>292.69</td>
+            </tr>
+            <tr>
+              <td>33</td>
+              <td>289.08</td>
+            </tr>
+            <tr>
+              <td>34</td>
+              <td>280.95</td>
+            </tr>
+            <tr>
+              <td>35</td>
+              <td>273.72</td>
+            </tr>
+            <tr>
+              <td>36</td>
+              <td>265.59</td>
+            </tr>
+            <tr>
+              <td>37</td>
+              <td>253.84</td>
+            </tr>
+            <tr>
+              <td>38</td>
+              <td>243.91</td>
+            </tr>
+            <tr>
+              <td>39</td>
+              <td>233.07</td>
+            </tr>
+            <tr>
+              <td>40</td>
+              <td>218.61</td>
+            </tr>
+            <tr>
+              <td>41</td>
+              <td>205.06</td>
+            </tr>
+            <tr>
+              <td>42</td>
+              <td>190.61</td>
+            </tr>
+            <tr>
+              <td>43</td>
+              <td>177.96</td>
+            </tr>
+            <tr>
+              <td>44</td>
+              <td>166.22</td>
+            </tr>
+            <tr>
+              <td>45</td>
+              <td>156.28</td>
+            </tr>
+            <tr>
+              <td>46</td>
+              <td>145.44</td>
+            </tr>
+            <tr>
+              <td>47</td>
+              <td>134.6</td>
+            </tr>
+            <tr>
+              <td>48</td>
+              <td>121.95</td>
+            </tr>
+            <tr>
+              <td>49</td>
+              <td>106.6</td>
+            </tr>
+            <tr>
+              <td>50</td>
+              <td>93.05</td>
+            </tr>
+            <tr>
+              <td>51</td>
+              <td>77.69</td>
+            </tr>
+            <tr>
+              <td>52</td>
+              <td>64.14</td>
+            </tr>
+            <tr>
+              <td>53</td>
+              <td>50.59</td>
+            </tr>
+            <tr>
+              <td>54</td>
+              <td>35.23</td>
+            </tr>
+            <tr>
+              <td>55</td>
+              <td>18.97</td>
+            </tr>
+            <tr>
+              <td>56</td>
+              <td>2.71</td>
+            </tr>
+            <tr>
+              <td>57</td>
+              <td>-12.65</td>
+            </tr>
+            <tr>
+              <td>58</td>
+              <td>-26.2</td>
+            </tr>
+            <tr>
+              <td>59</td>
+              <td>-40.65</td>
+            </tr>
+            <tr>
+              <td>60</td>
+              <td>-52.39</td>
+            </tr>
+            <tr>
+              <td>61</td>
+              <td>-67.75</td>
+            </tr>
+            <tr>
+              <td>62</td>
+              <td>-80.4</td>
+            </tr>
+            <tr>
+              <td>63</td>
+              <td>-94.85</td>
+            </tr>
+            <tr>
+              <td>64</td>
+              <td>-109.31</td>
+            </tr>
+            <tr>
+              <td>65</td>
+              <td>-124.66</td>
+            </tr>
+            <tr>
+              <td>66</td>
+              <td>-139.12</td>
+            </tr>
+            <tr>
+              <td>67</td>
+              <td>-152.67</td>
+            </tr>
+            <tr>
+              <td>68</td>
+              <td>-166.22</td>
+            </tr>
+            <tr>
+              <td>69</td>
+              <td>-177.06</td>
+            </tr>
+            <tr>
+              <td>70</td>
+              <td>-189.71</td>
+            </tr>
+            <tr>
+              <td>71</td>
+              <td>-200.55</td>
+            </tr>
+            <tr>
+              <td>72</td>
+              <td>-212.29</td>
+            </tr>
+            <tr>
+              <td>73</td>
+              <td>-224.03</td>
+            </tr>
+            <tr>
+              <td>74</td>
+              <td>-234.87</td>
+            </tr>
+            <tr>
+              <td>75</td>
+              <td>-246.62</td>
+            </tr>
+            <tr>
+              <td>76</td>
+              <td>-255.65</td>
+            </tr>
+            <tr>
+              <td>77</td>
+              <td>-265.59</td>
+            </tr>
+            <tr>
+              <td>78</td>
+              <td>-272.82</td>
+            </tr>
+            <tr>
+              <td>79</td>
+              <td>-280.04</td>
+            </tr>
+            <tr>
+              <td>80</td>
+              <td>-285.46</td>
+            </tr>
+            <tr>
+              <td>81</td>
+              <td>-287.27</td>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>-288.17</td>
+            </tr>
+            <tr>
+              <td>83</td>
+              <td>-288.17</td>
+            </tr>
+            <tr>
+              <td>84</td>
+              <td>-289.08</td>
+            </tr>
+            <tr>
+              <td>85</td>
+              <td>-289.08</td>
+            </tr>
+            <tr>
+              <td>86</td>
+              <td>-289.98</td>
+            </tr>
+            <tr>
+              <td>87</td>
+              <td>-291.79</td>
+            </tr>
+            <tr>
+              <td>88</td>
+              <td>-294.5</td>
+            </tr>
+            <tr>
+              <td>89</td>
+              <td>-296.3</td>
+            </tr>
+            <tr>
+              <td>90</td>
+              <td>-297.21</td>
+            </tr>
+            <tr>
+              <td>91</td>
+              <td>-298.11</td>
+            </tr>
+            <tr>
+              <td>92</td>
+              <td>-298.11</td>
+            </tr>
+            <tr>
+              <td>93</td>
+              <td>-298.11</td>
+            </tr>
+            <tr>
+              <td>94</td>
+              <td>-297.21</td>
+            </tr>
+            <tr>
+              <td>95</td>
+              <td>-295.4</td>
+            </tr>
+            <tr>
+              <td>96</td>
+              <td>-291.79</td>
+            </tr>
+            <tr>
+              <td>97</td>
+              <td>-287.27</td>
+            </tr>
+            <tr>
+              <td>98</td>
+              <td>-280.04</td>
+            </tr>
+            <tr>
+              <td>99</td>
+              <td>-271.91</td>
+            </tr>
+            <tr>
+              <td>100</td>
+              <td>-263.78</td>
+            </tr>
+            <tr>
+              <td>101</td>
+              <td>-252.94</td>
+            </tr>
+            <tr>
+              <td>102</td>
+              <td>-242.1</td>
+            </tr>
+            <tr>
+              <td>103</td>
+              <td>-231.26</td>
+            </tr>
+            <tr>
+              <td>104</td>
+              <td>-217.71</td>
+            </tr>
+            <tr>
+              <td>105</td>
+              <td>-202.35</td>
+            </tr>
+            <tr>
+              <td>106</td>
+              <td>-188.8</td>
+            </tr>
+            <tr>
+              <td>107</td>
+              <td>-176.16</td>
+            </tr>
+            <tr>
+              <td>108</td>
+              <td>-164.41</td>
+            </tr>
+            <tr>
+              <td>109</td>
+              <td>-154.47</td>
+            </tr>
+            <tr>
+              <td>110</td>
+              <td>-143.63</td>
+            </tr>
+            <tr>
+              <td>111</td>
+              <td>-131.89</td>
+            </tr>
+            <tr>
+              <td>112</td>
+              <td>-118.34</td>
+            </tr>
+            <tr>
+              <td>113</td>
+              <td>-104.79</td>
+            </tr>
+            <tr>
+              <td>114</td>
+              <td>-89.43</td>
+            </tr>
+            <tr>
+              <td>115</td>
+              <td>-74.98</td>
+            </tr>
+            <tr>
+              <td>116</td>
+              <td>-62.33</td>
+            </tr>
+            <tr>
+              <td>117</td>
+              <td>-46.97</td>
+            </tr>
+            <tr>
+              <td>118</td>
+              <td>-32.52</td>
+            </tr>
+            <tr>
+              <td>119</td>
+              <td>-16.26</td>
+            </tr>
+            <tr>
+              <td>120</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>121</td>
+              <td>15.36</td>
+            </tr>
+            <tr>
+              <td>122</td>
+              <td>28.91</td>
+            </tr>
+            <tr>
+              <td>123</td>
+              <td>42.46</td>
+            </tr>
+            <tr>
+              <td>124</td>
+              <td>55.11</td>
+            </tr>
+            <tr>
+              <td>125</td>
+              <td>70.46</td>
+            </tr>
+            <tr>
+              <td>126</td>
+              <td>83.11</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10.666667px" text="Table %T" />
+        </regions>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Tensão Led</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Led.V</e>
+        </input>
+      </table>
+    </region>
+    <region left="558" top="216" width="165" height="298" color="#000000" fontSize="10" showInputData="false">
+      <table id="2" elementsOnDataSizeChange="10,10" focus="0,0;1,10" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">y</e>
+          <e regions="columns">Led.I</e>
+          <e regions="columns">Led.V</e>
+          <e regions="rows">y.1</e>
+          <e regions="rows">x</e>
+          <e regions="rows">y</e>
+          <e regions="rows">Led.I</e>
+          <e regions="rows">Led.V</e>
+          <e regions="units">y</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="127" cols="2" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>0</td>
+              <td>131.14</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>144.7</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>167.31</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>162.79</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>176.36</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>171.83</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>171.83</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>171.83</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>176.36</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>176.36</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>176.36</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>180.88</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>171.83</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>180.88</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>162.79</td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>158.27</td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>149.22</td>
+            </tr>
+            <tr>
+              <td>17</td>
+              <td>144.7</td>
+            </tr>
+            <tr>
+              <td>18</td>
+              <td>131.14</td>
+            </tr>
+            <tr>
+              <td>19</td>
+              <td>140.18</td>
+            </tr>
+            <tr>
+              <td>20</td>
+              <td>126.61</td>
+            </tr>
+            <tr>
+              <td>21</td>
+              <td>135.66</td>
+            </tr>
+            <tr>
+              <td>22</td>
+              <td>140.18</td>
+            </tr>
+            <tr>
+              <td>23</td>
+              <td>140.18</td>
+            </tr>
+            <tr>
+              <td>24</td>
+              <td>144.7</td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>135.66</td>
+            </tr>
+            <tr>
+              <td>26</td>
+              <td>131.14</td>
+            </tr>
+            <tr>
+              <td>27</td>
+              <td>126.61</td>
+            </tr>
+            <tr>
+              <td>28</td>
+              <td>131.14</td>
+            </tr>
+            <tr>
+              <td>29</td>
+              <td>117.57</td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>122.09</td>
+            </tr>
+            <tr>
+              <td>31</td>
+              <td>117.57</td>
+            </tr>
+            <tr>
+              <td>32</td>
+              <td>108.53</td>
+            </tr>
+            <tr>
+              <td>33</td>
+              <td>90.44</td>
+            </tr>
+            <tr>
+              <td>34</td>
+              <td>90.44</td>
+            </tr>
+            <tr>
+              <td>35</td>
+              <td>90.44</td>
+            </tr>
+            <tr>
+              <td>36</td>
+              <td>67.83</td>
+            </tr>
+            <tr>
+              <td>37</td>
+              <td>72.35</td>
+            </tr>
+            <tr>
+              <td>38</td>
+              <td>72.35</td>
+            </tr>
+            <tr>
+              <td>39</td>
+              <td>49.74</td>
+            </tr>
+            <tr>
+              <td>40</td>
+              <td>54.26</td>
+            </tr>
+            <tr>
+              <td>41</td>
+              <td>45.22</td>
+            </tr>
+            <tr>
+              <td>42</td>
+              <td>40.7</td>
+            </tr>
+            <tr>
+              <td>43</td>
+              <td>36.18</td>
+            </tr>
+            <tr>
+              <td>44</td>
+              <td>40.7</td>
+            </tr>
+            <tr>
+              <td>45</td>
+              <td>31.65</td>
+            </tr>
+            <tr>
+              <td>46</td>
+              <td>27.13</td>
+            </tr>
+            <tr>
+              <td>47</td>
+              <td>18.09</td>
+            </tr>
+            <tr>
+              <td>48</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>49</td>
+              <td>4.52</td>
+            </tr>
+            <tr>
+              <td>50</td>
+              <td>-4.52</td>
+            </tr>
+            <tr>
+              <td>51</td>
+              <td>-4.52</td>
+            </tr>
+            <tr>
+              <td>52</td>
+              <td>9.04</td>
+            </tr>
+            <tr>
+              <td>53</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>54</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>55</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>56</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>57</td>
+              <td>-4.52</td>
+            </tr>
+            <tr>
+              <td>58</td>
+              <td>-4.52</td>
+            </tr>
+            <tr>
+              <td>59</td>
+              <td>4.52</td>
+            </tr>
+            <tr>
+              <td>60</td>
+              <td>-40.7</td>
+            </tr>
+            <tr>
+              <td>61</td>
+              <td>-90.44</td>
+            </tr>
+            <tr>
+              <td>62</td>
+              <td>-94.96</td>
+            </tr>
+            <tr>
+              <td>63</td>
+              <td>-113.05</td>
+            </tr>
+            <tr>
+              <td>64</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>65</td>
+              <td>-144.7</td>
+            </tr>
+            <tr>
+              <td>66</td>
+              <td>-158.27</td>
+            </tr>
+            <tr>
+              <td>67</td>
+              <td>-162.79</td>
+            </tr>
+            <tr>
+              <td>68</td>
+              <td>-171.83</td>
+            </tr>
+            <tr>
+              <td>69</td>
+              <td>-162.79</td>
+            </tr>
+            <tr>
+              <td>70</td>
+              <td>-167.31</td>
+            </tr>
+            <tr>
+              <td>71</td>
+              <td>-176.36</td>
+            </tr>
+            <tr>
+              <td>72</td>
+              <td>-180.88</td>
+            </tr>
+            <tr>
+              <td>73</td>
+              <td>-176.36</td>
+            </tr>
+            <tr>
+              <td>74</td>
+              <td>-167.31</td>
+            </tr>
+            <tr>
+              <td>75</td>
+              <td>-180.88</td>
+            </tr>
+            <tr>
+              <td>76</td>
+              <td>-171.83</td>
+            </tr>
+            <tr>
+              <td>77</td>
+              <td>-167.31</td>
+            </tr>
+            <tr>
+              <td>78</td>
+              <td>-167.31</td>
+            </tr>
+            <tr>
+              <td>79</td>
+              <td>-158.27</td>
+            </tr>
+            <tr>
+              <td>80</td>
+              <td>-140.18</td>
+            </tr>
+            <tr>
+              <td>81</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>-126.61</td>
+            </tr>
+            <tr>
+              <td>83</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>84</td>
+              <td>-122.09</td>
+            </tr>
+            <tr>
+              <td>85</td>
+              <td>-135.66</td>
+            </tr>
+            <tr>
+              <td>86</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>87</td>
+              <td>-135.66</td>
+            </tr>
+            <tr>
+              <td>88</td>
+              <td>-126.61</td>
+            </tr>
+            <tr>
+              <td>89</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>90</td>
+              <td>-126.61</td>
+            </tr>
+            <tr>
+              <td>91</td>
+              <td>-131.14</td>
+            </tr>
+            <tr>
+              <td>92</td>
+              <td>-122.09</td>
+            </tr>
+            <tr>
+              <td>93</td>
+              <td>-122.09</td>
+            </tr>
+            <tr>
+              <td>94</td>
+              <td>-108.53</td>
+            </tr>
+            <tr>
+              <td>95</td>
+              <td>-104.01</td>
+            </tr>
+            <tr>
+              <td>96</td>
+              <td>-104.01</td>
+            </tr>
+            <tr>
+              <td>97</td>
+              <td>-94.96</td>
+            </tr>
+            <tr>
+              <td>98</td>
+              <td>-72.35</td>
+            </tr>
+            <tr>
+              <td>99</td>
+              <td>-94.96</td>
+            </tr>
+            <tr>
+              <td>100</td>
+              <td>-54.26</td>
+            </tr>
+            <tr>
+              <td>101</td>
+              <td>-67.83</td>
+            </tr>
+            <tr>
+              <td>102</td>
+              <td>-58.79</td>
+            </tr>
+            <tr>
+              <td>103</td>
+              <td>-45.22</td>
+            </tr>
+            <tr>
+              <td>104</td>
+              <td>-45.22</td>
+            </tr>
+            <tr>
+              <td>105</td>
+              <td>-40.7</td>
+            </tr>
+            <tr>
+              <td>106</td>
+              <td>-40.7</td>
+            </tr>
+            <tr>
+              <td>107</td>
+              <td>-31.65</td>
+            </tr>
+            <tr>
+              <td>108</td>
+              <td>-36.18</td>
+            </tr>
+            <tr>
+              <td>109</td>
+              <td>-27.13</td>
+            </tr>
+            <tr>
+              <td>110</td>
+              <td>-18.09</td>
+            </tr>
+            <tr>
+              <td>111</td>
+              <td>-18.09</td>
+            </tr>
+            <tr>
+              <td>112</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>113</td>
+              <td>9.04</td>
+            </tr>
+            <tr>
+              <td>114</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>115</td>
+              <td>4.52</td>
+            </tr>
+            <tr>
+              <td>116</td>
+              <td>9.04</td>
+            </tr>
+            <tr>
+              <td>117</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>118</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>119</td>
+              <td>9.04</td>
+            </tr>
+            <tr>
+              <td>120</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>121</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>122</td>
+              <td>4.52</td>
+            </tr>
+            <tr>
+              <td>123</td>
+              <td>4.52</td>
+            </tr>
+            <tr>
+              <td>124</td>
+              <td>45.22</td>
+            </tr>
+            <tr>
+              <td>125</td>
+              <td>99.48</td>
+            </tr>
+            <tr>
+              <td>126</td>
+              <td>99.48</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 8.533333px" text="Table %T" />
+        </regions>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Corrente Led</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Led.I</e>
+        </input>
+      </table>
+    </region>
+    <region left="846" top="270" width="60" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">c</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">385</e>
+        </result>
+      </math>
+    </region>
+    <region left="801" top="297" width="349" height="266" color="#000000" bgColor="#ffffff" fontSize="10">
+      <xyplot width="339" height="258" points="100" name="XYPlot">
+        <chartstyle backcolor="White" bordercolor="Black" />
+        <propertiessource index="1" sourcetype="PropertyGrid" />
+        <grid gridcolor="LightGray" gridpattern="Dash" gridthickness="1" isxgrid="true" isygrid="true" isy2grid="false" />
+        <xaxes xmin="0.7964594" xmax="10.79645" xtick="1" visible="True" decimalplaces="3" numberformat="General" />
+        <yaxes ymin="0.6860464" ymax="9.686049" ytick="1" visible="True" decimalplaces="3" numberformat="General" />
+        <y2axes isy2axis="true" y2min="0" y2max="10" y2tick="1" visible="True" decimalplaces="3" numberformat="General" />
+        <title2d title="" titlefont="Arial, 10pt" titlefontcolor="Black" />
+        <xylabel labelfont="Arial, 10pt" labelfontcolor="Black" tickfont="Arial, 8pt" tickfontcolor="Black" xlabel="x" ylabel="y" y2label="y2" />
+        <legend isbordervisible="true" islegendvisible="false" legendbackcolor="White" legendbordercolor="Black" legendfont="Arial, 8pt" legendposition="NorthEast" textcolor="Black" />
+        <traces>
+          <trace seriesname="" isy2data="false" isvisible="true" plotmethod="Lines" lineantialias="true" linecolor="Blue" linethickness="1" linepattern="Solid" symbolantialias="true" symbolsize="8" symboltype="None" symbolborderthickness="1" symbolbordercolor="Black" symbolfillcolor="White" />
+        </traces>
+        <input>
+          <e type="operand">y.1</e>
+          <e type="operand">x</e>
+          <e type="function" args="2">augment</e>
+        </input>
+      </xyplot>
+    </region>
+    <region left="0" top="531" width="138" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.V1</e>
+          <e type="operand">Led.V</e>
+          <e type="function" args="1">fft</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="558" width="138" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.I1</e>
+          <e type="operand">Led.I</e>
+          <e type="function" args="1">fft</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="594" width="205" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.Vh1</e>
+          <e type="operand">y</e>
+          <e type="operand">Led.V1</e>
+          <e type="function" args="2">augment</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="612" width="205" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Led.Ih1</e>
+          <e type="operand">y</e>
+          <e type="operand">Led.I1</e>
+          <e type="function" args="2">augment</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="792" top="621" width="148" height="58" color="#000000" fontSize="10">
+      <math optimize="2" error="0" errorLocation="1">
+        <input>
+          <e type="operand">F.rms</e>
+          <e type="operand">#</e>
+          <e type="bracket">(</e>
+          <e type="function" args="1">sum</e>
+          <e type="operand">x</e>
+          <e type="function" args="1">length</e>
+          <e type="operator" args="2">/</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="675" width="290" height="275" color="#000000" fontSize="10">
+      <table id="3" elementsOnDataSizeChange="10,10" focus="0,0;2,9" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">Led.Ih1</e>
+          <e regions="columns">Led.Vh1</e>
+          <e regions="columns">Led.I1</e>
+          <e regions="columns">Led.V1</e>
+          <e regions="columns">y</e>
+          <e regions="columns">Led.I</e>
+          <e regions="columns">Led.V</e>
+          <e regions="rows">Led.Ih1</e>
+          <e regions="rows">Led.Vh1</e>
+          <e regions="rows">y.1</e>
+          <e regions="rows">x</e>
+          <e regions="rows">y</e>
+          <e regions="units">y</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="127" cols="3" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>0</td>
+              <td>8001</td>
+              <td>-5.42</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>18138.36</td>
+              <td>9282.14</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>91.37</td>
+              <td>1343.25</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>-16.16</td>
+              <td>963.16</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>-0.9</td>
+              <td>663.04</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>204.79</td>
+              <td>252.47</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>-1.83</td>
+              <td>421.72</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>-299.64</td>
+              <td>478.71</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>-44.38</td>
+              <td>333.55</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>32.39</td>
+              <td>267.88</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>-46.33</td>
+              <td>264.31</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>55.85</td>
+              <td>200</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>-32.91</td>
+              <td>214.02</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>-60.89</td>
+              <td>175.19</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>-49.97</td>
+              <td>182.9</td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>-53.75</td>
+              <td>150.9</td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>-51.64</td>
+              <td>160.47</td>
+            </tr>
+            <tr>
+              <td>17</td>
+              <td>7.16</td>
+              <td>134.69</td>
+            </tr>
+            <tr>
+              <td>18</td>
+              <td>-45.64</td>
+              <td>136.66</td>
+            </tr>
+            <tr>
+              <td>19</td>
+              <td>-56.87</td>
+              <td>153.31</td>
+            </tr>
+            <tr>
+              <td>20</td>
+              <td>-47.16</td>
+              <td>128.95</td>
+            </tr>
+            <tr>
+              <td>21</td>
+              <td>-62.94</td>
+              <td>117.81</td>
+            </tr>
+            <tr>
+              <td>22</td>
+              <td>-48.59</td>
+              <td>109.42</td>
+            </tr>
+            <tr>
+              <td>23</td>
+              <td>-60.64</td>
+              <td>100.72</td>
+            </tr>
+            <tr>
+              <td>24</td>
+              <td>-56.99</td>
+              <td>100.86</td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>-58.67</td>
+              <td>95.47</td>
+            </tr>
+            <tr>
+              <td>26</td>
+              <td>-59.85</td>
+              <td>94.64</td>
+            </tr>
+            <tr>
+              <td>27</td>
+              <td>-53.75</td>
+              <td>77.3</td>
+            </tr>
+            <tr>
+              <td>28</td>
+              <td>-55.18</td>
+              <td>83.34</td>
+            </tr>
+            <tr>
+              <td>29</td>
+              <td>-57.41</td>
+              <td>79.06</td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>-54.88</td>
+              <td>74.12</td>
+            </tr>
+            <tr>
+              <td>31</td>
+              <td>-58.45</td>
+              <td>75.14</td>
+            </tr>
+            <tr>
+              <td>32</td>
+              <td>-59.69</td>
+              <td>68.61</td>
+            </tr>
+            <tr>
+              <td>33</td>
+              <td>-51.04</td>
+              <td>60.35</td>
+            </tr>
+            <tr>
+              <td>34</td>
+              <td>-55.51</td>
+              <td>59.32</td>
+            </tr>
+            <tr>
+              <td>35</td>
+              <td>-61.91</td>
+              <td>58.11</td>
+            </tr>
+            <tr>
+              <td>36</td>
+              <td>-58.79</td>
+              <td>56.49</td>
+            </tr>
+            <tr>
+              <td>37</td>
+              <td>-61.56</td>
+              <td>48.54</td>
+            </tr>
+            <tr>
+              <td>38</td>
+              <td>-62.91</td>
+              <td>51.06</td>
+            </tr>
+            <tr>
+              <td>39</td>
+              <td>-54.45</td>
+              <td>54.72</td>
+            </tr>
+            <tr>
+              <td>40</td>
+              <td>-56.11</td>
+              <td>56.87</td>
+            </tr>
+            <tr>
+              <td>41</td>
+              <td>-59.52</td>
+              <td>45.56</td>
+            </tr>
+            <tr>
+              <td>42</td>
+              <td>-69.01</td>
+              <td>45.67</td>
+            </tr>
+            <tr>
+              <td>43</td>
+              <td>-56.52</td>
+              <td>42.3</td>
+            </tr>
+            <tr>
+              <td>44</td>
+              <td>-56.44</td>
+              <td>37.15</td>
+            </tr>
+            <tr>
+              <td>45</td>
+              <td>-61.92</td>
+              <td>38.64</td>
+            </tr>
+            <tr>
+              <td>46</td>
+              <td>-57.46</td>
+              <td>38.81</td>
+            </tr>
+            <tr>
+              <td>47</td>
+              <td>-53.61</td>
+              <td>27.39</td>
+            </tr>
+            <tr>
+              <td>48</td>
+              <td>-62.64</td>
+              <td>29.31</td>
+            </tr>
+            <tr>
+              <td>49</td>
+              <td>-58.57</td>
+              <td>32.61</td>
+            </tr>
+            <tr>
+              <td>50</td>
+              <td>-58.45</td>
+              <td>37.17</td>
+            </tr>
+            <tr>
+              <td>51</td>
+              <td>-53.92</td>
+              <td>29.87</td>
+            </tr>
+            <tr>
+              <td>52</td>
+              <td>-57.42</td>
+              <td>23.14</td>
+            </tr>
+            <tr>
+              <td>53</td>
+              <td>-63.97</td>
+              <td>30.71</td>
+            </tr>
+            <tr>
+              <td>54</td>
+              <td>-53.76</td>
+              <td>16.31</td>
+            </tr>
+            <tr>
+              <td>55</td>
+              <td>-67.46</td>
+              <td>22.51</td>
+            </tr>
+            <tr>
+              <td>56</td>
+              <td>-61.1</td>
+              <td>11.47</td>
+            </tr>
+            <tr>
+              <td>57</td>
+              <td>-57.27</td>
+              <td>21.65</td>
+            </tr>
+            <tr>
+              <td>58</td>
+              <td>-60.48</td>
+              <td>13.97</td>
+            </tr>
+            <tr>
+              <td>59</td>
+              <td>-58.78</td>
+              <td>17.13</td>
+            </tr>
+            <tr>
+              <td>60</td>
+              <td>-59.87</td>
+              <td>9.79</td>
+            </tr>
+            <tr>
+              <td>61</td>
+              <td>-65.65</td>
+              <td>16.34</td>
+            </tr>
+            <tr>
+              <td>62</td>
+              <td>-57.34</td>
+              <td>12.07</td>
+            </tr>
+            <tr>
+              <td>63</td>
+              <td>-64.56</td>
+              <td>7.92</td>
+            </tr>
+            <tr>
+              <td>64</td>
+              <td>-62.44</td>
+              <td>6.35</td>
+            </tr>
+            <tr>
+              <td>65</td>
+              <td>-69.66</td>
+              <td>7.35</td>
+            </tr>
+            <tr>
+              <td>66</td>
+              <td>-61.35</td>
+              <td>8.48</td>
+            </tr>
+            <tr>
+              <td>67</td>
+              <td>-67.13</td>
+              <td>-1.23</td>
+            </tr>
+            <tr>
+              <td>68</td>
+              <td>-68.22</td>
+              <td>2.93</td>
+            </tr>
+            <tr>
+              <td>69</td>
+              <td>-66.52</td>
+              <td>-3.42</td>
+            </tr>
+            <tr>
+              <td>70</td>
+              <td>-69.73</td>
+              <td>1.05</td>
+            </tr>
+            <tr>
+              <td>71</td>
+              <td>-65.9</td>
+              <td>-12.36</td>
+            </tr>
+            <tr>
+              <td>72</td>
+              <td>-59.54</td>
+              <td>-4.6</td>
+            </tr>
+            <tr>
+              <td>73</td>
+              <td>-73.24</td>
+              <td>-14.1</td>
+            </tr>
+            <tr>
+              <td>74</td>
+              <td>-63.03</td>
+              <td>-3.04</td>
+            </tr>
+            <tr>
+              <td>75</td>
+              <td>-69.58</td>
+              <td>-14</td>
+            </tr>
+            <tr>
+              <td>76</td>
+              <td>-73.08</td>
+              <td>-10.7</td>
+            </tr>
+            <tr>
+              <td>77</td>
+              <td>-68.55</td>
+              <td>-6.89</td>
+            </tr>
+            <tr>
+              <td>78</td>
+              <td>-68.43</td>
+              <td>-15.01</td>
+            </tr>
+            <tr>
+              <td>79</td>
+              <td>-64.36</td>
+              <td>-21.92</td>
+            </tr>
+            <tr>
+              <td>80</td>
+              <td>-73.39</td>
+              <td>-27.53</td>
+            </tr>
+            <tr>
+              <td>81</td>
+              <td>-69.54</td>
+              <td>-19.88</td>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>-65.08</td>
+              <td>-23.91</td>
+            </tr>
+            <tr>
+              <td>83</td>
+              <td>-70.56</td>
+              <td>-29.35</td>
+            </tr>
+            <tr>
+              <td>84</td>
+              <td>-70.48</td>
+              <td>-28.26</td>
+            </tr>
+            <tr>
+              <td>85</td>
+              <td>-57.99</td>
+              <td>-29.05</td>
+            </tr>
+            <tr>
+              <td>86</td>
+              <td>-67.48</td>
+              <td>-33.46</td>
+            </tr>
+            <tr>
+              <td>87</td>
+              <td>-70.89</td>
+              <td>-26.57</td>
+            </tr>
+            <tr>
+              <td>88</td>
+              <td>-72.55</td>
+              <td>-33.3</td>
+            </tr>
+            <tr>
+              <td>89</td>
+              <td>-64.09</td>
+              <td>-41.69</td>
+            </tr>
+            <tr>
+              <td>90</td>
+              <td>-65.44</td>
+              <td>-49.12</td>
+            </tr>
+            <tr>
+              <td>91</td>
+              <td>-68.21</td>
+              <td>-46.27</td>
+            </tr>
+            <tr>
+              <td>92</td>
+              <td>-65.09</td>
+              <td>-49.95</td>
+            </tr>
+            <tr>
+              <td>93</td>
+              <td>-71.49</td>
+              <td>-54.27</td>
+            </tr>
+            <tr>
+              <td>94</td>
+              <td>-75.96</td>
+              <td>-59.03</td>
+            </tr>
+            <tr>
+              <td>95</td>
+              <td>-67.31</td>
+              <td>-56.83</td>
+            </tr>
+            <tr>
+              <td>96</td>
+              <td>-68.55</td>
+              <td>-56.66</td>
+            </tr>
+            <tr>
+              <td>97</td>
+              <td>-72.12</td>
+              <td>-64.38</td>
+            </tr>
+            <tr>
+              <td>98</td>
+              <td>-69.59</td>
+              <td>-66.51</td>
+            </tr>
+            <tr>
+              <td>99</td>
+              <td>-71.82</td>
+              <td>-69.71</td>
+            </tr>
+            <tr>
+              <td>100</td>
+              <td>-73.25</td>
+              <td>-83.69</td>
+            </tr>
+            <tr>
+              <td>101</td>
+              <td>-67.15</td>
+              <td>-74.81</td>
+            </tr>
+            <tr>
+              <td>102</td>
+              <td>-68.33</td>
+              <td>-83.02</td>
+            </tr>
+            <tr>
+              <td>103</td>
+              <td>-70.01</td>
+              <td>-87.31</td>
+            </tr>
+            <tr>
+              <td>104</td>
+              <td>-66.36</td>
+              <td>-97.88</td>
+            </tr>
+            <tr>
+              <td>105</td>
+              <td>-78.41</td>
+              <td>-100.44</td>
+            </tr>
+            <tr>
+              <td>106</td>
+              <td>-64.06</td>
+              <td>-104.27</td>
+            </tr>
+            <tr>
+              <td>107</td>
+              <td>-79.84</td>
+              <td>-106.46</td>
+            </tr>
+            <tr>
+              <td>108</td>
+              <td>-70.13</td>
+              <td>-96.71</td>
+            </tr>
+            <tr>
+              <td>109</td>
+              <td>-81.36</td>
+              <td>-129.46</td>
+            </tr>
+            <tr>
+              <td>110</td>
+              <td>-134.16</td>
+              <td>-149.29</td>
+            </tr>
+            <tr>
+              <td>111</td>
+              <td>-75.36</td>
+              <td>-143.47</td>
+            </tr>
+            <tr>
+              <td>112</td>
+              <td>-73.25</td>
+              <td>-175.52</td>
+            </tr>
+            <tr>
+              <td>113</td>
+              <td>-77.03</td>
+              <td>-169.03</td>
+            </tr>
+            <tr>
+              <td>114</td>
+              <td>-66.11</td>
+              <td>-206.02</td>
+            </tr>
+            <tr>
+              <td>115</td>
+              <td>-94.09</td>
+              <td>-201.18</td>
+            </tr>
+            <tr>
+              <td>116</td>
+              <td>-182.85</td>
+              <td>-255.15</td>
+            </tr>
+            <tr>
+              <td>117</td>
+              <td>-80.67</td>
+              <td>-238.58</td>
+            </tr>
+            <tr>
+              <td>118</td>
+              <td>-159.39</td>
+              <td>-293.11</td>
+            </tr>
+            <tr>
+              <td>119</td>
+              <td>-82.62</td>
+              <td>-299.81</td>
+            </tr>
+            <tr>
+              <td>120</td>
+              <td>172.64</td>
+              <td>-247.37</td>
+            </tr>
+            <tr>
+              <td>121</td>
+              <td>-125.17</td>
+              <td>-427.66</td>
+            </tr>
+            <tr>
+              <td>122</td>
+              <td>-331.79</td>
+              <td>-769.09</td>
+            </tr>
+            <tr>
+              <td>123</td>
+              <td>-126.1</td>
+              <td>-616.27</td>
+            </tr>
+            <tr>
+              <td>124</td>
+              <td>-110.84</td>
+              <td>-745.04</td>
+            </tr>
+            <tr>
+              <td>125</td>
+              <td>-218.37</td>
+              <td>-1221.67</td>
+            </tr>
+            <tr>
+              <td>126</td>
+              <td>-18265.36</td>
+              <td>4149.16</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 8.533333px" text="Table %T" />
+        </regions>
+        <input>
+          <e type="operand">Led.Vh1</e>
+        </input>
+      </table>
+    </region>
+    <region left="297" top="675" width="266" height="273" color="#000000" fontSize="10">
+      <table id="4" elementsOnDataSizeChange="10,10" focus="0,0;2,9" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">Led.Ih1</e>
+          <e regions="columns">Led.Vh1</e>
+          <e regions="columns">Led.I1</e>
+          <e regions="columns">Led.V1</e>
+          <e regions="columns">y</e>
+          <e regions="columns">Led.I</e>
+          <e regions="columns">Led.V</e>
+          <e regions="rows">Led.Ih1</e>
+          <e regions="rows">Led.Vh1</e>
+          <e regions="rows">y.1</e>
+          <e regions="rows">x</e>
+          <e regions="rows">y</e>
+          <e regions="units">y</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="127" cols="3" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>0</td>
+              <td>8001</td>
+              <td>176.36</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>7251.63</td>
+              <td>9090.6</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>-32.55</td>
+              <td>1242.97</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>1596.26</td>
+              <td>1050.28</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>-60.4</td>
+              <td>635.71</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>1400.27</td>
+              <td>780.72</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>-19.76</td>
+              <td>451.11</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>473.86</td>
+              <td>384.87</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>32.61</td>
+              <td>290.39</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>158.03</td>
+              <td>834.78</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>-9.62</td>
+              <td>277.03</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>52.51</td>
+              <td>667.13</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>-18.43</td>
+              <td>258.25</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>5.96</td>
+              <td>269.41</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>-21.76</td>
+              <td>188.33</td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>-96.51</td>
+              <td>215</td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>-50.52</td>
+              <td>166.37</td>
+            </tr>
+            <tr>
+              <td>17</td>
+              <td>-132.13</td>
+              <td>331.25</td>
+            </tr>
+            <tr>
+              <td>18</td>
+              <td>-25.8</td>
+              <td>99.44</td>
+            </tr>
+            <tr>
+              <td>19</td>
+              <td>-179.19</td>
+              <td>136.73</td>
+            </tr>
+            <tr>
+              <td>20</td>
+              <td>-102.08</td>
+              <td>181.59</td>
+            </tr>
+            <tr>
+              <td>21</td>
+              <td>-183.03</td>
+              <td>33.9</td>
+            </tr>
+            <tr>
+              <td>22</td>
+              <td>-39.55</td>
+              <td>161.92</td>
+            </tr>
+            <tr>
+              <td>23</td>
+              <td>-136.67</td>
+              <td>5.48</td>
+            </tr>
+            <tr>
+              <td>24</td>
+              <td>-67.25</td>
+              <td>107.69</td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>-131.12</td>
+              <td>-17.17</td>
+            </tr>
+            <tr>
+              <td>26</td>
+              <td>-51.31</td>
+              <td>104.61</td>
+            </tr>
+            <tr>
+              <td>27</td>
+              <td>-117.68</td>
+              <td>12.26</td>
+            </tr>
+            <tr>
+              <td>28</td>
+              <td>-89.68</td>
+              <td>90.38</td>
+            </tr>
+            <tr>
+              <td>29</td>
+              <td>-65.38</td>
+              <td>-8.98</td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>-52.61</td>
+              <td>62.91</td>
+            </tr>
+            <tr>
+              <td>31</td>
+              <td>-45.86</td>
+              <td>-12.21</td>
+            </tr>
+            <tr>
+              <td>32</td>
+              <td>-69.7</td>
+              <td>34.03</td>
+            </tr>
+            <tr>
+              <td>33</td>
+              <td>16.09</td>
+              <td>51.61</td>
+            </tr>
+            <tr>
+              <td>34</td>
+              <td>-77.48</td>
+              <td>44.48</td>
+            </tr>
+            <tr>
+              <td>35</td>
+              <td>39.48</td>
+              <td>-9.94</td>
+            </tr>
+            <tr>
+              <td>36</td>
+              <td>-185.19</td>
+              <td>40.34</td>
+            </tr>
+            <tr>
+              <td>37</td>
+              <td>39.44</td>
+              <td>30.8</td>
+            </tr>
+            <tr>
+              <td>38</td>
+              <td>-58.46</td>
+              <td>29.98</td>
+            </tr>
+            <tr>
+              <td>39</td>
+              <td>-62.26</td>
+              <td>-3.04</td>
+            </tr>
+            <tr>
+              <td>40</td>
+              <td>-106.42</td>
+              <td>-37.41</td>
+            </tr>
+            <tr>
+              <td>41</td>
+              <td>50.74</td>
+              <td>41.31</td>
+            </tr>
+            <tr>
+              <td>42</td>
+              <td>92.01</td>
+              <td>-56.38</td>
+            </tr>
+            <tr>
+              <td>43</td>
+              <td>-32.3</td>
+              <td>83.55</td>
+            </tr>
+            <tr>
+              <td>44</td>
+              <td>-69.34</td>
+              <td>56.72</td>
+            </tr>
+            <tr>
+              <td>45</td>
+              <td>-52.09</td>
+              <td>11.69</td>
+            </tr>
+            <tr>
+              <td>46</td>
+              <td>-75.25</td>
+              <td>14.19</td>
+            </tr>
+            <tr>
+              <td>47</td>
+              <td>-29.23</td>
+              <td>151.9</td>
+            </tr>
+            <tr>
+              <td>48</td>
+              <td>-64.6</td>
+              <td>66.02</td>
+            </tr>
+            <tr>
+              <td>49</td>
+              <td>-90.69</td>
+              <td>15.55</td>
+            </tr>
+            <tr>
+              <td>50</td>
+              <td>3.07</td>
+              <td>-24.22</td>
+            </tr>
+            <tr>
+              <td>51</td>
+              <td>-67.74</td>
+              <td>84.83</td>
+            </tr>
+            <tr>
+              <td>52</td>
+              <td>1.98</td>
+              <td>66.9</td>
+            </tr>
+            <tr>
+              <td>53</td>
+              <td>-182.73</td>
+              <td>47.94</td>
+            </tr>
+            <tr>
+              <td>54</td>
+              <td>-99.95</td>
+              <td>7.51</td>
+            </tr>
+            <tr>
+              <td>55</td>
+              <td>-1.83</td>
+              <td>8.66</td>
+            </tr>
+            <tr>
+              <td>56</td>
+              <td>-48.57</td>
+              <td>14.5</td>
+            </tr>
+            <tr>
+              <td>57</td>
+              <td>-119.42</td>
+              <td>75.22</td>
+            </tr>
+            <tr>
+              <td>58</td>
+              <td>-133.23</td>
+              <td>52.78</td>
+            </tr>
+            <tr>
+              <td>59</td>
+              <td>-90.64</td>
+              <td>61.1</td>
+            </tr>
+            <tr>
+              <td>60</td>
+              <td>-32.06</td>
+              <td>47.45</td>
+            </tr>
+            <tr>
+              <td>61</td>
+              <td>38.26</td>
+              <td>64.09</td>
+            </tr>
+            <tr>
+              <td>62</td>
+              <td>-83.38</td>
+              <td>74.55</td>
+            </tr>
+            <tr>
+              <td>63</td>
+              <td>-133.31</td>
+              <td>-22.07</td>
+            </tr>
+            <tr>
+              <td>64</td>
+              <td>6.31</td>
+              <td>-23.65</td>
+            </tr>
+            <tr>
+              <td>65</td>
+              <td>-43.62</td>
+              <td>69.84</td>
+            </tr>
+            <tr>
+              <td>66</td>
+              <td>-165.26</td>
+              <td>56.23</td>
+            </tr>
+            <tr>
+              <td>67</td>
+              <td>-94.94</td>
+              <td>36.43</td>
+            </tr>
+            <tr>
+              <td>68</td>
+              <td>-36.36</td>
+              <td>46.91</td>
+            </tr>
+            <tr>
+              <td>69</td>
+              <td>6.23</td>
+              <td>35.39</td>
+            </tr>
+            <tr>
+              <td>70</td>
+              <td>-7.58</td>
+              <td>54.62</td>
+            </tr>
+            <tr>
+              <td>71</td>
+              <td>-78.43</td>
+              <td>-9.33</td>
+            </tr>
+            <tr>
+              <td>72</td>
+              <td>-125.17</td>
+              <td>-18.45</td>
+            </tr>
+            <tr>
+              <td>73</td>
+              <td>-27.05</td>
+              <td>-22.9</td>
+            </tr>
+            <tr>
+              <td>74</td>
+              <td>55.73</td>
+              <td>14.19</td>
+            </tr>
+            <tr>
+              <td>75</td>
+              <td>-128.98</td>
+              <td>29.76</td>
+            </tr>
+            <tr>
+              <td>76</td>
+              <td>-59.26</td>
+              <td>44.26</td>
+            </tr>
+            <tr>
+              <td>77</td>
+              <td>-130.07</td>
+              <td>-68.28</td>
+            </tr>
+            <tr>
+              <td>78</td>
+              <td>-36.31</td>
+              <td>-32.07</td>
+            </tr>
+            <tr>
+              <td>79</td>
+              <td>-62.4</td>
+              <td>14.79</td>
+            </tr>
+            <tr>
+              <td>80</td>
+              <td>-97.77</td>
+              <td>96.98</td>
+            </tr>
+            <tr>
+              <td>81</td>
+              <td>-51.75</td>
+              <td>-44.5</td>
+            </tr>
+            <tr>
+              <td>82</td>
+              <td>-74.91</td>
+              <td>-50.86</td>
+            </tr>
+            <tr>
+              <td>83</td>
+              <td>-57.66</td>
+              <td>-9.78</td>
+            </tr>
+            <tr>
+              <td>84</td>
+              <td>-94.7</td>
+              <td>12.99</td>
+            </tr>
+            <tr>
+              <td>85</td>
+              <td>-219.01</td>
+              <td>-131.11</td>
+            </tr>
+            <tr>
+              <td>86</td>
+              <td>-177.74</td>
+              <td>-37.71</td>
+            </tr>
+            <tr>
+              <td>87</td>
+              <td>-20.58</td>
+              <td>-120.86</td>
+            </tr>
+            <tr>
+              <td>88</td>
+              <td>-64.74</td>
+              <td>-91.06</td>
+            </tr>
+            <tr>
+              <td>89</td>
+              <td>-68.54</td>
+              <td>-62.77</td>
+            </tr>
+            <tr>
+              <td>90</td>
+              <td>-166.44</td>
+              <td>-66.86</td>
+            </tr>
+            <tr>
+              <td>91</td>
+              <td>58.19</td>
+              <td>-62.42</td>
+            </tr>
+            <tr>
+              <td>92</td>
+              <td>-166.48</td>
+              <td>-118</td>
+            </tr>
+            <tr>
+              <td>93</td>
+              <td>-49.52</td>
+              <td>-69.11</td>
+            </tr>
+            <tr>
+              <td>94</td>
+              <td>-143.09</td>
+              <td>-67.77</td>
+            </tr>
+            <tr>
+              <td>95</td>
+              <td>-57.3</td>
+              <td>-91.41</td>
+            </tr>
+            <tr>
+              <td>96</td>
+              <td>-81.14</td>
+              <td>-144.01</td>
+            </tr>
+            <tr>
+              <td>97</td>
+              <td>-74.39</td>
+              <td>-75.59</td>
+            </tr>
+            <tr>
+              <td>98</td>
+              <td>-61.62</td>
+              <td>-154.55</td>
+            </tr>
+            <tr>
+              <td>99</td>
+              <td>-37.32</td>
+              <td>-62.67</td>
+            </tr>
+            <tr>
+              <td>100</td>
+              <td>-9.32</td>
+              <td>-148.73</td>
+            </tr>
+            <tr>
+              <td>101</td>
+              <td>-75.69</td>
+              <td>-64.84</td>
+            </tr>
+            <tr>
+              <td>102</td>
+              <td>4.12</td>
+              <td>-195.66</td>
+            </tr>
+            <tr>
+              <td>103</td>
+              <td>-59.75</td>
+              <td>-80.48</td>
+            </tr>
+            <tr>
+              <td>104</td>
+              <td>9.67</td>
+              <td>-193.12</td>
+            </tr>
+            <tr>
+              <td>105</td>
+              <td>-87.45</td>
+              <td>-47.94</td>
+            </tr>
+            <tr>
+              <td>106</td>
+              <td>56.03</td>
+              <td>-188.18</td>
+            </tr>
+            <tr>
+              <td>107</td>
+              <td>-24.92</td>
+              <td>-53.82</td>
+            </tr>
+            <tr>
+              <td>108</td>
+              <td>52.19</td>
+              <td>-113.29</td>
+            </tr>
+            <tr>
+              <td>109</td>
+              <td>-101.2</td>
+              <td>-166.68</td>
+            </tr>
+            <tr>
+              <td>110</td>
+              <td>5.13</td>
+              <td>47.26</td>
+            </tr>
+            <tr>
+              <td>111</td>
+              <td>-76.48</td>
+              <td>-137.57</td>
+            </tr>
+            <tr>
+              <td>112</td>
+              <td>-30.49</td>
+              <td>-111.41</td>
+            </tr>
+            <tr>
+              <td>113</td>
+              <td>-105.24</td>
+              <td>-163.61</td>
+            </tr>
+            <tr>
+              <td>114</td>
+              <td>-132.96</td>
+              <td>-111.81</td>
+            </tr>
+            <tr>
+              <td>115</td>
+              <td>-108.57</td>
+              <td>-156.94</td>
+            </tr>
+            <tr>
+              <td>116</td>
+              <td>-179.51</td>
+              <td>211.97</td>
+            </tr>
+            <tr>
+              <td>117</td>
+              <td>-117.38</td>
+              <td>-225.86</td>
+            </tr>
+            <tr>
+              <td>118</td>
+              <td>-285.03</td>
+              <td>273.79</td>
+            </tr>
+            <tr>
+              <td>119</td>
+              <td>-159.61</td>
+              <td>-342.96</td>
+            </tr>
+            <tr>
+              <td>120</td>
+              <td>-600.86</td>
+              <td>-341.22</td>
+            </tr>
+            <tr>
+              <td>121</td>
+              <td>-107.24</td>
+              <td>-398.27</td>
+            </tr>
+            <tr>
+              <td>122</td>
+              <td>-1527.27</td>
+              <td>-240.85</td>
+            </tr>
+            <tr>
+              <td>123</td>
+              <td>-66.6</td>
+              <td>-643.6</td>
+            </tr>
+            <tr>
+              <td>124</td>
+              <td>-1723.26</td>
+              <td>-657.92</td>
+            </tr>
+            <tr>
+              <td>125</td>
+              <td>-94.45</td>
+              <td>-1321.95</td>
+            </tr>
+            <tr>
+              <td>126</td>
+              <td>-7378.63</td>
+              <td>3957.63</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 6.82666636px" text="Table %T" />
+        </regions>
+        <input>
+          <e type="operand">Led.Ih1</e>
+        </input>
+      </table>
+    </region>
+    <region left="0" top="1044" width="187" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">N</e>
+          <e type="operand">Led.Ih1</e>
+          <e type="function" args="1">length</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">381</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="1089" width="139" height="37" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">v.soma</e>
+          <e type="operand">Led.Vh1</e>
+          <e type="function" args="1">sum</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1170" width="128" height="60" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.rms</e>
+          <e type="operand">v.soma</e>
+          <e type="function" args="1">abs</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="operand">N</e>
+          <e type="operator" args="2">/</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1242" width="127" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1132.8527</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="1287" width="88" height="55" color="#000000" fontSize="10">
+      <table id="5" elementsOnDataSizeChange="10,10" focus="0,0;0,0" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">V.rms</e>
+          <e regions="columns">v.soma</e>
+          <e regions="rows">V.rms</e>
+          <e regions="rows">v.soma</e>
+          <e regions="rows">y.1</e>
+          <e regions="rows">x</e>
+          <e regions="rows">y</e>
+          <e regions="units">V.rms</e>
+          <e regions="units">v.soma</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>1132.85</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,White,#E1E1E1,Black" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 10px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 13.333333px" text="Table %T" />
+        </regions>
+        <input>
+          <e type="operand">V.rms</e>
+        </input>
+      </table>
+    </region>
+  </regions>
+</worksheet>

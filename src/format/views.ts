@@ -99,10 +99,22 @@ export function assignments(blocks: BlockSegment[]): Assignment[] {
   );
 }
 
-/** Folha: avaliação de cima para baixo e da esquerda para a direita (y, depois x). */
+/** Regiões com y diferente em menos disto contam como a mesma linha (ADENDO 05, E3.1). */
+export const SAME_ROW_PX = 4;
+
+/** Folha: ordem de leitura. De cima para baixo; na mesma linha (y a menos de 4 px), da esquerda para a direita. */
 export function byPosition(blocks: BlockSegment[]): BlockSegment[] {
   const n = (b: BlockSegment, k: string) => Number(b.attrs[k] ?? 0);
-  return [...blocks].sort((a, b) => n(a, 'y') - n(b, 'y') || n(a, 'x') - n(b, 'x'));
+  const byY = [...blocks].sort((a, b) => n(a, 'y') - n(b, 'y') || n(a, 'x') - n(b, 'x'));
+  const out: BlockSegment[] = [];
+  for (let i = 0; i < byY.length;) {
+    const top = n(byY[i], 'y');
+    let j = i;
+    while (j < byY.length && n(byY[j], 'y') - top < SAME_ROW_PX) j++;
+    out.push(...byY.slice(i, j).sort((a, b) => n(a, 'x') - n(b, 'x')));
+    i = j;
+  }
+  return out;
 }
 
 export type LibFunction = {
@@ -156,4 +168,28 @@ export function texOutline(text: string): TexSection[] {
     out.push({ line: i + 1, level, title: m[3], number });
   });
   return out;
+}
+
+/** Nome definido numa linha linear: "x := 2", "f(a, b) := a + b", "Z_0 := sqrt(L/C) = ?". */
+export const definedName = (raw: string): string | null => /^\s*([^\s(:=#]+)\s*(?:\([^)]*\))?\s*:=/.exec(raw)?.[1] ?? null;
+
+/**
+ * Para o "=" inteligente (ADENDO 05, E2.1): before(chave, linha)(nome) diz se o nome já foi definido
+ * antes daquela linha, na ordem de avaliação dada. extra: nomes que valem desde o início (bibliotecas).
+ */
+export function definedBefore(blocks: { key: string; lines: string[] }[], extra: Iterable<string> = []) {
+  const first = new Map<string, number>();
+  const ord = new Map<string, number>();
+  let n = 0;
+  for (const b of blocks) b.lines.forEach((l, i) => {
+    ord.set(`${b.key}:${i}`, n);
+    const name = definedName(l);
+    if (name && !first.has(name)) first.set(name, n);
+    n++;
+  });
+  const always = new Set(extra);
+  return (key: string, line: number) => {
+    const here = ord.get(`${key}:${line}`) ?? n;
+    return (name: string) => always.has(name) || (first.get(name) ?? Infinity) < here;
+  };
 }

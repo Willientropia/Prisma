@@ -50,3 +50,11 @@
 - {id: B10-10, linear: "sin(x)", digitado: '\operatorname{sin}\left(x\right)'}
 - {id: B10-10, linear: "ρ_cu", digitado: '\rho_{\mathrm{cu}}'}
 - {id: B10-04, linear: "ρ", digitado: '\rho '}
+
+# --- ADENDO 05: definição que também mostra o resultado; índices de nome ---
+- {id: E8-11, linear: "Z_0 := sqrt(L/C) = ?"}
+- {id: E8-11, linear: "I_n := 5 A = ? mA"}
+- {id: E8-02, linear: "s_tensao := 10*x"}
+- {id: E8-10, linear: "S_trafo := 5 kV*A"}
+- {id: E8-19, linear: "Y = ? 10^(-6)", digitado: 'Y=?\,10^{-6}'}
+- {id: E8-19, linear: "arg(γ) = ? deg"}

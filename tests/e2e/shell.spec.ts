@@ -20,7 +20,7 @@ const RIBBON: Record<keyof typeof FILES, Record<string, string[]>> = {
   },
   folha: {
     Início: ['Regiões: Cálculo, Texto, Gráfico, Matriz, Imagem', 'Funções: Inserir função, Definir função', 'Organizar: Alinhar, Grade', 'Cálculo: Calcular, Interromper'],
-    Inserir: ['Conteúdo: Tabela, Imagem, Link'],
+    Inserir: ['Conteúdo: Tabela, Imagem, Link', 'Organizar: Área'], // grupo Organizar: ADENDO 05, E6
     Exibir: ['Exibição: Grade, Dependências, Zoom, Código-fonte'],
     Saída: ['Saída: Exportar, Imprimir, Promover a caderno'],
   },

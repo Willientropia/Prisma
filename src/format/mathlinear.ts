@@ -14,8 +14,8 @@ export type Node =
   | { t: 'call'; f: string; args: Node[] }
   | { t: 'mat'; rows: Node[][] };
 export type Line =
-  | { kind: 'def'; lhs: Node; rhs: Node }
-  | { kind: 'eval'; expr: Node; unit?: Unit }
+  | { kind: 'def'; lhs: Node; rhs: Node; show?: boolean; unit?: Unit; conv?: Node } // show: "x := expr = ?" (ADENDO 05, E2.1)
+  | { kind: 'eval'; expr: Node; unit?: Unit; conv?: Node } // conv: conversão por expressão, "= ? 10^-6" (E4.3)
   | { kind: 'expr'; expr: Node };
 
 export class MathSyntaxError extends Error {}
@@ -55,15 +55,30 @@ class LinearParser {
   eat(v: string) { if (!this.isOp(v)) fail(`Esperava "${v}"`); this.i++; }
   atEnd() { return this.peek() === undefined; }
 
+  /** O que vem depois de "= ?": unidade ("mV", "%", "deg") ou, se não for, expressão ("10^-6"). */
+  target(): { unit?: Unit; conv?: Node } {
+    if (this.atEnd()) return {};
+    const save = this.i;
+    try { const unit = this.unit(); if (this.atEnd()) return { unit }; } catch { /* não é unidade */ }
+    this.i = save;
+    return { conv: this.expr() };
+  }
+
   line(): Line {
     const e = this.expr();
-    if (this.isOp(':=')) { this.i++; const rhs = this.expr(); this.end(); return { kind: 'def', lhs: e, rhs }; }
+    if (this.isOp(':=')) {
+      this.i++;
+      const rhs = this.expr();
+      if (this.isOp('=')) { this.i++; this.eat('?'); const t = this.target(); this.end(); return { kind: 'def', lhs: e, rhs, show: true, ...t }; }
+      this.end();
+      return { kind: 'def', lhs: e, rhs };
+    }
     if (this.isOp('=')) {
       this.i++;
       this.eat('?');
-      const unit = this.atEnd() ? undefined : this.unit();
+      const t = this.target();
       this.end();
-      return { kind: 'eval', expr: e, unit };
+      return { kind: 'eval', expr: e, ...t };
     }
     this.end();
     return { kind: 'expr', expr: e };
@@ -195,8 +210,9 @@ export function nodeToLinear(n: Node): string {
 }
 
 export function lineToLinear(l: Line): string {
-  if (l.kind === 'def') return `${nodeToLinear(l.lhs)} := ${nodeToLinear(l.rhs)}`;
-  if (l.kind === 'eval') return `${nodeToLinear(l.expr)} = ?${l.unit ? ` ${unitToLinear(l.unit)}` : ''}`;
+  const tgt = (x: { unit?: Unit; conv?: Node }) => (x.unit ? ` ${unitToLinear(x.unit)}` : x.conv ? ` ${nodeToLinear(x.conv)}` : '');
+  if (l.kind === 'def') return `${nodeToLinear(l.lhs)} := ${nodeToLinear(l.rhs)}${l.show ? ` = ?${tgt(l)}` : ''}`;
+  if (l.kind === 'eval') return `${nodeToLinear(l.expr)} = ?${tgt(l)}`;
   return nodeToLinear(l.expr);
 }
 
@@ -224,7 +240,8 @@ export function idLatex(name: string): string {
 }
 
 /** defined: variáveis e funções já definidas (motor); isUnit: unidade conhecida (math.js). B4, reconhecimento de unidades. */
-export type LatexCtx = { defined?: Set<string>; params?: Set<string>; isUnit?: (name: string) => boolean };
+/** before: nomes definidos ANTES desta linha na ordem de avaliação (o "=" inteligente do ADENDO 05, E2.1). */
+export type LatexCtx = { defined?: Set<string>; params?: Set<string>; isUnit?: (name: string) => boolean; before?: (name: string) => boolean };
 
 const unitTermLatex = (t: UnitTerm) => `\\mathrm{${chars(t.name)}}${t.exp ? `^{${t.exp}}` : ''}`;
 /** Unidade em azul (classe u) e divisão sempre como fração (B3). */
@@ -243,7 +260,9 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
   switch (n.t) {
     case 'num': return numLatex(n.v);
     case 'id': {
-      const known = !ctx.defined || ctx.defined.has(n.name) || ctx.params?.has(n.name) || n.name === 'pi' || n.name === 'e';
+      const user = ctx.defined?.has(n.name) || ctx.params?.has(n.name);
+      if (n.name === 'i' && !user) return '\\mathbf{i}'; // unidade imaginária: negrito reto (ADENDO 05, E2.3)
+      const known = !ctx.defined || user || n.name === 'pi' || n.name === 'e';
       return known ? idLatex(n.name) : `\\class{undef}{${idLatex(n.name)}}`;
     }
     case 'qty': {
@@ -275,13 +294,15 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
 
 const paramsOf = (lhs: Node) => new Set(lhs.t === 'call' ? lhs.args.flatMap((a) => (a.t === 'id' ? [a.name] : [])) : []);
 
+const tgtLatex = (x: { unit?: Unit; conv?: Node }) => (x.unit ? `\\,${unitLatex(x.unit)}` : x.conv ? `\\,${nodeLatex(x.conv)}` : '');
+
 export function lineToLatex(l: Line, ctx: LatexCtx = {}): string {
   if (l.kind === 'def') {
     const inner = { ...ctx, params: new Set([...(ctx.params ?? []), ...paramsOf(l.lhs)]) };
     const lhs = l.lhs.t === 'id' ? idLatex(l.lhs.name) : nodeLatex(l.lhs, { ...inner, defined: undefined });
-    return `${lhs}\\;\\coloneq\\;${nodeLatex(l.rhs, inner)}`;
+    return `${lhs}\\;\\coloneq\\;${nodeLatex(l.rhs, inner)}${l.show ? `=?${tgtLatex(l)}` : ''}`;
   }
-  if (l.kind === 'eval') return `${nodeLatex(l.expr, ctx)}=?${l.unit ? `\\,${unitLatex(l.unit)}` : ''}`;
+  if (l.kind === 'eval') return `${nodeLatex(l.expr, ctx)}=?${tgtLatex(l)}`;
   return nodeLatex(l.expr, ctx);
 }
 
@@ -341,16 +362,28 @@ class LatexParser {
     if (isColoneq(this.peek())) {
       if (this.peek()!.v === ':' && this.peek(1)?.v === '=') this.i++;
       this.i++;
-      return { kind: 'def', lhs: e, rhs: this.done(this.expr()) };
+      const rhs = this.expr();
+      if (this.peek()?.v === '=' && this.peek(1)?.v === '?') {
+        this.i += 2;
+        return { kind: 'def', lhs: e, rhs, show: true, ...this.done(this.targetFrom()) };
+      }
+      return { kind: 'def', lhs: e, rhs: this.done(rhs) };
     }
     if (this.peek()?.v === '=' && this.peek(1)?.v === '?') {
       this.i += 2;
-      const unit = this.atEnd() ? undefined : this.unitFrom();
-      return { kind: 'eval', expr: e, unit: this.done(unit) };
+      return { kind: 'eval', expr: e, ...this.done(this.targetFrom()) };
     }
     return { kind: 'expr', expr: this.done(e) };
   }
   private done<T>(x: T): T { if (!this.atEnd()) fail('Expressão incompleta'); return x; }
+  /** Depois de "=?": unidade ou expressão de conversão (E4.3). */
+  targetFrom(): { unit?: Unit; conv?: Node } {
+    if (this.atEnd()) return {};
+    const save = this.i;
+    try { const unit = this.unitFrom(); if (this.atEnd()) return { unit }; } catch { /* não é unidade */ }
+    this.i = save;
+    return { conv: this.expr() };
+  }
 
   expr(): Node {
     const a = this.add();
@@ -588,6 +621,13 @@ class LatexParser {
 
 export const latexToLine = (latex: string): Line => new LatexParser(llex(latex)).line();
 /** Unidade digitada no campo do marcador (B5): "mV", "\%", "\mathrm{kWh}". */
+/** Conversão digitada no marcador (E4.3): unidade ou, se não for, expressão ("10^{-6}"). */
+export function latexToTarget(latex: string): { unit?: Unit; conv?: Node } {
+  const p = new LatexParser(llex(latex));
+  const t = p.targetFrom();
+  if (!p.atEnd()) fail('Conversão inválida');
+  return t;
+}
 export function latexToUnit(latex: string): Unit {
   const p = new LatexParser(llex(latex));
   const u = p.unitFrom();

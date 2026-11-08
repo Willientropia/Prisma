@@ -1,14 +1,16 @@
 // Folha livre (SPEC 7.2 + ADENDO 02, B6): regiões na grade, editadas no lugar, recalculadas sem clique.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
-import { lines, parse, type BlockSegment } from '../../format/doc';
-import { assignments, byPosition } from '../../format/views';
+import { lines, parse, withAttr, type BlockSegment } from '../../format/doc';
+import { assignments, byPosition, definedBefore, definedName } from '../../format/views';
 import { dirname, fmtNumber } from '../../format/display';
 import { idLatex, nodeLatex, parseLinear, parseUnit, unitLatex } from '../../format/mathlinear';
 import { recalc } from '../../engine/run';
 import { run } from '../../commands/registry';
 import { useWorkspace, type OpenDoc } from '../../store/workspace';
-import { LeftPanel } from '../../shell/ProjectPanel';
+import { ContextMenu, LeftPanel, type MenuState } from '../../shell/ProjectPanel';
+import { Icon } from '../../components/Icon';
+import { register } from '../../commands/registry';
 import { MathLine, isKnownUnit } from '../../math/MathLine';
 import { MathMarkup, type Key } from '../../math/MathField';
 import { TextEditor } from '../TextEditor';
@@ -18,6 +20,8 @@ import { Plot } from './Plot';
 import s from '../editors.module.css';
 
 const GRID = 20;
+/** Altura da linha de título de uma área (E6). */
+const AREA_HEAD = 20;
 const snap = (v: number) => Math.max(0, Math.round(v / GRID) * GRID);
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const num = (b: BlockSegment, k: string, d = 0) => Number(b.attrs[k] ?? d) || d;
@@ -75,10 +79,20 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   useEffect(() => { if (doc.path) void loadDir(dirname(doc.path)); }, [doc.path, loadDir]);
   const stale = useStale();
   const ctx = useMemo(() => ({ defined: new Set(result?.defined ?? []), isUnit: isKnownUnit }), [result]);
+  // nomes definidos antes de cada linha, na ordem de leitura da folha (ADENDO 05, E2.1 e E3.1)
+  const before = useMemo(() => {
+    const ordered = byPosition(regions.filter((r) => !('desativado' in r.seg.attrs)).map((r) => r.seg)).map((seg) => ({ key: regions.find((r) => r.seg === seg)!.key, lines: lines(seg.body).map((l) => l.replace(/\r?\n$/, '')) }));
+    const own = new Set(ordered.flatMap((b) => b.lines.map(definedName).filter((x): x is string => !!x)));
+    return definedBefore(ordered, (result?.defined ?? []).filter((d) => !own.has(d)));
+  }, [regions, result]);
 
   const sheet = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [cross, setCross] = useState<{ x: number; y: number } | null>(null);
+  const [crossState, setCrossState] = useState<{ x: number; y: number } | null>(null);
+  // ref junto do estado: a tecla digitada logo depois do Enter já encontra a cruz nova (ADENDO 05)
+  const crossRef = useRef<{ x: number; y: number } | null>(null);
+  const setCross = (c: { x: number; y: number } | null) => { crossRef.current = c; setCrossState(c); };
+  const cross = crossState;
   const [focus, setFocus] = useState<Focus>(null);
   const [drag, setDrag] = useState<{ ids: string[]; dx: number; dy: number } | null>(null);
   const [band, setBand] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
@@ -92,6 +106,80 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const pagina = (parsed.meta.pagina ?? {}) as { largura?: number; altura?: number };
   const pageW = Number(pagina.largura) || 1200;
   const pageH = Number(pagina.altura) || 1600;
+
+  // Áreas (ADENDO 05, E6): blocos area ... fim-area, na ordem do arquivo. Recolhida, as regiões de dentro
+  // somem (mas continuam sendo avaliadas) e as de baixo sobem para ocupar o espaço.
+  const areas = useMemo(() => {
+    const out: { region: Region; members: Set<string>; top: number; bottom: number; collapsed: boolean; locked: boolean; titulo: string }[] = [];
+    const open: typeof out = [];
+    for (const r of regions) {
+      if (r.seg.type === 'area') {
+        const a = { region: r, members: new Set<string>(), top: num(r.seg, 'y'), bottom: num(r.seg, 'y') + AREA_HEAD, collapsed: 'recolhida' in r.seg.attrs, locked: 'travada' in r.seg.attrs, titulo: r.seg.attrs.titulo ?? '' };
+        out.push(a); open.push(a);
+      } else if (r.seg.type === 'fim-area') {
+        const k = open.map((a) => a.region.id).lastIndexOf(r.id);
+        const a = k >= 0 ? open.splice(k, 1)[0] : open.pop();
+        if (a) a.bottom = Math.max(a.bottom, num(r.seg, 'y', a.bottom));
+      } else for (const a of open) { a.members.add(r.id); a.bottom = Math.max(a.bottom, num(r.seg, 'y') + AREA_HEAD * 2); }
+    }
+    return out;
+  }, [regions]);
+  /** Quanto uma posição y sobe por causa das áreas recolhidas acima dela. */
+  const shiftAt = (y: number, self?: string) => areas.reduce((acc, a) => (a.collapsed && a.bottom <= y && a.region.id !== self ? acc + Math.max(0, a.bottom - a.top - AREA_HEAD) : acc), 0);
+  const hidden = (id: string) => areas.some((a) => a.collapsed && a.members.has(id));
+  const locked = (id: string) => areas.some((a) => a.locked && a.members.has(id));
+
+  const [menu, setMenu] = useState<MenuState>(null);
+  /** Troca um atributo da linha de abertura (desativado, moldura, descricao, recolhida, travada). */
+  const setAttr = (id: string, name: string, value: string | true | null) => {
+    const r = byId(id);
+    if (!r) return;
+    const first = lines(r.seg.raw)[0];
+    edit(doc.id, r.start, r.start + first.length, withAttr(first, name, value));
+  };
+  const regionMenu = (e: React.MouseEvent, r: Region) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const a = r.seg.attrs;
+    setMenu({ x: e.clientX, y: e.clientY, items: [
+      { label: 'desativado' in a ? 'Ativar avaliação' : 'Desativar avaliação', run: () => setAttr(r.id, 'desativado', 'desativado' in a ? null : true) },
+      { label: 'moldura' in a ? 'Tirar moldura' : 'Moldura', run: () => setAttr(r.id, 'moldura', 'moldura' in a ? null : true) },
+      { label: 'Descrição...', run: async () => {
+        const q = await useWorkspace.getState().ask({ title: 'Descrição da região', message: 'Comentário curto mostrado acima da região (vazio tira):', input: a.descricao ?? '', buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
+        if (q.id === 'ok') setAttr(r.id, 'descricao', q.value.trim() || null);
+      } },
+    ] });
+  };
+  const areaMenu = (e: React.MouseEvent, a: (typeof areas)[number]) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenu({ x: e.clientX, y: e.clientY, items: [
+      { label: a.collapsed ? 'Expandir área' : 'Recolher área', run: () => setAttr(a.region.id, 'recolhida', a.collapsed ? null : true) },
+      { label: a.locked ? 'Destravar área' : 'Travar área', run: () => setAttr(a.region.id, 'travada', a.locked ? null : true) },
+      { label: 'Renomear área...', run: async () => {
+        const q = await useWorkspace.getState().ask({ title: 'Área', message: 'Título da área:', input: a.titulo, buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
+        if (q.id === 'ok') setAttr(a.region.id, 'titulo', q.value.trim() || null);
+      } },
+    ] });
+  };
+
+  /** Inserir > Organizar > Área: envolve as regiões selecionadas (E6). */
+  const wrapInArea = () => {
+    const sel = fresh().filter((r) => selected.has(r.id) && r.seg.type !== 'area' && r.seg.type !== 'fim-area');
+    if (!sel.length) return set({ status: 'Selecione as regiões que vão para dentro da área' });
+    const t = textNow();
+    const top = Math.max(0, snap(Math.min(...sel.map((r) => num(r.seg, 'y'))) - GRID));
+    const bottom = snap(Math.max(...sel.map((r) => num(r.seg, 'y') + (sheet.current?.querySelector<HTMLElement>(`[data-region="${r.id}"]`)?.offsetHeight ?? GRID))) + GRID / 2);
+    const id = nextId('area');
+    let rest = t;
+    for (const r of [...sel].sort((a, b) => b.start - a.start)) rest = rest.slice(0, r.start) + rest.slice(r.end);
+    const at = sel.reduce((m, r) => Math.min(m, r.start), Infinity);
+    const before = t.slice(0, at).length - sel.filter((r) => r.start < at).reduce((n, r) => n + (r.end - r.start), 0);
+    const inner = sel.map((r) => r.seg.raw.replace(/\n*$/, '\n')).join('\n');
+    const block = `\`\`\`area {#${id} titulo="Área" y=${top}}\n\`\`\`\n\n${inner}\n\`\`\`fim-area {#${id} y=${bottom}}\n\`\`\`\n`;
+    edit(doc.id, 0, t.length, rest.slice(0, before) + block + rest.slice(before));
+  };
+  useEffect(() => { register('folha.area', { label: 'Área', run: wrapInArea }); return () => register('folha.area', { run: undefined }); });
 
   const textNow = () => useWorkspace.getState().openDocs.find((x) => x.id === doc.id)?.text ?? '';
   const fresh = () => regionsOf(textNow());
@@ -213,15 +301,26 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     }
     if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
     e.preventDefault();
-    if (!cross) return;
+    const at = crossRef.current;
+    if (!at) return;
     if (e.key === '"') { // " numa área vazia cria região de texto (B4)
-      setFocus({ id: appendRegion('texto', cross.x, cross.y), line: -1 });
+      setFocus({ id: appendRegion('texto', at.x, at.y), line: -1 });
     } else {
       pendingKeys.current = [{ key: e.key }];
       creating.current = true;
-      setFocus({ id: appendRegion('calc', cross.x, cross.y), line: 0 });
+      setFocus({ id: appendRegion('calc', at.x, at.y), line: 0 });
     }
     setCross(null);
+  };
+
+  /** Enter: confirma e põe a cruz logo abaixo da região, como no SMath; o que se digitar cria a próxima (ADENDO 05). */
+  const crossBelow = (id: string) => {
+    const r = byId(id);
+    if (!r) return;
+    const el = sheet.current?.querySelector<HTMLElement>(`[data-region="${id}"]`);
+    setSelected(new Set());
+    setCross({ x: num(r.seg, 'x'), y: snap(num(r.seg, 'y') + (el?.offsetHeight ?? GRID) + GRID / 2) });
+    sheet.current?.focus();
   };
 
   /** Shift+Enter: confirma e cria uma região logo abaixo, alinhada à esquerda (B4). */
@@ -238,8 +337,9 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const b = r.seg;
     const moving = drag?.ids.includes(r.id);
     // prévia já encaixada na grade, igual ao que fica ao soltar
-    const style = moving ? { left: snap(num(b, 'x') + drag!.dx), top: snap(num(b, 'y') + drag!.dy) } : { left: num(b, 'x'), top: num(b, 'y') };
-    const cls = [s.region, selected.has(r.id) ? s.regionOn : s.regionOff].join(' ');
+    const lift = shiftAt(num(b, 'y'));
+    const style = moving ? { left: snap(num(b, 'x') + drag!.dx), top: snap(num(b, 'y') + drag!.dy) - lift } : { left: num(b, 'x'), top: num(b, 'y') - lift };
+    const cls = [s.region, selected.has(r.id) ? s.regionOn : s.regionOff, 'desativado' in b.attrs && s.regionDisabled, 'moldura' in b.attrs && s.regionFrame].filter(Boolean).join(' ');
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
     let content;
     if (EVALUATED.has(b.type)) {
@@ -247,10 +347,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         const mine = focus?.id === r.id && focus.line === i;
         return (
           <div key={i} className={s.regionLine}>
-            <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={ctx} theme="dark" size={20}
+            <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20}
               focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={() => { creating.current = false; }}
               onWrite={(w) => writeLine(r.id, i, w)}
-              onEnter={(shift) => { (document.activeElement as HTMLElement | null)?.blur?.(); if (shift) regionBelow(r.id); }}
+              onEnter={(shift) => { (document.activeElement as HTMLElement | null)?.blur?.(); if (shift) regionBelow(r.id); else crossBelow(r.id); }}
               onBackspaceEmpty={() => writeLine(r.id, i, '')}
               onFocus={() => { setSelected(new Set([r.id])); setCross(null); }}
               onExit={() => setFocus((f) => (f?.id === r.id ? null : f))} />
@@ -269,7 +369,9 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       content = <Plot data={result?.plots?.[r.key]} width={num(b, 'largura', 400)} height={num(b, 'altura', 200)} />;
     } else content = <pre className={s.regionPre}>{b.body}</pre>;
     return (
-      <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDown={(e) => onRegionDown(e, r.id)}>
+      <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDown={(e) => onRegionDown(e, r.id)} onContextMenu={(e) => regionMenu(e, r)}
+        {...(locked(r.id) ? ({ inert: '' } as object) : {})} /* área travada: nada de dentro recebe foco (E6) */ title={'desativado' in b.attrs ? 'Avaliação desativada' : undefined}>
+        {b.attrs.descricao && <div className={s.regionDesc}>{b.attrs.descricao}</div>}
         {content}
       </div>
     );
@@ -293,7 +395,22 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     <div className={s.sheetScroll}>
       <div ref={sheet} className={s.sheet} style={{ width: pageW, height: pageH }} tabIndex={0} aria-label="Folha"
         onPointerDown={onSheetDown} onKeyDown={onSheetKey}>
-        {regions.map(regionView)}
+        {regions.filter((r) => r.seg.type !== 'area' && r.seg.type !== 'fim-area' && !hidden(r.id)).map(regionView)}
+        {areas.map((a) => {
+          const top = a.top - shiftAt(a.top, a.region.id);
+          return (
+            <div key={a.region.key} data-area={a.region.id} className={s.area} style={{ top, height: a.collapsed ? AREA_HEAD : a.bottom - a.top }} onContextMenu={(e) => areaMenu(e, a)}>
+              <div className={s.areaHead}>
+                <button type="button" className={s.areaToggle} aria-label={a.collapsed ? 'Expandir área' : 'Recolher área'} aria-expanded={!a.collapsed}
+                  onPointerDown={(e) => e.stopPropagation()} onClick={() => setAttr(a.region.id, 'recolhida', a.collapsed ? null : true)}>
+                  <Icon name="chevron" size={14} stroke={2} className={a.collapsed ? undefined : s.areaOpen} />
+                </button>
+                <span className={s.areaTitle}>{a.titulo}</span>
+                {a.locked && <Icon name="lock" size={12} stroke={2} />}
+              </div>
+            </div>
+          );
+        })}
         {cross && <div className={s.cross} style={{ left: cross.x, top: cross.y }} aria-hidden="true" />}
         {band && <div className={s.band} style={{ left: Math.min(band.x0, band.x1), top: Math.min(band.y0, band.y1), width: Math.abs(band.x1 - band.x0), height: Math.abs(band.y1 - band.y0) }} />}
       </div>
@@ -302,6 +419,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
 
   return (
     <>
+      <ContextMenu menu={menu} onClose={() => setMenu(null)} />
       <LeftPanel doc={doc} className={s.left}>
         <PanelHeader title="Variáveis" aside={vars.length} />
         <div className={s.varsHead}><span>Nome</span><span>Valor</span><span>Unid.</span></div>

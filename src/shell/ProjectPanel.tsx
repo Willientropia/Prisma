@@ -8,11 +8,11 @@ import { platform } from '../platform';
 import { useWorkspace, activeDoc, type ProjectList, type OpenDoc } from '../store/workspace';
 import s from './project.module.css';
 
-type MenuItem = { label: string; run: () => void };
-type MenuState = { x: number; y: number; items: MenuItem[] } | null;
+export type MenuItem = { label: string; run: () => void };
+export type MenuState = { x: number; y: number; items: MenuItem[] } | null;
 
 /** Menu de contexto simples na posição do clique. Fecha com Esc ou clique fora. */
-function ContextMenu({ menu, onClose }: { menu: MenuState; onClose: () => void }) {
+export function ContextMenu({ menu, onClose }: { menu: MenuState; onClose: () => void }) {
   useEffect(() => {
     if (!menu) return;
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();

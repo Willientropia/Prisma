@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { MathfieldElement, convertLatexToMarkup } from 'mathlive';
 import 'mathlive/static.css'; // estilos da renderização estática e as fontes (empacotadas, sem internet)
 import { run } from '../commands/registry';
-import { greekLatex, LATIN_TO_GREEK, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
+import { math } from '../engine/math';
+import { greekLatex, LATIN_TO_GREEK, type Node, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
 
 MathfieldElement.fontsDirectory = null; // as @font-face já vêm de mathlive/static.css
 MathfieldElement.soundsDirectory = null;
@@ -20,7 +21,8 @@ const SHADOW_CSS = `
 .ML__virtual-keyboard-toggle, .ML__menu-toggle { display: none !important; }
 `;
 
-export type Commit = 'enter' | 'shift-enter' | 'blur' | 'escape' | 'eval';
+/** eval: pediu o resultado ("x ="); defeval: definição completa + "=" acrescenta o resultado ("Z_0 := sqrt(L/C) ="). */
+export type Commit = 'enter' | 'shift-enter' | 'blur' | 'escape' | 'eval' | 'defeval';
 export type FieldProps = {
   latex: string;
   ctx: LatexCtx;
@@ -66,7 +68,7 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-type FieldState = { script: 'sub' | 'sup' | null; edited: boolean };
+type FieldState = { script: 'sub' | 'sup' | null; edited: boolean; lastCommit?: Commit | null };
 
 function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current: FieldProps }): boolean {
   const before = () => beforeCaret(mf);
@@ -85,7 +87,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
 
   // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
   // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
-  const commit = (how: Commit) => { state.script = null; classify(true); state.edited = false; p.current.onCommit(mf.value, how); };
+  const commit = (how: Commit) => { state.script = null; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
     const l = lastLetter(before());
@@ -98,18 +100,35 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
 
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
-  if (OPERATOR_KEYS.has(e.key)) { leaveSub(); if (!['/', ',', ':', '='].includes(e.key)) classify(); }
+  // ';' e ')': reclassificar ali tiraria o cursor de dentro dos parênteses (f(a;b)); confirmar reclassifica
+  if (OPERATOR_KEYS.has(e.key)) { leaveSub(); if (!['/', ',', ':', '=', ';', ')'].includes(e.key)) classify(); }
   switch (e.key) {
     case 'Enter': commit(e.shiftKey ? 'shift-enter' : 'enter'); return true;
     case 'Escape': commit('escape'); return true;
     case 'Backspace': if (mf.value === '') { p.current.onBackspaceEmpty?.(); return true; } return false;
     case ':': insert('\\coloneq '); return true;
-    case '=': if (!mf.value.includes('coloneq')) commit('eval'); return true;
+    case '=': {
+      // "=" inteligente (ADENDO 05, E2.1): nome ainda não definido vira definição; o resto, avaliação
+      const v = mf.value;
+      if (v.includes('coloneq')) { if (v.split('coloneq')[1].replace(/\\[;,]/g, '').trim()) commit('defeval'); return true; }
+      let target: Node | null = null;
+      try { const l = latexToLine(v); if (l.kind === 'expr') target = l.expr; } catch { /* incompleta */ }
+      const name = target?.t === 'id' ? target.name : target?.t === 'call' && target.args.every((a) => a.t === 'id') ? target.f : null;
+      const defined = (n: string) => !!p.current.ctx.before?.(n) || n in math || n === 'i' || n === 'e';
+      if (name && !defined(name)) { leaveSub(); insert('\\coloneq '); return true; }
+      commit('eval');
+      return true;
+    }
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
     case "'": insert('\\class{u}{\\mathrm{#0}}'); return true; // força unidade (B4)
     case '|': insert('\\left\\lvert #0\\right\\rvert'); return true;
-    case ',': if (afterDigit()) { insert('{,}'); return true; } insert(';'); return true; // vírgula decimal; senão separa argumentos
+    case ',': {
+      if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
+      // depois de letra abre o índice do nome, como no SMath: s,tensao (ADENDO 05, E2.2)
+      if (!state.script && /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$|[\u00C0-\u024F\u0370-\u03FF]\s*$/.test(before())) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      insert(';'); return true; // senão separa argumentos
+    }
     case ';': insert(';'); return true;
     case '.': {
       if (afterDigit()) { insert('{,}'); return true; }
@@ -153,6 +172,10 @@ export function holdKeys(): void {
   window.addEventListener('keydown', listener, true);
   held = { keys, listener };
 }
+/** Acrescenta teclas à fila guardada (se houver uma esperando o próximo campo). */
+function holdMore(keys: Key[]): void {
+  held?.keys.push(...keys);
+}
 function releaseKeys(): Key[] {
   if (!held) return [];
   window.removeEventListener('keydown', held.listener, true);
@@ -190,7 +213,15 @@ export function MathField(props: FieldProps) {
     mf.value = p.current.latex;
 
     const state: FieldState = { script: null, edited: false }; // edited: houve digitação desde o foco ou o último commit
+    // Enquanto as teclas guardadas (digitadas antes do foco) não foram aplicadas, as que chegam direto ao
+    // campo esperam na fila: senão o "=" de "x=2" seria tratado com o campo ainda vazio, antes do "x".
+    let waiting = !!p.current.focused && !!p.current.initialKeys?.length;
+    const queued: Key[] = [];
     const onKey = (e: KeyboardEvent) => {
+      if (waiting) {
+        if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); queued.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
+        return;
+      }
       if (handleKey(mf, e, state, p)) { e.preventDefault(); e.stopPropagation(); }
     };
     mf.addEventListener('keydown', onKey, { capture: true });
@@ -209,21 +240,34 @@ export function MathField(props: FieldProps) {
 
     // O MathLive só aceita foco alguns quadros depois de montado: tenta até conseguir e só então
     // aplica as teclas que chegaram antes (região nova na folha, linha nova no caderno).
+    let startEl: Element | null = null; // quem tinha o foco quando este campo pediu foco
     const tryFocus = (n: number) => {
       if (!mf.isConnected) return;
+      // a pessoa já clicou em outro lugar: não rouba o foco de volta; o campo é tratado como deixado
+      const now = document.activeElement;
+      if (now && now !== startEl && now !== document.body && now !== mf && !host.current?.contains(now)) {
+        releaseKeys(); waiting = false; p.current.onLeave?.(); return;
+      }
       mf.focus();
       // hasFocus() do MathLive diz "sim" antes do documento: só confia quando o foco é de fato do campo
       if (document.activeElement !== mf) {
         if (n < 120) focusFrame.current = requestAnimationFrame(() => tryFocus(n + 1));
-        else releaseKeys();
+        else { releaseKeys(); waiting = false; }
         return;
       }
       if (p.current.selectOnFocus) mf.executeCommand('selectAll'); else mf.position = mf.lastOffset;
-      const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys()];
-      for (const k of keys) if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
+      const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys(), ...queued.splice(0)];
+      waiting = false;
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i];
+        state.lastCommit = null;
+        if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
+        // depois do "=" que avalia, o resto do lote é do marcador de conversão, não deste campo (E8-08)
+        if (state.lastCommit === 'eval' || state.lastCommit === 'defeval') { holdMore(keys.slice(i + 1)); break; }
+      }
       p.current.onReady?.();
     };
-    focusNow.current = () => { cancelAnimationFrame(focusFrame.current); focusFrame.current = requestAnimationFrame(() => tryFocus(0)); };
+    focusNow.current = () => { cancelAnimationFrame(focusFrame.current); startEl = document.activeElement; focusFrame.current = requestAnimationFrame(() => tryFocus(0)); };
     if (p.current.focused) focusNow.current();
     return () => { cancelAnimationFrame(focusFrame.current); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
   }, []);

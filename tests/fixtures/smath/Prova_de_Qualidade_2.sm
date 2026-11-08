@@ -1,0 +1,1563 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Studio Desktop" version="1.1.8763.0"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="96">
+    <identity>
+      <id>916f0ea1-351c-42cb-9e29-fc2661d297ea</id>
+      <revision>15</revision>
+    </identity>
+    <calculation>
+      <precision>4</precision>
+      <exponentialThreshold>5</exponentialThreshold>
+      <trailingZeros>false</trailingZeros>
+      <significantDigitsMode>false</significantDigitsMode>
+      <roundingMode>0</roundingMode>
+      <approximateEqualAccuracy>0</approximateEqualAccuracy>
+      <fractions>decimal</fractions>
+    </calculation>
+    <pageModel active="false" viewMode="2" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true">
+      <paper id="9" orientation="Portrait" width="827" height="1169" />
+      <margins left="39" right="39" top="49" bottom="49" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Studio Desktop" version="1.1.8763.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.11.8763.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="SpecialFunctions" version="1.12.8763.0" guid="2814e667-4e12-48b1-8d51-194e480eabc5" />
+      <assembly name="TextRegion" version="1.11.8763.0" guid="485d28c5-349a-48b6-93be-12a35a1c1e39" />
+      <assembly name="AreaRegion" version="1.11.8763.0" guid="4974b228-4974-44cf-8274-bf2936b4a766" />
+      <assembly name="Table Region" version="0.3.8770.23606" guid="51fec712-ec75-4551-a13e-478d375ae8d6" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region top="0" color="#000000">
+      <area collapsed="true" />
+      <region left="0" top="9" width="172" height="81" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">este</e>
+            <e type="operand">100</e>
+            <e type="operand">30</e>
+            <e type="operand" style="unit">deg</e>
+            <e type="operator" args="2">*</e>
+            <e type="operator" args="1">-</e>
+            <e type="operand">30</e>
+            <e type="operand">180</e>
+            <e type="operand" style="unit">deg</e>
+            <e type="operator" args="2">*</e>
+            <e type="operator" args="1">-</e>
+            <e type="operand">20</e>
+            <e type="operand">10</e>
+            <e type="operand" style="unit">deg</e>
+            <e type="operator" args="2">*</e>
+            <e type="operand">5</e>
+            <e type="operand">55</e>
+            <e type="operand" style="unit">deg</e>
+            <e type="operator" args="2">*</e>
+            <e type="operator" args="1">-</e>
+            <e type="operand">4</e>
+            <e type="operand">2</e>
+            <e type="function" args="10">mat</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region left="261" top="18" width="461" height="27" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">Title</e>
+            <e type="operand" style="string">N</e>
+            <e type="operand" style="string">I,impar</e>
+            <e type="operand" style="string">Xt,impar</e>
+            <e type="operand" style="string">Vbarra,impar</e>
+            <e type="operand" style="string">DIT,v%</e>
+            <e type="operand">1</e>
+            <e type="operand">5</e>
+            <e type="function" args="7">mat</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region left="288" top="45" width="277" height="31" color="#000000" fontSize="10">
+        <math>
+          <input>
+            <e type="operand">Title.2</e>
+            <e type="operand" style="string">N</e>
+            <e type="operand" style="string">Zt,r</e>
+            <e type="operand" style="string">XC,r</e>
+            <e type="operand" style="string">Z,eq</e>
+            <e type="operand">1</e>
+            <e type="operand">4</e>
+            <e type="function" args="6">mat</e>
+            <e type="operator" args="2">:</e>
+          </input>
+        </math>
+      </region>
+      <region top="108" color="#000000">
+        <area terminator="true" />
+      </region>
+    </region>
+    <region left="135" top="117" width="34" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">nm.1</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="126" width="83" height="136" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">I.h</e>
+          <e type="operand">100</e>
+          <e type="operand">80</e>
+          <e type="operand">55</e>
+          <e type="operand">40</e>
+          <e type="operand">28</e>
+          <e type="operand">17</e>
+          <e type="operand">5</e>
+          <e type="operand">7</e>
+          <e type="operand">1</e>
+          <e type="function" args="9">mat</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="108" top="144" width="73" height="30" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">n.max</e>
+          <e type="operand">13</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="108" top="171" width="142" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">n</e>
+          <e type="operand">I.h</e>
+          <e type="function" args="1">length</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">7</e>
+        </result>
+      </math>
+    </region>
+    <region left="108" top="198" width="123" height="32" color="#000000" fontSize="10">
+      <math>
+        <description active="false" position="Top" lang="eng" />
+        <input>
+          <e type="operand">N</e>
+          <e type="operand">3</e>
+          <e type="operand">n.max</e>
+          <e type="operand">5</e>
+          <e type="function" args="3">range</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="324" top="207" width="399" height="38" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>a) encontre o valor eficaz da corrente resultante e sua distrorção harmônica total e individual</p>
+        </content>
+      </text>
+    </region>
+    <region left="108" top="225" width="130" height="31" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">N.max</e>
+          <e type="operand">N</e>
+          <e type="function" args="1">length</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="306" top="261" width="128" height="48" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">I.rms</e>
+          <e type="operand">I.h</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="270" width="167" height="34" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">N.graph</e>
+          <e type="operand">1</e>
+          <e type="operand">n.max</e>
+          <e type="bracket">(</e>
+          <e type="operand">3</e>
+          <e type="function" args="3">range</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="504" top="288" width="111" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Valor Eficaz da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">I.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">148.738</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="297" width="99" height="193" color="#000000" fontSize="10">
+      <table id="1" elementsOnDataSizeChange="10,10" focus="0,0;1,6" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">N.graph</e>
+          <e regions="columns">I.rms</e>
+          <e regions="columns">I.h</e>
+          <e regions="columns">Title.2</e>
+          <e regions="columns">Title</e>
+          <e regions="rows">N.graph</e>
+          <e regions="rows">I.rms</e>
+          <e regions="rows">N</e>
+          <e regions="rows">I.h</e>
+          <e regions="rows">este</e>
+          <e regions="units">N.graph</e>
+          <e regions="units">I.rms</e>
+          <e regions="units">I.h</e>
+        </inputs>
+        <regions header="False" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="True,Bottom">
+          <body rows="7" cols="2" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>1</td>
+              <td>100</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>80</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>55</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>40</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>28</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>17</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>5</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Courier New, 13.333333px" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 13.333333px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 13.3333321px" text="Table %T" />
+        </regions>
+        <input>
+          <e type="operand">N.graph</e>
+          <e type="operand">I.h</e>
+          <e type="function" args="2">augment</e>
+        </input>
+      </table>
+    </region>
+    <region left="297" top="306" width="179" height="90" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">DTI</e>
+          <e type="operand">I.h</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="operand">2</e>
+          <e type="operand">7</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operand">I.h</e>
+          <e type="operand">1</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="504" top="342" width="128" height="24" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Distorção Harmônica total da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTI</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">110.1045</e>
+        </result>
+      </math>
+    </region>
+    <region left="306" top="405" width="132" height="73" border="true" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">DIi.h</e>
+          <e type="operand">I.h</e>
+          <e type="operand">1</e>
+          <e type="operand">n</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">I.h</e>
+          <e type="operand">1</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="504" top="405" width="109" height="136" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Distorção Harmônica indivudual da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DIi.h</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">100</e>
+          <e type="operand">80</e>
+          <e type="operand">55</e>
+          <e type="operand">40</e>
+          <e type="operand">28</e>
+          <e type="operand">17</e>
+          <e type="operand">5</e>
+          <e type="operand">7</e>
+          <e type="operand">1</e>
+          <e type="function" args="9">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="225" top="576" width="502" height="38" color="#000000" fontSize="10" isBreakable="false">
+      <text lang="por" width="498" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>b) Encontre o valor eficaz da tensão resultante na barra, desprezando a queda de tensão na frequência fundamental;</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="594" width="106" height="30" color="#ff8000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Dados fornecidos:</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">v.sistema</e>
+          <e type="operand">220</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="324" top="612" width="124" height="30" border="true" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">V.barra</e>
+          <e type="operand">v.sistema</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="468" top="612" width="92" height="30" color="#ff0000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.barra</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">220</e>
+        </result>
+      </math>
+    </region>
+    <region left="558" top="612" width="21" height="23" color="#ff0000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p style="color: #ff0000;">v</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="639" width="124" height="30" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Z%.modulo</e>
+          <e type="operand">0.120</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="324" top="648" width="153" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>b1)"Correção\0020\da\0020\impedância\0020\no\0020\trafo"</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Xt.impar</e>
+          <e type="operand">N</e>
+          <e type="operand">Z%.modulo</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="666" width="102" height="24" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Z%</e>
+          <e type="operand">0.120</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="486" top="675" width="114" height="30" color="#ff0000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Z%.modulo</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.12</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="684" width="138" height="41" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">I.impar</e>
+          <e type="operand">I.h</e>
+          <e type="operand">2</e>
+          <e type="operand">n</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="324" top="702" width="261" height="63" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>b2) "Queda\0020\de\0020\tensão\0020\de\0020\cada\0020\componente\0020\harmônica"</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">j</e>
+          <e type="operand">1</e>
+          <e type="operand">N.max</e>
+          <e type="function" args="2">range</e>
+          <e type="operand">V.barra.impar</e>
+          <e type="operand">j</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">Xt.impar</e>
+          <e type="operand">j</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">I.impar</e>
+          <e type="operand">j</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+          <e type="function" args="3">for</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="720" width="60" height="30" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">XC.1</e>
+          <e type="operand">0</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="324" top="792" width="215" height="70" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>c) "Distorção\0020\Harmônica\0020\Individual\0020\de\0020\Tensão"</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DIT.v</e>
+          <e type="operand">V.barra.impar</e>
+          <e type="operand">1</e>
+          <e type="operand">N.max</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">v.sistema</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="9" top="900" width="477" height="51" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Legenda</e>
+          <e type="operand">N</e>
+          <e type="operand" style="string">Nº de harmônicas sem a fundamental</e>
+          <e type="operand">I.impar</e>
+          <e type="operand" style="string">Distorções Harmônicas Sem a Fundamental</e>
+          <e type="operand">2</e>
+          <e type="operand">2</e>
+          <e type="function" args="6">mat</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="9" top="954" width="601" height="170" border="true" color="#000000" fontSize="10" showInputData="false">
+      <table id="2" elementsOnDataSizeChange="10,10" focus="0,0;4,5" bgColor="White" borderSize="1,1" borderStyle="Solid,Solid" borderColor="Black,Black" frameBorderSize="1,1,1,1" frameBorderStyle="Solid,Solid,Solid,Solid" frameBorderColor="Black,Black,Black,Black" resizeFrame="5px #0080FF" resizeFrameInner="#000000 alpha:0" resizeFrameOuter="#0A0A0A alpha:130">
+        <inputs>
+          <e regions="columns">DIT.v</e>
+          <e regions="columns">V.barra.impar</e>
+          <e regions="columns">I.impar</e>
+          <e regions="columns">Z%</e>
+          <e regions="columns">Xt.impar</e>
+          <e regions="columns">Z%.modulo</e>
+          <e regions="columns">DTI</e>
+          <e regions="columns">I.rms</e>
+          <e regions="columns">N</e>
+          <e regions="columns">Title.2</e>
+          <e regions="columns">Title</e>
+          <e regions="rows">DIT.v</e>
+          <e regions="rows">V.barra.impar</e>
+          <e regions="rows">I.impar</e>
+          <e regions="rows">Z%</e>
+          <e regions="rows">Xt.impar</e>
+          <e regions="rows">Z%.modulo</e>
+          <e regions="rows">DIi.h</e>
+          <e regions="rows">DTI</e>
+          <e regions="rows">N.graph</e>
+          <e regions="rows">I.rms</e>
+          <e regions="rows">N</e>
+          <e regions="rows">I.h</e>
+          <e regions="rows">Title</e>
+          <e regions="units">DIT.v</e>
+          <e regions="units">V.barra.impar</e>
+          <e regions="units">I.impar</e>
+          <e regions="units">Z%</e>
+          <e regions="units">Xt.impar</e>
+          <e regions="units">Z%.modulo</e>
+          <e regions="units">DTI</e>
+          <e regions="units">I.rms</e>
+          <e regions="units">N</e>
+        </inputs>
+        <regions header="True" lstub="False" units="False,Top" rstub="False" footer="False" footnote="False" caption="False,Bottom">
+          <body rows="6" cols="5" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>3</td>
+              <td>80</td>
+              <td>0.36</td>
+              <td>28.8</td>
+              <td>13.09</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>55</td>
+              <td>0.6</td>
+              <td>33</td>
+              <td>15</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>40</td>
+              <td>0.84</td>
+              <td>33.6</td>
+              <td>15.27</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>28</td>
+              <td>1.08</td>
+              <td>30.24</td>
+              <td>13.75</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>17</td>
+              <td>1.32</td>
+              <td>22.44</td>
+              <td>10.2</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>5</td>
+              <td>1.56</td>
+              <td>7.8</td>
+              <td>3.55</td>
+            </tr>
+          </body>
+          <units input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </units>
+          <header input="Title" rows="1" cols="5" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>N</td>
+              <td>I,impar</td>
+              <td>Xt,impar</td>
+              <td>Vbarra,impar</td>
+              <td>DIT,v%</td>
+            </tr>
+          </header>
+          <lstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </lstub>
+          <rstub input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </rstub>
+          <footer input="" rows="1" cols="1" align="Center" pattern="Fixed,Fixed" borderSize="1,1" borderStyle="Dot,Dot" borderColor="Black,Black" padding="3,3" color="Black,Black" bgColor="White,White" style="Uniform" styleEffects="None" font="Courier New, 10pt" numbers="Default,2,15,False,0,True,6" highlighters="#0080FF,#FFFFFF,#E1E1E1,#000000" ellipsisFont="Times New Roman, 16px, style=Bold" ellipsisSize="0">
+            <tr>
+              <td>#</td>
+            </tr>
+          </footer>
+          <footnote align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 13.333333px" text="NOTE" />
+          <caption align="Near" borderSize="1" borderStyle="Solid" borderColor="Black" padding="3,3" color="Black" bgColor="White" font="Courier New, 13.333333px" text="Table %T" />
+        </regions>
+        <input>
+          <e type="operand">N</e>
+          <e type="operand">I.impar</e>
+          <e type="operand">Xt.impar</e>
+          <e type="operand">V.barra.impar</e>
+          <e type="operand">DIT.v</e>
+          <e type="operand">100</e>
+          <e type="operator" args="2">*</e>
+          <e type="function" args="5">augment</e>
+        </input>
+      </table>
+    </region>
+    <region left="162" top="1125" width="34" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand" style="unit">ohm</e>
+        </input>
+      </math>
+    </region>
+    <region left="288" top="1125" width="18" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand" style="unit">A</e>
+        </input>
+      </math>
+    </region>
+    <region left="414" top="1125" width="18" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand" style="unit">V</e>
+        </input>
+      </math>
+    </region>
+    <region left="531" top="1125" width="18" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand" style="unit">%</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1188" width="292" height="32" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.resultante</e>
+          <e type="operand">V.barra</e>
+          <e type="operand">V.barra.impar</e>
+          <e type="function" args="2">stack</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1260" width="186" height="48" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>b3) Valor Eficaz a Tensão na barra de BT</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">V.rms</e>
+          <e type="operand">V.resultante</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="189" top="1287" width="119" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">230.0571</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="1368" width="243" height="81" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>C) Distorção Harmônica total da Tensão</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT</e>
+          <e type="operand">V.barra.impar</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="operand">1</e>
+          <e type="operand">6</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operand">V.barra</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="243" top="1413" width="120" height="24" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="false" position="Top" lang="eng">
+          <content>
+            <p></p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">30.5806</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="1503" width="258" height="23" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>Com a entrada do banco de Capacitores:</p>
+        </content>
+      </text>
+    </region>
+    <region left="288" top="1521" width="76" height="30" border="true" color="#ff8000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">XC.1</e>
+          <e type="operand">XC.1</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1539" width="70" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Zt.1</e>
+          <e type="operand">Z%</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="279" top="1557" width="164" height="68" border="true" color="#000000" fontSize="10" showInputData="false">
+      <math>
+        <description active="true" position="Top" lang="eng" width="16">
+          <content>
+            <p>Dividindo -15i pelo número de Harmônicas</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">j</e>
+          <e type="operand">1</e>
+          <e type="operand">6</e>
+          <e type="function" args="2">range</e>
+          <e type="operand">XC.impar</e>
+          <e type="operand">j</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">XC.1</e>
+          <e type="operand">1</e>
+          <e type="operand">N</e>
+          <e type="operand">j</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+          <e type="function" args="3">for</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1575" width="121" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng" width="212">
+          <content>
+            <p>Multiplicando 0,15i Pelo número de harmônicas</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Zt.impar</e>
+          <e type="operand">N</e>
+          <e type="operand">Zt.1</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1647" width="194" height="32" border="true" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">Zt.r</e>
+          <e type="operand">Zt.1</e>
+          <e type="operand">Zt.impar</e>
+          <e type="function" args="2">stack</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="279" top="1647" width="194" height="32" border="true" color="#000000" fontSize="10">
+      <math optimize="2">
+        <input>
+          <e type="operand">XC.r</e>
+          <e type="operand">XC.1</e>
+          <e type="operand">XC.impar</e>
+          <e type="function" args="2">stack</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1701" width="171" height="89" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Impedância Equivalente na Barra (Paralelo)</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">l</e>
+          <e type="operand">1</e>
+          <e type="operand">n</e>
+          <e type="function" args="2">range</e>
+          <e type="operand">Z.eq</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">Zt.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">XC.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">Zt.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">XC.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">+</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+          <e type="function" args="3">for</e>
+        </input>
+      </math>
+    </region>
+    <region left="414" top="1710" width="206" height="57" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Impedância Equivalente na Barra (série)</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">l</e>
+          <e type="operand">1</e>
+          <e type="operand">n</e>
+          <e type="function" args="2">range</e>
+          <e type="operand">Z.eq.serie</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">Zt.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">XC.r</e>
+          <e type="operand">l</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">+</e>
+          <e type="operator" args="2">:</e>
+          <e type="function" args="3">for</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="1818" width="289" height="212" color="#000000" fontSize="14" showInputData="false">
+      <math>
+        <input>
+          <e type="operand">Title.2</e>
+          <e type="operand">1</e>
+          <e type="operand">N</e>
+          <e type="function" args="2">stack</e>
+          <e type="operand">Zt.r</e>
+          <e type="operand">XC.r</e>
+          <e type="operand">Z.eq</e>
+          <e type="function" args="4">augment</e>
+          <e type="function" args="2">stack</e>
+        </input>
+        <result action="numeric">
+          <e type="operand" style="string">N</e>
+          <e type="operand" style="string">Zt,r</e>
+          <e type="operand" style="string">XC,r</e>
+          <e type="operand" style="string">Z,eq</e>
+          <e type="operand">1</e>
+          <e type="operand">0.12</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">3</e>
+          <e type="operand">0.36</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">5</e>
+          <e type="operand">0.6</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">7</e>
+          <e type="operand">0.84</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">9</e>
+          <e type="operand">1.08</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">11</e>
+          <e type="operand">1.32</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">13</e>
+          <e type="operand">1.56</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0</e>
+          <e type="operand">0</e>
+          <e type="operand">8</e>
+          <e type="operand">4</e>
+          <e type="function" args="34">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="378" top="1827" width="151" height="136" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Z.eq.serie</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.12</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.36</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.6</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.84</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.08</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.32</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.56</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">7</e>
+          <e type="operand">1</e>
+          <e type="function" args="9">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="576" top="1863" width="76" height="55" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Ordem Harmônica de Ressonância</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">XC.1</e>
+          <e type="operand">Zt.1</e>
+          <e type="operator" args="2">/</e>
+          <e type="function" args="1">sqrt</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0</e>
+        </result>
+      </math>
+    </region>
+    <region left="18" top="2277" width="193" height="57" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Distorção Harmônica Individual de tensão Com BC</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">k</e>
+          <e type="operand">2</e>
+          <e type="operand">n</e>
+          <e type="function" args="2">range</e>
+          <e type="operand">Vbarrabc</e>
+          <e type="operand">k</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">I.h</e>
+          <e type="operand">k</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">Z.eq</e>
+          <e type="operand">k</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+          <e type="function" args="3">for</e>
+        </input>
+      </math>
+    </region>
+    <region left="18" top="2376" width="129" height="33" color="#000000" fontSize="10">
+      <math>
+        <description active="false" position="Top" lang="eng" />
+        <input>
+          <e type="operand">Vbarrabc</e>
+          <e type="operand">1</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">220</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="2430" width="184" height="263" color="#000000" fontSize="20" showInputData="false">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>N/I/Distorção individual de Tensão</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">1</e>
+          <e type="operand">N</e>
+          <e type="function" args="2">stack</e>
+          <e type="operand">I.h</e>
+          <e type="operand">Vbarrabc</e>
+          <e type="function" args="3">augment</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1</e>
+          <e type="operand">100</e>
+          <e type="operand">220</e>
+          <e type="operand">3</e>
+          <e type="operand">80</e>
+          <e type="operand">0</e>
+          <e type="operand">5</e>
+          <e type="operand">55</e>
+          <e type="operand">0</e>
+          <e type="operand">7</e>
+          <e type="operand">40</e>
+          <e type="operand">0</e>
+          <e type="operand">9</e>
+          <e type="operand">28</e>
+          <e type="operand">0</e>
+          <e type="operand">11</e>
+          <e type="operand">17</e>
+          <e type="operand">0</e>
+          <e type="operand">13</e>
+          <e type="operand">5</e>
+          <e type="operand">0</e>
+          <e type="operand">7</e>
+          <e type="operand">3</e>
+          <e type="function" args="23">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="2745" width="256" height="31" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Vbarrabc.modulo</e>
+          <e type="operand">Vbarrabc</e>
+          <e type="operand">1</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="1">-</e>
+          <e type="bracket">(</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="2772" width="167" height="39" color="#000000" fontSize="10">
+      <math>
+        <description active="false" position="Top" lang="eng" />
+        <input>
+          <e type="operand">Vbarrabc.modulo</e>
+          <e type="operand">1</e>
+          <e type="function" args="2">el</e>
+          <e type="operand">220</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="9" top="2826" width="279" height="84" border="true" color="#000000" fontSize="10">
+      <math optimize="2">
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>d) Distorção Harmônica total da Tensão com Bc</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT.bc</e>
+          <e type="operand">Vbarrabc.modulo</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="operand">2</e>
+          <e type="operand">7</e>
+          <e type="function" args="2">range</e>
+          <e type="function" args="2">el</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operand">Vbarrabc</e>
+          <e type="operand">1</e>
+          <e type="function" args="2">el</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="198" top="2952" width="85" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="false" position="Top" lang="eng">
+          <content>
+            <p></p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT.bc</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">0</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="3006" width="244" height="49" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>b3) Valor Eficaz a Tensão na barra de BT</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Vbc.rms</e>
+          <e type="operand">Vbarrabc.modulo</e>
+          <e type="bracket">(</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="207" top="3087" width="95" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Vbc.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">220</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="3339" width="195" height="44" color="#000000" fontSize="24">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p style="font-weight: bold; font-size: 24px;">Resultados </p>
+        </content>
+      </text>
+    </region>
+    <region left="72" top="3402" width="561" height="23" color="#000000" fontSize="10" isBreakable="false">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>a) encontre o valor eficaz da corrente resultante e sua distrorção harmônica total e individual</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="3447" width="111" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Valor Eficaz da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">I.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">148.738</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="3501" width="128" height="24" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Distorção Harmônica total da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTI</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">110.1045</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="3555" width="109" height="136" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Distorção Harmônica indivudual da corrente</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DIi.h</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">100</e>
+          <e type="operand">80</e>
+          <e type="operand">55</e>
+          <e type="operand">40</e>
+          <e type="operand">28</e>
+          <e type="operand">17</e>
+          <e type="operand">5</e>
+          <e type="operand">7</e>
+          <e type="operand">1</e>
+          <e type="function" args="9">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="144" top="3717" width="502" height="38" color="#000000" fontSize="10" isBreakable="false">
+      <text lang="por" width="498" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>b) Encontre o valor eficaz da tensão resultante na barra, desprezando a queda de tensão na frequência fundamental;</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="3789" width="186" height="48" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng" width="296">
+          <content>
+            <p> Valor Eficaz a Tensão na barra de BC</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">V.rms</e>
+          <e type="operand">V.resultante</e>
+          <e type="operand">2</e>
+          <e type="operator" args="2">^</e>
+          <e type="function" args="1">vectorize</e>
+          <e type="function" args="1">sum</e>
+          <e type="function" args="1">sqrt</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="189" top="3816" width="119" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">V.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">230.0571</e>
+        </result>
+      </math>
+    </region>
+    <region left="171" top="3897" width="387" height="23" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>c) Encontre a distorção harmônica total e individual da Tensão;</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="3942" width="125" height="118" border="true" color="#000000" fontSize="10">
+      <math decimalPlaces="2">
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>c) "Distorção\0020\Harmônica\0020\Individual\0020\de\0020\Tensão"</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DIT.v</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">13.09</e>
+          <e type="operand">15</e>
+          <e type="operand">15.27</e>
+          <e type="operand">13.75</e>
+          <e type="operand">10.2</e>
+          <e type="operand">3.55</e>
+          <e type="operand">6</e>
+          <e type="operand">1</e>
+          <e type="function" args="8">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="4104" width="120" height="24" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>C) Distorção Harmônica total da Tensão</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">30.5806</e>
+        </result>
+      </math>
+    </region>
+    <region left="99" top="4167" width="560" height="38" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>d) Encontre a distorção harmônica total da Tensão com a entrada do Banco de Capacitores;<br /></p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="4194" width="85" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>d) Distorção Harmônica total da Tensão com BC</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">DTT.bc</e>
+        </input>
+        <contract>
+          <e type="operand" style="unit">%</e>
+        </contract>
+        <result action="numeric">
+          <e type="operand">0</e>
+        </result>
+      </math>
+    </region>
+    <region left="126" top="4383" width="71" height="23" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Arial" fontSize="10">
+        <content>
+          <p>e) Bonus:</p>
+        </content>
+      </text>
+    </region>
+    <region left="18" top="4428" width="76" height="55" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Ordem Harmônica de Ressonância</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">XC.1</e>
+          <e type="operand">Zt.1</e>
+          <e type="operator" args="2">/</e>
+          <e type="function" args="1">sqrt</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="4545" width="151" height="136" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>Impedância Equivalente na Barra (série)</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Z.eq.serie</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.12</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.36</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.6</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">0.84</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.08</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.32</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">1.56</e>
+          <e type="operand">i</e>
+          <e type="operator" args="2">*</e>
+          <e type="operand">7</e>
+          <e type="operand">1</e>
+          <e type="function" args="9">mat</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="4725" width="95" height="30" border="true" color="#000000" fontSize="10">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>b3) Valor Eficaz a Tensão na barra de BC</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">Vbc.rms</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">220</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="4788" width="184" height="263" color="#000000" fontSize="20" showInputData="false">
+      <math>
+        <description active="true" position="Top" lang="eng">
+          <content>
+            <p>N/I/Distorção individual de Tensão Com BC</p>
+          </content>
+        </description>
+        <input>
+          <e type="operand">1</e>
+          <e type="operand">N</e>
+          <e type="function" args="2">stack</e>
+          <e type="operand">I.h</e>
+          <e type="operand">Vbarrabc</e>
+          <e type="function" args="3">augment</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1</e>
+          <e type="operand">100</e>
+          <e type="operand">220</e>
+          <e type="operand">3</e>
+          <e type="operand">80</e>
+          <e type="operand">0</e>
+          <e type="operand">5</e>
+          <e type="operand">55</e>
+          <e type="operand">0</e>
+          <e type="operand">7</e>
+          <e type="operand">40</e>
+          <e type="operand">0</e>
+          <e type="operand">9</e>
+          <e type="operand">28</e>
+          <e type="operand">0</e>
+          <e type="operand">11</e>
+          <e type="operand">17</e>
+          <e type="operand">0</e>
+          <e type="operand">13</e>
+          <e type="operand">5</e>
+          <e type="operand">0</e>
+          <e type="operand">7</e>
+          <e type="operand">3</e>
+          <e type="function" args="23">mat</e>
+        </result>
+      </math>
+    </region>
+  </regions>
+</worksheet>

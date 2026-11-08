@@ -160,3 +160,13 @@
 .libRow { gap: 6px; }
 .libName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .libLine { white-space: nowrap; flex: none; font-size: 11px; }
+
+/* ADENDO 05: região desativada, moldura, descrição (E3.6, E5) e áreas (E6) */
+.regionDisabled { opacity: 0.45; box-shadow: inset 2px 0 0 var(--text-dim); }
+.regionFrame { border-color: var(--text-muted) !important; padding: 4px; }
+.regionDesc { position: absolute; bottom: 100%; left: 0; white-space: nowrap; color: var(--text-muted); font: 11px Inter, sans-serif; }
+.area { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); pointer-events: none; }
+.areaHead { display: flex; align-items: center; gap: 4px; height: 20px; margin-top: -10px; padding: 0 6px; width: max-content; background: var(--bg-grid); color: var(--text-muted); font: 11px Inter, sans-serif; pointer-events: auto; }
+.areaToggle { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: none; background: transparent; color: var(--text-muted); }
+.areaOpen { transform: rotate(90deg); }
+.areaTitle { white-space: nowrap; }

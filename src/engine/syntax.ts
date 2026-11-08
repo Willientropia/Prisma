@@ -6,6 +6,7 @@ export type Line = {
   target?: string; // unidade pedida em "= ? V" (math.js) ou '%'
   name?: string; // variável ou função definida
   limit?: string; // lado direito da condição, como escrito (para o selo "limite 1 %")
+  show?: boolean; // definição que também mostra o valor: "Z_0 := sqrt(L/C) = ?" (ADENDO 05, E2.1)
 };
 
 const REPLACE: [RegExp, string][] = [
@@ -24,6 +25,9 @@ const REPLACE: [RegExp, string][] = [
 
 export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.replace(re, to), s.trim());
 
+/** De volta do math.js para a sintaxe linear (resultado simbólico, E3.3): "10 * x" -> "10*x". */
+export const fromMath = (s: string) => s.replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°');
+
 const GREEK: Record<string, string> = {
   alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ', iota: 'ι', kappa: 'κ',
   lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ', phi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
@@ -40,6 +44,12 @@ export function classify(raw: string, isCheck = false): Line {
   if (!line) return { kind: 'empty', src: '' };
 
   const ev = /^(.*?)(?<![:<>!=])=\s*\?\s*(.*)$/.exec(line);
+  const defShow = ev && /^(.+?):=(.*)$/.exec(ev[1]);
+  if (ev && defShow) {
+    const lhs = defShow[1].trim();
+    const t = ev[2].trim();
+    return { kind: FUNC_LHS.test(lhs) ? 'func' : 'assign', src: `${toMath(lhs)} = ${toMath(defShow[2])}`, name: lhs.replace(/\(.*$/, '').trim(), show: true, target: t ? (t === '%' ? '%' : toMath(t)) : undefined };
+  }
   if (ev) {
     const t = ev[2].trim();
     return { kind: 'eval', src: toMath(ev[1]), target: t ? (t === '%' ? '%' : toMath(t)) : undefined };

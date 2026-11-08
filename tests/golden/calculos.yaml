@@ -211,3 +211,122 @@
   definicoes: ["a := 9.5", "b := 10"]
   verificar: "a < b"
   esperado: {estado: ok}
+
+# --- ADENDO 05: folha livre com a semântica do SMath (folha: true) ---
+- id: E8-03
+  descricao: "s_tensao := 10*x com x := 2 dá 20"
+  folha: true
+  definicoes: ["x := 2", "s_tensao := 10*x"]
+  expr: "s_tensao"
+  sem_unidade: true
+  esperado: {valor: 20}
+- id: E8-05
+  descricao: definição com nome em aberto é resolvida na avaliação
+  folha: true
+  definicoes: ["s := 10*x", "x := 2"]
+  expr: "s"
+  sem_unidade: true
+  esperado: {valor: 20}
+- id: E8-05
+  descricao: e com o valor que x tem no ponto da avaliação
+  folha: true
+  definicoes: ["s := 10*x", "x := 2", "x := 3"]
+  expr: "s"
+  sem_unidade: true
+  esperado: {valor: 30}
+- id: E8-06
+  descricao: definição guarda o valor daquele ponto
+  folha: true
+  definicoes: ["x := 2", "s := 10*x", "x := 3"]
+  expr: "s"
+  sem_unidade: true
+  esperado: {valor: 20}
+- id: E8-07
+  descricao: nome que nunca foi definido fica em aberto, sem erro
+  folha: true
+  definicoes: ["s := 10*x"]
+  expr: "s"
+  sem_unidade: true
+  esperado: {simbolico: "10*x", faltando: [x]}
+- id: E8-09
+  descricao: "dois-pontos redefine um nome que já existe"
+  folha: true
+  definicoes: ["x := 2", "x := 3"]
+  expr: "x"
+  sem_unidade: true
+  esperado: {valor: 3}
+- id: E8-11
+  descricao: "definição com resultado: Z_0 := sqrt(L/C) = ?"
+  folha: true
+  definicoes: ["L := 1.5*10^-3", "C := 0.01*10^-6", "Z_0 := sqrt(L/C) = ?"]
+  linha: 2
+  esperado: {valor: 387.3, texto: "387,30"}
+- id: E8-12
+  descricao: função do usuário
+  folha: true
+  definicoes: ["f(a, b) := a + b"]
+  expr: "f(2, 3)"
+  sem_unidade: true
+  esperado: {valor: 5}
+- id: E8-13
+  descricao: redefinir usando o valor anterior
+  folha: true
+  definicoes: ["P_custo := 100", "p := 1.1", "P_custo := P_custo*p"]
+  expr: "P_custo"
+  sem_unidade: true
+  esperado: {valor: 110}
+
+# --- ADENDO 05, item 2: complexos, formato do SMath (E4.2) e conversão por expressão (E4.3) ---
+# exibicao igual à do 08do10.sm: 4 algarismos significativos, sem zeros à direita, científica a partir de 10^3
+- id: E8-14
+  descricao: complexo com i
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  definicoes: ["z := (0.11 + i*0.5655)*100"]
+  expr: "z"
+  sem_unidade: true
+  esperado: {texto: "11 + 56,55·i"}
+- id: E8-14
+  descricao: parte imaginária negativa com o sinal de menos
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  expr: "389.7 - 27.15*i"
+  sem_unidade: true
+  esperado: {texto: "389,7 − 27,15·i"}
+- id: E8-15
+  descricao: "arg(z) convertido para graus no marcador"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  definicoes: ["z := (0.11 + i*0.5655)*100"]
+  expr: "arg(z)"
+  unidade: deg
+  esperado: {valor: 78.99}
+- id: E8-18
+  descricao: "formato do SMath: 387,298 com 4 significativos vira 387,3"
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  expr: "387.298"
+  sem_unidade: true
+  esperado: {texto: "387,3"}
+- id: E8-18
+  descricao: "abaixo de 10^-3: notação científica (a tela desenha 1,475·10⁻³)"
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  expr: "0.0014752"
+  sem_unidade: true
+  esperado: {texto: "1,475e-3"}
+- id: E8-18
+  descricao: "casas decimais com zeros à direita"
+  exibicao: {casas: 3, modo: decimais, zeros_a_direita: true, limite_exponencial: 5}
+  expr: "2.5"
+  sem_unidade: true
+  esperado: {texto: "2,500"}
+- id: E8-19
+  descricao: "conversão por expressão: = ? 10^-6"
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  expr: "(0.2 + 3.77*i)*10^-6"
+  unidade: "10^-6"
+  esperado: {texto: "(0,2 + 3,77·i)·10^-6"}
+- id: E8-19
+  descricao: "conversão por unidade continua: = ? mV"
+  expr: "3.2936 V"
+  unidade: mV
+  esperado: {valor: 3293.6, texto: "3293,60 mV"}

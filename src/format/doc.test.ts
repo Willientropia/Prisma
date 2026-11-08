@@ -1,7 +1,7 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { blocks, normalizeForSave, parse, parseInfo, serialize } from './doc';
+import { blocks, normalizeForSave, parse, parseInfo, serialize, withAttr } from './doc';
 import { assignments, byPosition, classifyFile, libFunctions, outline, tipoByExt, texOutline } from './views';
 import { joinPath, relativePath, shortenPath } from './display';
 import { findUserFiles, rel, ROOT, USER_FILE_DIRS } from '../../tests/helpers/files';
@@ -140,5 +140,15 @@ describe('ADENDO 01: codificação, tipo e caminhos', () => {
     const p = parse(read('usina-boa-vista.prsp'));
     const all = [...(p.meta.arquivos as string[]), ...(p.meta.documentos as string[])];
     for (const rel of all) expect(statSync(join(EX, rel)).isFile()).toBe(true);
+  });
+});
+
+describe('ADENDO 05: atributos da região', () => {
+  it('[E8-16] [E8-28] atributos sem valor (desativado, moldura, recolhida) e descricao="..." são lidos e trocados sem mexer no resto', () => {
+    expect(parseInfo('calc {#a x=40 y=80 desativado moldura descricao="Tensão de linha"}').attrs).toEqual({ x: '40', y: '80', desativado: '', moldura: '', descricao: 'Tensão de linha' });
+    expect(withAttr('```calc {#a x=40 y=80}\n', 'desativado', true)).toBe('```calc {#a x=40 y=80 desativado}\n');
+    expect(withAttr('```calc {#a x=40 desativado y=80}\n', 'desativado', null)).toBe('```calc {#a x=40 y=80}\n');
+    expect(withAttr('```calc {#a x=40 descricao="x"}\n', 'descricao', 'Nova')).toBe('```calc {#a x=40 descricao="Nova"}\n');
+    expect(withAttr('```area {#r titulo="Valores RMS" y=711}\n', 'recolhida', true)).toBe('```area {#r titulo="Valores RMS" y=711 recolhida}\n');
   });
 });

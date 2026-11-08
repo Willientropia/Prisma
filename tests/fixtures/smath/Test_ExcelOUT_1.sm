@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Studio Desktop" version="1.1.8763.0"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="96">
+    <identity>
+      <id>cf1c5e50-10f4-4eac-b346-7a565fe73b6b</id>
+      <revision>19</revision>
+    </identity>
+    <calculation>
+      <precision>4</precision>
+      <exponentialThreshold>5</exponentialThreshold>
+      <trailingZeros>false</trailingZeros>
+      <significantDigitsMode>false</significantDigitsMode>
+      <roundingMode>0</roundingMode>
+      <approximateEqualAccuracy>0</approximateEqualAccuracy>
+      <fractions>decimal</fractions>
+    </calculation>
+    <pageModel active="false" viewMode="1" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true">
+      <paper id="1" orientation="Portrait" width="850" height="1100" />
+      <margins left="39" right="39" top="39" bottom="39" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Studio Desktop" version="1.1.8763.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.11.8763.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="TextRegion" version="1.11.8763.0" guid="485d28c5-349a-48b6-93be-12a35a1c1e39" />
+      <assembly name="EXCEL (2003+) I/O with recalculation and PNG export" version="2.1.8225.33551" guid="e40eaef6-4622-4ef3-ad03-077e8f005bb1" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region left="0" top="0" width="148" height="20" color="#000000" fontSize="8" isBreakable="false">
+      <text lang="eng" fontFamily="Arial" fontSize="10">
+        <content>
+          <p style="font-weight: bold; font-style: italic; text-decoration: underline; font-family: Courier New; font-size: 8px;">Specifying file path:</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="27" width="166" height="20" color="#000000" fontSize="8">
+      <math>
+        <input>
+          <e type="operand">EXCELpath</e>
+          <e type="operand" style="string">teste1.xlsx</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="54" width="422" height="397" color="#000000" fontSize="8">
+      <math matrixOptions="0,0,1,26">
+        <description active="false" position="Top" lang="eng" />
+        <input>
+          <e type="operand">output</e>
+          <e type="operand">EXCELpath</e>
+          <e type="operand" style="string">Planilha1</e>
+          <e type="operand" style="string">A1:A124</e>
+          <e type="function" args="3">excel_OUT</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">107.5</e>
+          <e type="operand">121.9537</e>
+          <e type="operand">135.5042</e>
+          <e type="operand">149.9579</e>
+          <e type="operand">162.605</e>
+          <e type="operand">175.252</e>
+          <e type="operand">186.9957</e>
+          <e type="operand">198.7394</e>
+          <e type="operand">209.5798</e>
+          <e type="operand">221.3234</e>
+          <e type="operand">232.1638</e>
+          <e type="operand">243.0041</e>
+          <e type="operand">252.9411</e>
+          <e type="operand">261.9747</e>
+          <e type="operand">271.0083</e>
+          <e type="operand">278.2352</e>
+          <e type="operand">283.6554</e>
+          <e type="operand">286.3654</e>
+          <e type="operand">287.2688</e>
+          <e type="operand">289.0755</e>
+          <e type="operand">289.0755</e>
+          <e type="operand">289.9789</e>
+          <e type="operand">290.8822</e>
+          <e type="operand">292.689</e>
+          <e type="operand">294.4957</e>
+          <e type="operand">296.3024</e>
+          <e type="operand">26</e>
+          <e type="operand">1</e>
+          <e type="function" args="28">mat</e>
+        </result>
+      </math>
+    </region>
+  </regions>
+</worksheet>

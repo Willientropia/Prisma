@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Studio Desktop" version="1.1.8763.0"?>
+<worksheet xmlns="http://smath.info/schemas/worksheet/1.0">
+  <settings ppi="120">
+    <identity>
+      <id>a1795e1f-94a3-4ddd-a2f9-9b8db0213435</id>
+      <revision>3</revision>
+    </identity>
+    <calculation>
+      <precision>4</precision>
+      <exponentialThreshold>5</exponentialThreshold>
+      <trailingZeros>false</trailingZeros>
+      <significantDigitsMode>false</significantDigitsMode>
+      <roundingMode>0</roundingMode>
+      <approximateEqualAccuracy>0</approximateEqualAccuracy>
+      <fractions>decimal</fractions>
+    </calculation>
+    <pageModel active="false" viewMode="2" printGrid="false" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true">
+      <paper id="9" orientation="Portrait" width="827" height="1169" />
+      <margins left="39" right="39" top="49" bottom="49" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Studio Desktop" version="1.1.8763.0" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="MathRegion" version="1.11.8763.0" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="TextRegion" version="1.11.8763.0" guid="485d28c5-349a-48b6-93be-12a35a1c1e39" />
+    </dependencies>
+  </settings>
+  <regions type="content">
+    <region left="0" top="18" width="102" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Demanda</e>
+          <e type="operand">80</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="45" width="86" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Fp</e>
+          <e type="operand">10500</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="72" width="62" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">p</e>
+          <e type="operand">750</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="126" width="158" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Demanda.Custo</e>
+          <e type="operand">25.22</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="162" width="220" height="41" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">p.custoTUSD</e>
+          <e type="operand">1571.74</e>
+          <e type="operand">1000</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1.5717</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="216" width="212" height="41" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Fp.custoTUSD</e>
+          <e type="operand">97.83</e>
+          <e type="operand">1000</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.0978</e>
+        </result>
+      </math>
+    </region>
+    <region left="18" top="270" width="300" height="21" color="#000000" fontSize="10">
+      <text lang="por" fontFamily="Bahnschrift Light SemiCondensed" fontSize="10">
+        <content>
+          <p>Resolução Homologatória da EQUATORIAL GO OUT/2023</p>
+        </content>
+      </text>
+    </region>
+    <region left="0" top="315" width="191" height="41" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">p.custoTE</e>
+          <e type="operand">421.04</e>
+          <e type="operand">1000</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.421</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="360" width="207" height="41" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Fp.custoTE</e>
+          <e type="operand">268.50</e>
+          <e type="operand">1000</e>
+          <e type="operator" args="2">/</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.2685</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="432" width="297" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Fp.custo</e>
+          <e type="operand">Fp.custoTE</e>
+          <e type="operand">Fp.custoTUSD</e>
+          <e type="operator" args="2">+</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">0.3663</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="459" width="273" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">P.custo</e>
+          <e type="operand">p.custoTE</e>
+          <e type="operand">p.custoTUSD</e>
+          <e type="operator" args="2">+</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1.9928</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="531" width="211" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">P.custo</e>
+          <e type="operand">P.custo</e>
+          <e type="operand">p</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">1494.585</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="567" width="235" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Fp.custo</e>
+          <e type="operand">Fp.custo</e>
+          <e type="operand">Fp</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">3846.465</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="603" width="307" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Demanda</e>
+          <e type="operand">Demanda</e>
+          <e type="operand">Demanda.Custo</e>
+          <e type="operator" args="2">*</e>
+          <e type="operator" args="2">:</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">2017.6</e>
+        </result>
+      </math>
+    </region>
+    <region left="0" top="657" width="276" height="30" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Faturado</e>
+          <e type="operand">P.custo</e>
+          <e type="operand">Fp.custo</e>
+          <e type="operator" args="2">+</e>
+          <e type="operand">Demanda</e>
+          <e type="operator" args="2">+</e>
+          <e type="operator" args="2">:</e>
+        </input>
+      </math>
+    </region>
+    <region left="0" top="729" width="148" height="24" color="#000000" fontSize="10">
+      <math>
+        <input>
+          <e type="operand">Faturado</e>
+        </input>
+        <result action="numeric">
+          <e type="operand">7358.65</e>
+        </result>
+      </math>
+    </region>
+  </regions>
+</worksheet>

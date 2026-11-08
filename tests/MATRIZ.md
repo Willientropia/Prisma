@@ -19,6 +19,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Bugs corrigidos | BUG | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
+| Adendo 05: folha estilo SMath | E8 | em andamento |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -99,6 +100,34 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F4-07c | Ctrl+S no arquivo de fábrica abre "Salvar como" em Documentos/Prisma/Bibliotecas (ou /Modelos) com "Arquivo de fábrica é somente leitura. Salve uma cópia." | tests/e2e/biblioteca.spec.ts | e2e | ok |
 | F4-08 | Função do caderno diferente da biblioteca: rótulo "FUNÇÃO · <ID> · ALTERADA, NÃO SALVA NA BIBLIOTECA"; clicar salva; iguais, o aviso some | tests/e2e/biblioteca.spec.ts | e2e | ok |
 | F4-09 | Base + extensão não dispara o aviso de id repetido; dois arquivos independentes com o mesmo id disparam | src/format/library.test.ts | unit | ok |
+| E8-01 | `x=2` Enter numa folha vazia: x ≔ 2; arquivo `x := 2` | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-02 | Depois, `s,tensao=10*x` Enter: s com índice tensao ≔ 10·x; arquivo `s_tensao := 10*x` | tests/e2e/smath.spec.ts, tests/golden/conversao.yaml | e2e, unit | ok |
+| E8-03 | Depois, `s,tensao=` Enter: s_tensao = 20; arquivo `s_tensao = ?` | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-04 | Editar x para 3: s_tensao = 30 sem nenhum clique | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-05 | `s≔10·x` acima, `x≔2` abaixo, `s=` mais abaixo: 20 (simbólico resolvido na avaliação) | tests/golden/calculos.yaml | unit | ok |
+| E8-06 | `x≔2`, `s≔10·x`, `x≔3`, `s=`: 20 (valor guardado na definição) | tests/golden/calculos.yaml | unit | ok |
+| E8-07 | `s=` sem x definido: s = 10·x, sem erro, x sublinhado | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-08 | `x=` com x já definido, digitar 5: o 5 vai para o marcador de conversão | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-09 | `x:3` com x já definido redefine x ≔ 3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-10 | `S.trafo:5kV*A`: S com índice trafo ≔ 5 kV·A; arquivo `S_trafo := 5 kV*A` | tests/e2e/smath.spec.ts, tests/golden/conversao.yaml | e2e, unit | ok |
+| E8-11 | `Z,0=sqrt(L/C)=` com L e C definidos: Z0 ≔ √(L/C) = 387,3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml, tests/golden/conversao.yaml | e2e, unit | ok |
+| E8-12 | `f(a;b)=a+b` Enter e `f(2;3)=`: f(a; b) ≔ a + b e f(2; 3) = 5 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-13 | `P,custo:P,custo*p` usa o valor anterior de P_custo | tests/golden/calculos.yaml | unit | ok |
+| E8-14 | Complexo: `z:(0,11+i*0,5655)*100` e `z=`: 11 + 56,55·i | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-15 | `arg(z)=` com marcador `deg`: valor em graus | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-16 | Região desativada que define x: as de depois não enxergam esse x | tests/e2e/smath.spec.ts, src/format/doc.test.ts | e2e, unit | ok |
+| E8-17 | Área recolhida: regiões de dentro continuam avaliadas; as de baixo sobem | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-18 | Formato do resultado como no SMath (exibicao: casas, modo, zeros_a_direita, limite_exponencial; casas= na região); notação científica na tela 1,475·10⁻³, nunca "e-3" | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
+| E8-19 | O marcador de conversão aceita expressão além de unidade (= ? 10^-6, = ? deg, = ? %) | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml, tests/golden/conversao.yaml | e2e, unit | ok |
+| E8-28 | Moldura (1 px --text-muted) e descrição (Inter 11 px --text-muted acima da região), pelo menu de contexto e pelos atributos moldura e descricao= | tests/e2e/smath.spec.ts, src/format/doc.test.ts | e2e, unit | ok |
+| E8-20 | Os 17 .sm importam sem travar e sem perder região | | | pendente |
+| E8-21 | Os 8 .sm só com recursos nativos batem 100 % com os resultados do SMath | | | pendente |
+| E8-22 | Nos .sm com plugin, 100 % dos resultados que não dependem de plugin batem | | | pendente |
+| E8-23 | Abrir um .sm nunca altera o original (hash igual) | | | pendente |
+| E8-24 | 08do10.sm: Z0 = 387,3; Z = 11 + 56,55·i; |γ| = 1,475·10⁻³; arg(γ) = 82,98 deg; |Zc| = 390,6; |i1| = 113,3; arg(i1) = −24,32 deg | | | pendente |
+| E8-25 | Exemplo_de_Fatura_A4_-_Verde.sm: Faturado = 7 358,65 | | | pendente |
+| E8-26 | P_gina1.sm: Relação_invest.Lucro = 4,295 %; QTD_meses = 23,2828 | | | pendente |
+| E8-27 | Dia_2.09.sm: Zpu_A(0,03; 15 kV; 13,8 kV; 15; 10) = 2,3629 % e Zt_1(5 kV·A; 13,8 kV; 2,6 %) = 990,288 Ω | | | pendente |
 | F5-01 | O memorial de exemplo compila | | app | pendente |
 | F5-02 | Mudar S no caderno não altera o PDF até clicar em Atualizar resultados | | e2e | pendente |
 | F5-03 | Inserir resultado põe \resultado{...} no cursor com o valor em comentário | | e2e | pendente |
