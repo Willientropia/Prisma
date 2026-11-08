@@ -225,6 +225,10 @@ S := 4 mm^2
 ΔV(L, I, S)/V_mp = ? %
 ```
 
+```verificar {#criterio x=40 y=330}
+ΔV(L, I, S)/V_mp < 1 %
+```
+
 ```grafico {#dv-por-secao x=420 y=70 largura=400 altura=200}
 titulo: ΔV % × seção do cabo
 x: {var: S, valores: [2.5, 4, 6, 10], unidade: mm^2}

@@ -14,6 +14,8 @@ casas_decimais: 2
 separador_decimal: \",\"
 motor_latex: tectonic
 tema: grafite-violeta
+verificacao:
+  margem_atencao: 20 %
 ";
 
 /// Só em build de depuração: PRISMA_HOME troca as pastas do sistema por uma pasta de teste,

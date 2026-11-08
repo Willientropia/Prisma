@@ -3,11 +3,13 @@ import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
 import { math } from './math';
 import { classify, toMath, type LineKind } from './syntax';
-import { DEFAULT_FORMAT, fmtNum, prettyUnit, type FormatOpts } from './format';
+import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtNum, prettyUnit, type FormatOpts } from './format';
 
 export type LibInput = { id: string; constants: [string, string][]; functions: string[] };
-export type BlockInput = { key: string; type: string; lines: string[] };
-export type EvalInput = { libs: LibInput[]; blocks: BlockInput[]; format?: FormatOpts };
+/** atencao: margem de ATENÇÃO do bloco (atributo atencao=10%), em fração; vence a margem geral. */
+export type BlockInput = { key: string; type: string; lines: string[]; atencao?: number };
+/** margem: margem de ATENÇÃO geral (config.yaml, verificacao.margem_atencao), em fração; padrão 0,2. */
+export type EvalInput = { libs: LibInput[]; blocks: BlockInput[]; format?: FormatOpts; margem?: number };
 
 export type LineResult = {
   kind: LineKind;
@@ -91,14 +93,22 @@ function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   return msg;
 }
 
-/** Folga da condição: passou, mas com o lado esquerdo a 80 % ou mais do limite vira ATENÇÃO. */
-function margin(src: string, scope: Map<string, unknown>): number | undefined {
+/**
+ * Razão de uso da condição (regra do selo): `<`/`<=` r = valor/limite; `>`/`>=` r = limite/valor.
+ * Sem razão (nunca ATENÇÃO): `=`/`≠`, limite que depende de variáveis, limite zero ou negativo.
+ */
+function usage(src: string, scope: Map<string, unknown>): number | undefined {
   const node = math.parse(src);
   if (!math.isOperatorNode(node) || node.args.length !== 2) return undefined;
-  const [a, b] = node.args.map((x) => x.compile().evaluate(scope));
-  const r = Number(math.divide(a as never, b as never));
-  if (!Number.isFinite(r)) return undefined;
-  return node.fn === 'smaller' || node.fn === 'smallerEq' ? r : node.fn === 'larger' || node.fn === 'largerEq' ? 1 / r : undefined;
+  const less = node.fn === 'smaller' || node.fn === 'smallerEq';
+  if (!less && node.fn !== 'larger' && node.fn !== 'largerEq') return undefined;
+  let limit: unknown;
+  try { limit = node.args[1].compile().evaluate(new Map()); } catch { return undefined; } // limite com variável
+  const sign = isUnit(limit) ? Math.sign(Number(limit.value)) : typeof limit === 'number' ? Math.sign(limit) : NaN;
+  if (!(sign > 0)) return undefined;
+  const value = node.args[0].compile().evaluate(scope);
+  const r = Number(less ? math.divide(value as never, limit as never) : math.divide(limit as never, value as never));
+  return Number.isFinite(r) ? r : undefined;
 }
 
 function lhsShown(src: string, limit: string | undefined, scope: Map<string, unknown>, fmt: FormatOpts): Shown | undefined {
@@ -144,10 +154,11 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
         const v = math.evaluate(c.src, scope);
         if (c.kind === 'check') {
           if (typeof v !== 'boolean') return { kind: 'check', error: 'A verificação precisa ser uma condição, como x < 1 %' };
-          const r = margin(c.src, scope);
+          const r = usage(c.src, scope);
+          const m = b.atencao ?? input.margem ?? DEFAULT_MARGIN;
           let shown: Shown | undefined;
           try { shown = lhsShown(c.src, c.limit, scope, fmt); } catch { /* sem valor exibido; o estado já basta */ }
-          const status = !v ? 'fail' : r !== undefined && r >= 0.8 ? 'warn' : 'ok';
+          const status = !v ? 'fail' : r !== undefined && r >= 1 - m ? 'warn' : 'ok';
           return { kind: 'check', status, limit: c.limit, ...shown };
         }
         return { kind: 'eval', ...show(v, c.target, fmt) };

@@ -39,3 +39,16 @@ test('[V-07] página do caderno branca e bloco de função com --paper-accent', 
   const fn = page.locator('article [class*="fnBlock"]').first();
   expect(await fn.evaluate((e) => getComputedStyle(e).borderTopColor)).toBe(await color('--paper-accent'));
 });
+
+test('[F3-10] [F3-12] atributo atencao= no bloco verificar muda o selo; texto "<ESTADO> · limite <limite>"', async ({ page }) => {
+  await start(page);
+  const fence = '```';
+  const doc = (attr: string) => `---\ntipo: caderno\ntitulo: Selo\nversao_formato: 1\n---\n\n${fence}verificar {#v${attr}}\n0.85 < 1\n${fence}\n`;
+  await dev(page).write(`${DOCS}/selo-a.prsm`, doc(''));
+  await dev(page).open(`${DOCS}/selo-a.prsm`);
+  await expect(page.locator('article')).toContainText('ATENÇÃO · limite 1'); // margem padrão de 20 %
+  await dev(page).write(`${DOCS}/selo-b.prsm`, doc(' atencao=10%'));
+  await dev(page).open(`${DOCS}/selo-b.prsm`);
+  await expect(page.locator('article')).toContainText('APROVADO · limite 1');
+  await expect(page.locator('article')).not.toContainText('ATENÇÃO');
+});

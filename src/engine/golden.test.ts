@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate, type BlockInput } from './evaluate';
+import { parseMargin } from './format';
 import { unitFromMathjs } from '../format/mathlinear';
 import { loadGolden, ROOT } from '../../tests/helpers/files';
 
@@ -13,6 +14,8 @@ export type CalcCase = {
   unidade?: string;
   sem_unidade?: boolean;
   verificar?: string;
+  margem?: string | number; // config.yaml verificacao.margem_atencao
+  atencao?: string; // atributo atencao= do bloco verificar
   linha?: number;
   esperado?: { valor?: number; unidade?: string; tolerancia?: number | string; texto?: string; estado?: 'ok' | 'warn' | 'fail' };
   erro?: string;
@@ -26,8 +29,8 @@ export function runCase(c: CalcCase) {
   const target = c.sem_unidade ? '' : (c.unidade ?? c.esperado?.unidade ?? '');
   if (c.expr) lines.push(`${c.expr} = ?${target ? ` ${target}` : ''}`);
   const blocks: BlockInput[] = [{ key: 'calc', type: 'calc', lines }];
-  if (c.verificar) blocks.push({ key: 'check', type: 'verificar', lines: [c.verificar] });
-  const r = evaluate({ libs: [], blocks });
+  if (c.verificar) blocks.push({ key: 'check', type: 'verificar', lines: [c.verificar], atencao: parseMargin(c.atencao) });
+  const r = evaluate({ libs: [], blocks, margem: parseMargin(c.margem) });
   if (c.verificar) return r.blocks.check[0];
   return r.blocks.calc[c.linha ?? lines.length - 1];
 }

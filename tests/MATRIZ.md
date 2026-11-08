@@ -17,7 +17,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Adendo 04: posição das abas | D6 | concluída |
 | Adendo 03: testes | C9, C7 | concluída |
 | Bugs corrigidos | BUG | concluída |
-| Fase 3: folha livre | F3 | em andamento |
+| Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | futura |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
@@ -70,12 +70,17 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F2-15 | A sintaxe da SPEC 3.4 é traduzida para o motor (:=, = ?, = ? unidade, comentário, °C, Ω, letra grega por nome) | src/engine/engine.test.ts | unit | ok |
 | F2-16 | Exibição com casas decimais da configuração, vírgula e arredondamento decimal (SPEC 8.5) | tests/golden/calculos.yaml, src/engine/engine.test.ts | unit | ok |
 | F3-01 | A folha string-3 mostra 3,29 V e 0,82 % | tests/e2e/folha.spec.ts | e2e | ok |
-| F3-02 | A folha string-3 mostra ATENÇÃO | | e2e | pendente |
+| F3-02 | A folha string-3 mostra ATENÇÃO (região #criterio acrescentada ao exemplo, pedido do usuário) | tests/e2e/folha.spec.ts | e2e | ok |
 | F3-03 | O gráfico da string-3 tem a linha de limite | tests/e2e/folha.spec.ts | e2e | ok |
 | F3-04 | Regiões são arrastadas pela moldura com encaixe na grade de 20 px | tests/e2e/folha.spec.ts | e2e | ok |
 | F3-05 | A folha é avaliada por posição (y, depois x) | src/format/doc.test.ts, tests/e2e/folha.spec.ts | unit, e2e | ok |
 | F3-06 | Tabela de variáveis com nome, valor e unidade | tests/e2e/folha.spec.ts | e2e | ok |
 | F3-07 | Linha de comando aceita "ir <arquivo>" | tests/e2e/folha.spec.ts | e2e | ok |
+| F3-08 | Selo por razão de uso: `<`/`<=` r = valor/limite, `>`/`>=` r = limite/valor; falsa: REPROVADO; verdadeira e r ≥ 1 − m: ATENÇÃO; senão APROVADO | tests/golden/calculos.yaml | unit | ok |
+| F3-09 | Margem de atenção padrão 20 %, configurável em config.yaml (verificacao.margem_atencao) | tests/golden/calculos.yaml, src/engine/engine.test.ts | unit | ok |
+| F3-10 | Atributo atencao=10% no bloco verificar vence o padrão | tests/golden/calculos.yaml, tests/e2e/caderno.spec.ts | unit, e2e | ok |
+| F3-11 | Limite zero, negativo ou sem limite numérico (=, ≠, duas expressões variáveis): nunca ATENÇÃO | tests/golden/calculos.yaml | unit | ok |
+| F3-12 | Texto do selo "<ESTADO> · limite <limite>" no caderno e na folha | tests/e2e/caderno.spec.ts, tests/e2e/folha.spec.ts | e2e | ok |
 | F4-01 | Bibliotecas .prsl são carregadas e usadas no cálculo | tests/e2e/caderno.spec.ts | e2e | ok |
 | F4-02 | `salvar=` grava a função na biblioteca indicada | | e2e | pendente |
 | F4-03 | Função salva no caderno aparece na biblioteca e na folha | | e2e | pendente |

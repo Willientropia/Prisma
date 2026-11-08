@@ -6,7 +6,7 @@ import { useWorkspace } from '../store/workspace';
 import { platform } from '../platform';
 import { evaluateAsync, LINE_LIMIT_MS, stop } from './client';
 import type { BlockInput, EvalResult, LibInfo, LibInput } from './evaluate';
-import { DEFAULT_FORMAT } from './format';
+import { DEFAULT_FORMAT, parseMargin } from './format';
 
 /** Chave do bloco = índice do segmento no arquivo (a mesma usada na estrutura do caderno). */
 export const blockKey = (segIndex: number) => `b${segIndex}`;
@@ -62,7 +62,7 @@ export async function recalc(docId: string): Promise<void> {
     const order = byPosition(bs.map((b) => b.seg));
     bs = order.map((seg) => bs.find((b) => b.seg === seg)!);
   }
-  const blocks: BlockInput[] = bs.map(({ seg, key }) => ({ key, type: seg.type, lines: lines(seg.body) }));
+  const blocks: BlockInput[] = bs.map(({ seg, key }) => ({ key, type: seg.type, lines: lines(seg.body), atencao: parseMargin(seg.attrs.atencao) }));
   const libErrors: string[] = [];
   const ids = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
   const { libs, info } = await loadLibs(ids, !!st.projectPathOf(doc.path), libErrors);
@@ -73,7 +73,8 @@ export async function recalc(docId: string): Promise<void> {
   };
 
   useWorkspace.setState({ calculating: true });
-  const out = await evaluateAsync({ libs, blocks, format });
+  const margem = parseMargin((cfg.verificacao as { margem_atencao?: unknown } | undefined)?.margem_atencao);
+  const out = await evaluateAsync({ libs, blocks, format, margem });
   useWorkspace.setState({ calculating: false });
 
   let result: EvalResult;

@@ -31,3 +31,13 @@ export function prettyUnit(u: string): string {
     .replace(/\^2\b/g, '²')
     .replace(/\^3\b/g, '³');
 }
+
+// Margem de ATENÇÃO das verificações (config.yaml: verificacao.margem_atencao; bloco: atencao=10%).
+export const DEFAULT_MARGIN = 0.2;
+
+/** "20 %", "20%", "12,5 %" ou 20 (sempre em por cento) para fração; fora de 0 a 100 % não vale. */
+export function parseMargin(v: unknown): number | undefined {
+  const m = typeof v === 'number' ? v : typeof v === 'string' ? /^\s*(\d+(?:[.,]\d+)?)\s*%?\s*$/.exec(v)?.[1]?.replace(',', '.') : undefined;
+  const n = Number(m) / 100;
+  return m !== undefined && Number.isFinite(n) && n >= 0 && n <= 1 ? n : undefined;
+}

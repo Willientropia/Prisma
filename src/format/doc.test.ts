@@ -83,7 +83,8 @@ describe('leitura dos blocos', () => {
   it('[F3-05] folha: posições e ordem (y, x)', () => {
     const d = parse(read('calculos/string-3.prsf'));
     expect(d.meta.pagina).toEqual({ largura: 1200, altura: 1600, grade: 20 });
-    expect(byPosition(blocks(d)).map((b) => b.id)).toEqual(['t1', 'dv-por-secao', 's', 'entradas', 'resultado']);
+    // #criterio (y=330) entrou no exemplo a pedido do usuário ao fechar a fase 3 (F3-02)
+    expect(byPosition(blocks(d)).map((b) => b.id)).toEqual(['t1', 'dv-por-secao', 's', 'entradas', 'resultado', 'criterio']);
     expect(parseInfo('grafico {#g x=420 rotulo="limite 1 %"}')).toEqual({ type: 'grafico', id: 'g', attrs: { x: '420', rotulo: 'limite 1 %' } });
   });
 

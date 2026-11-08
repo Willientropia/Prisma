@@ -119,7 +119,7 @@ export function MathLine(props: Props) {
         </span>
       )}
       {props.isCheck && result?.status && !err && (
-        <Badge kind={result.status}>{result.status === 'ok' ? `APROVADO · limite ${result.limit ?? ''}` : result.status === 'warn' ? 'ATENÇÃO · perto do limite' : `REPROVADO · limite ${result.limit ?? ''}`}</Badge>
+        <Badge kind={result.status}>{`${{ ok: 'APROVADO', warn: 'ATENÇÃO', fail: 'REPROVADO' }[result.status]}${result.limit ? ` · limite ${result.limit}` : ''}`}</Badge>
       )}
     </span>
   );

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate, type BlockInput, type EvalInput, type LibInput } from './evaluate';
 import { classify, greek } from './syntax';
-import { fmtNum, prettyUnit } from './format';
+import { fmtNum, parseMargin, prettyUnit } from './format';
 import { math } from './math';
 import { blocks, lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
@@ -158,5 +158,12 @@ describe('ADENDO 02: gráfico e partes do resultado', () => {
   it('[B10-08] resultado traz número e unidade separados', () => {
     expect(last(['ΔV(25 m, 12 A, 6 mm^2) = ? mV'])).toMatchObject({ numText: '1790,00', unitRaw: 'mV' });
     expect(last(['3.29 V / 400 V = ? %'])).toMatchObject({ numText: '0,82', unitRaw: '%' });
+  });
+
+  it('[F3-09] margem de ATENÇÃO lida do config.yaml e do atributo: "20 %", "12,5%", 20; fora de 0 a 100 % não vale', () => {
+    expect(parseMargin('20 %')).toBe(0.2);
+    expect(parseMargin('12,5%')).toBe(0.125);
+    expect(parseMargin(20)).toBe(0.2);
+    for (const bad of ['150 %', '-5 %', 'muito', undefined, null]) expect(parseMargin(bad)).toBeUndefined();
   });
 });

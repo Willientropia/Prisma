@@ -55,3 +55,10 @@ test('[F3-07] linha de comando: "ir cabos-cc" abre o arquivo', async ({ page }) 
   await cmd.press('Enter');
   await expect(tabs(page).last()).toContainText('cabos-cc.prsm');
 });
+
+test('[F3-02] [F3-12] string-3 mostra ATENÇÃO · limite 1 % na região de verificação', async ({ page }) => {
+  await start(page);
+  await dev(page).open(`${CALC}/string-3.prsf`);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect(page.locator('[data-region="criterio"]')).toContainText('ATENÇÃO · limite 1 %');
+});

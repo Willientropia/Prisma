@@ -133,3 +133,81 @@
   descricao: reprovado
   verificar: "0.82 / 100 < 0.5 %"
   esperado: {estado: fail}
+
+# --- regra do selo (pedido do usuário ao fechar a fase 3) ---
+# razão de uso: < e <= : r = valor/limite; > e >= : r = limite/valor. ATENÇÃO se a condição vale e r >= 1 - margem.
+- id: F3-08
+  descricao: "< com r = 0,85 (margem padrão 20 %): ATENÇÃO"
+  verificar: "0.85 < 1"
+  esperado: {estado: warn}
+- id: F3-08
+  descricao: "< com r = 0,7: APROVADO"
+  verificar: "0.7 < 1"
+  esperado: {estado: ok}
+- id: F3-08
+  descricao: "<= exatamente em r = 0,8: ATENÇÃO"
+  verificar: "0.8 <= 1"
+  esperado: {estado: warn}
+- id: F3-08
+  descricao: "> com r = 10/12: ATENÇÃO"
+  verificar: "12 A > 10 A"
+  esperado: {estado: warn}
+- id: F3-08
+  descricao: "> com r = 10/30: APROVADO"
+  verificar: "30 A > 10 A"
+  esperado: {estado: ok}
+- id: F3-08
+  descricao: ">= com r = 0,8: ATENÇÃO"
+  verificar: "12.5 A >= 10 A"
+  esperado: {estado: warn}
+- id: F3-08
+  descricao: "condição falsa: REPROVADO"
+  verificar: "5 A > 10 A"
+  esperado: {estado: fail}
+- id: F3-08
+  descricao: "queda da string-3 (0,82 % de 1 %): ATENÇÃO"
+  definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "ΔV(L, I, S) := 2*ρ_cu*L*I/S"]
+  verificar: "ΔV(32 m, 11.5 A, 4 mm^2)/(400 V) < 1 %"
+  esperado: {estado: warn}
+- id: F3-09
+  descricao: "margem do config.yaml em 10 %: r = 0,85 vira APROVADO"
+  margem: "10 %"
+  verificar: "0.85 < 1"
+  esperado: {estado: ok}
+- id: F3-09
+  descricao: "margem do config.yaml em 50 %: r = 0,6 vira ATENÇÃO"
+  margem: "50 %"
+  verificar: "0.6 < 1"
+  esperado: {estado: warn}
+- id: F3-10
+  descricao: "atributo atencao=10% vence a margem padrão de 20 %"
+  atencao: "10%"
+  verificar: "0.85 < 1"
+  esperado: {estado: ok}
+- id: F3-10
+  descricao: "atributo atencao=30% vence a margem do config.yaml (10 %)"
+  margem: "10 %"
+  atencao: "30%"
+  verificar: "0.75 < 1"
+  esperado: {estado: warn}
+- id: F3-11
+  descricao: "limite zero: nunca ATENÇÃO"
+  verificar: "-0.1 V < 0 V"
+  esperado: {estado: ok}
+- id: F3-11
+  descricao: "limite negativo: nunca ATENÇÃO"
+  verificar: "-5 < -4"
+  esperado: {estado: ok}
+- id: F3-11
+  descricao: "igualdade: só APROVADO ou REPROVADO"
+  verificar: "2 m == 2 m"
+  esperado: {estado: ok}
+- id: F3-11
+  descricao: "diferente: só APROVADO ou REPROVADO"
+  verificar: "2 m ≠ 3 m"
+  esperado: {estado: ok}
+- id: F3-11
+  descricao: "duas expressões variáveis (r = 0,95): nunca ATENÇÃO"
+  definicoes: ["a := 9.5", "b := 10"]
+  verificar: "a < b"
+  esperado: {estado: ok}

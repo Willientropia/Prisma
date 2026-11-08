@@ -1,4 +1,4 @@
-# Prisma: relatório para verificação (fases 0 a 2 + ADENDOS 01 a 04)
+# Prisma: relatório para verificação (fases 0 a 3 + ADENDOS 01 a 04)
 
 Este documento é para um revisor (pessoa ou agente) conferir o que foi feito **antes da fase 3**. Ele diz o que existe, onde está, como rodar, o que foi verificado e como, e o que ficou de fora de propósito. Desconfie do que está escrito aqui: o objetivo é que você confira no código e rodando.
 
@@ -11,7 +11,7 @@ Este documento é para um revisor (pessoa ou agente) conferir o que foi feito **
 
 **Outros documentos:**
 - **Referência visual:** [`referencia-design.dc.html`](../referencia-design.dc.html) (protótipo aprovado; vale o markup e os estilos).
-- **Notas:** [`fase-0.md`](fase-0.md), [`fase-1.md`](fase-1.md) (inclui o ADENDO 01), [`fase-2.md`](fase-2.md), [`adendo-02.md`](adendo-02.md), [`adendo-03.md`](adendo-03.md), [`adendo-04.md`](adendo-04.md).
+- **Notas:** [`fase-0.md`](fase-0.md), [`fase-1.md`](fase-1.md) (inclui o ADENDO 01), [`fase-2.md`](fase-2.md), [`adendo-02.md`](adendo-02.md), [`adendo-03.md`](adendo-03.md), [`adendo-04.md`](adendo-04.md), [`fase-3.md`](fase-3.md).
 - **Matriz de rastreio:** [`tests/MATRIZ.md`](../tests/MATRIZ.md) (todo critério com ID e teste); itens manuais em [`tests/MANUAL.md`](../tests/MANUAL.md).
 - **Instruções permanentes do agente:** [`CLAUDE.md`](../CLAUDE.md).
 - **Repositório:** https://github.com/Willientropia/Prisma (branch `main`).
@@ -140,6 +140,10 @@ Também no e2e, para a B7:
 
 Concluído. Matriz com todos os critérios (F0 a F7, A9, B10, B7, B4, V, C7, C9, BUG); cada um ativo tem teste, conferido pelo `check-matriz`. Camadas: Vitest (unidade, navegador e meta), cargo test, Playwright (interface, regressão, visual), app real com tauri-driver e itens manuais. Detalhes, bugs achados (BUG-005 e BUG-006) e decisões em [`adendo-03.md`](adendo-03.md).
 
+### Fase 3: folha livre
+
+Concluída. A `string-3` ganhou a região `#criterio` (pedido do usuário) e mostra ATENÇÃO. Regra do selo com razão de uso e margem configurável (`config.yaml` e atributo `atencao=`). Detalhes em [`fase-3.md`](fase-3.md).
+
 ### ADENDO 04: posição das abas
 
 Concluído: ordem título → abas → ribbon → conteúdo → status; aba Início só com ícone de casa; ribbon com 124 px fixos; regra de estabilidade na SPEC 4.5. Critérios D6 em `tests/e2e/abas.spec.ts`. Detalhes em [`adendo-04.md`](adendo-04.md).
@@ -253,5 +257,4 @@ Concluído: ordem título → abas → ribbon → conteúdo → status; aba Iní
   - linha de comando só com `calcular` e `ir <nome>`;
   - regiões de matriz e imagem pelo ribbon.
 - **Fase 3 em diante:**
-  - **Fase 3:** grande parte da folha já entrou com o ADENDO 02 (regiões, arrastar, gráfico, recálculo). Falta conferir os critérios da fase 3, por exemplo o ATENÇÃO no `string-3`, que não tem bloco `verificar`.
   - **Fases 4 a 7:** bibliotecas com testes, LaTeX completo, exportação e modelos.
