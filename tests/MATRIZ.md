@@ -19,7 +19,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Bugs corrigidos | BUG | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
-| Adendo 05: folha estilo SMath | E8 | em andamento |
+| Adendo 05: folha estilo SMath | E8 | concluída |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -119,15 +119,18 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | E8-17 | Área recolhida: regiões de dentro continuam avaliadas; as de baixo sobem | tests/e2e/smath.spec.ts | e2e | ok |
 | E8-18 | Formato do resultado como no SMath (exibicao: casas, modo, zeros_a_direita, limite_exponencial; casas= na região); notação científica na tela 1,475·10⁻³, nunca "e-3" | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
 | E8-19 | O marcador de conversão aceita expressão além de unidade (= ? 10^-6, = ? deg, = ? %) | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml, tests/golden/conversao.yaml | e2e, unit | ok |
-| E8-28 | Moldura (1 px --text-muted) e descrição (Inter 11 px --text-muted acima da região), pelo menu de contexto e pelos atributos moldura e descricao= | tests/e2e/smath.spec.ts, src/format/doc.test.ts | e2e, unit | ok |
-| E8-20 | Os 17 .sm importam sem travar e sem perder região | | | pendente |
-| E8-21 | Os 8 .sm só com recursos nativos batem 100 % com os resultados do SMath | | | pendente |
-| E8-22 | Nos .sm com plugin, 100 % dos resultados que não dependem de plugin batem | | | pendente |
-| E8-23 | Abrir um .sm nunca altera o original (hash igual) | | | pendente |
-| E8-24 | 08do10.sm: Z0 = 387,3; Z = 11 + 56,55·i; |γ| = 1,475·10⁻³; arg(γ) = 82,98 deg; |Zc| = 390,6; |i1| = 113,3; arg(i1) = −24,32 deg | | | pendente |
-| E8-25 | Exemplo_de_Fatura_A4_-_Verde.sm: Faturado = 7 358,65 | | | pendente |
-| E8-26 | P_gina1.sm: Relação_invest.Lucro = 4,295 %; QTD_meses = 23,2828 | | | pendente |
-| E8-27 | Dia_2.09.sm: Zpu_A(0,03; 15 kV; 13,8 kV; 15; 10) = 2,3629 % e Zt_1(5 kV·A; 13,8 kV; 2,6 %) = 990,288 Ω | | | pendente |
+| E8-30 | Moldura (1 px --text-muted) e descrição (Inter 11 px --text-muted acima da região), pelo menu de contexto e pelos atributos moldura e descricao= | tests/e2e/smath.spec.ts, src/format/doc.test.ts | e2e, unit | ok |
+| E8-31 | Vetores, matrizes e programação do SMath: v[i] e M[i, j] (1-based; atribuição cria o vetor), mat, sys, range, stack, augment, length, row, xy2pol, sys2mat, vectorize, for, fft; matriz mostrada como matriz | tests/golden/calculos.yaml, tests/golden/conversao.yaml, tests/e2e/smath.spec.ts | unit, e2e | ok |
+| E8-20 | Os 17 .sm importam sem travar e sem perder região | src/format/smath.test.ts, tests/e2e/smath.spec.ts | unit, e2e | ok |
+| E8-21 | Os 8 .sm só com recursos nativos batem 100 % com os resultados do SMath | src/format/smath.test.ts | unit | ok |
+| E8-22 | Nos .sm com plugin, 100 % dos resultados que não dependem de plugin batem; os 3 resultados do fft de Teste_Pot_ncia_Com_Harm_nica.sm (o SMath trocou o i da saída pela variável i = 8 do laço) ficam como não comparáveis, com o motivo, e batem com o esperado corrigido [8; 3+i; −6; 3−i] | src/format/smath.test.ts | unit | ok |
+| E8-23 | Abrir um .sm nunca altera o original (hash igual) | src/format/smath.test.ts, tests/e2e/smath.spec.ts | unit, e2e | ok |
+| E8-24 | 08do10.sm: Z0 = 387,3; Z = 11 + 56,55·i; abs(γ) = 1,475·10⁻³; arg(γ) = 82,98 deg; abs(Zc) = 390,6; abs(i1) = 113,3; arg(i1) = −24,32 deg | src/format/smath.test.ts | unit | ok |
+| E8-25 | Exemplo_de_Fatura_A4_-_Verde.sm: Faturado = 7 358,65 | src/format/smath.test.ts | unit | ok |
+| E8-26 | P_gina1.sm: Relação_invest.Lucro = 4,295 %; QTD_meses = 23,2828 | src/format/smath.test.ts | unit | ok |
+| E8-27 | Dia_2.09.sm: Zpu_A(0,03; 15 kV; 13,8 kV; 15; 10) = 2,3629 % e Zt_1(5 kV·A; 13,8 kV; 2,6 %) = 990,288 Ω | src/format/smath.test.ts | unit | ok |
+| E8-28 | Depois de for(i; range(1;8); ...), i continua definido com o último valor (8), como no SMath; i e o vetor de destino contam como definidos para a tela e para o "=" inteligente | tests/golden/calculos.yaml, src/format/smath.test.ts, tests/e2e/smath.spec.ts | unit, e2e | ok |
+| E8-29 | Unidade imaginária 𝐢 e constante de Euler 𝐞 são símbolos próprios (negrito reto), nunca a variável i ou e do usuário; definir i ou e (inclusive como variável de laço) mostra uma vez por documento, na barra de status: "i agora é uma variável (vale 8). A unidade imaginária continua disponível como 𝐢 no ribbon Matemática." | tests/golden/calculos.yaml, tests/golden/conversao.yaml, src/format/smath.test.ts, tests/e2e/smath.spec.ts | unit, e2e | ok |
 | F5-01 | O memorial de exemplo compila | | app | pendente |
 | F5-02 | Mudar S no caderno não altera o PDF até clicar em Atualizar resultados | | e2e | pendente |
 | F5-03 | Inserir resultado põe \resultado{...} no cursor com o valor em comentário | | e2e | pendente |
@@ -193,3 +196,4 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-004 | Pedir resultado com "=" perdia o "= ?" ao sair do campo | tests/regressao/bugs.spec.ts, tests/golden/teclado.yaml | e2e, browser | ok |
 | BUG-005 | Na folha, "ir <nome>" não achava arquivo da mesma pasta sem projeto aberto (a pasta nunca era listada) | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-006 | Abrir um .prsm de 1 MB levava 728 ms: o editor de texto serializava o Markdown inteiro ao montar | tests/e2e/desempenho.spec.ts | e2e | ok |
+| BUG-007 | O i imaginário da tela (mathbf{i}) voltava para o arquivo como "mathbf*i" | tests/golden/conversao.yaml | unit | ok |

@@ -25,6 +25,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       files::file_read,
       files::file_write,
+      files::file_write_base64,
+      files::file_read_base64,
       files::file_stat,
       files::file_rename,
       files::dir_list,

@@ -144,7 +144,7 @@ describe('ADENDO 01: codificação, tipo e caminhos', () => {
 });
 
 describe('ADENDO 05: atributos da região', () => {
-  it('[E8-16] [E8-28] atributos sem valor (desativado, moldura, recolhida) e descricao="..." são lidos e trocados sem mexer no resto', () => {
+  it('[E8-16] [E8-30] atributos sem valor (desativado, moldura, recolhida) e descricao="..." são lidos e trocados sem mexer no resto', () => {
     expect(parseInfo('calc {#a x=40 y=80 desativado moldura descricao="Tensão de linha"}').attrs).toEqual({ x: '40', y: '80', desativado: '', moldura: '', descricao: 'Tensão de linha' });
     expect(withAttr('```calc {#a x=40 y=80}\n', 'desativado', true)).toBe('```calc {#a x=40 y=80 desativado}\n');
     expect(withAttr('```calc {#a x=40 desativado y=80}\n', 'desativado', null)).toBe('```calc {#a x=40 y=80}\n');

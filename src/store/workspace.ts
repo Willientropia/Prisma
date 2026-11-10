@@ -8,6 +8,7 @@ import { basename, dirname, joinPath, normPath, relativePath, samePath, stem } f
 import { platform, type AppPaths, type Recovered, type RecentItem, type Filter } from '../platform';
 import type { RibbonTab } from '../shell/ribbons';
 import type { EvalResult } from '../engine/evaluate';
+import { importSm } from '../format/smath';
 
 export type OpenDoc = {
   id: string; // caminho do arquivo, ou "novo:Caderno1" enquanto não foi salvo
@@ -110,6 +111,7 @@ export const OPEN_FILTERS: Filter[] = [
   { name: 'Arquivos Prisma (*.prsm, *.prsf, *.prsl, *.prst, *.prsp)', extensions: ['prsm', 'prsf', 'prsl', 'prst', 'prsp'] },
   ...(['caderno', 'folha', 'biblioteca', 'modelo', 'projeto'] as Tipo[]).map((t) => ({ name: `${LABEL[t]} (*.${TIPO_EXT[t]})`, extensions: [TIPO_EXT[t]] })),
   { name: 'Documentos LaTeX (*.tex)', extensions: ['tex'] },
+  { name: 'SMath Studio (*.sm)', extensions: ['sm'] }, // importado para folha livre (ADENDO 05, E7)
   { name: 'Todos os arquivos (*.*)', extensions: ['*'] },
 ];
 const isPrisma = (ext: string) => /^prs[mflpt]$/.test(ext);
@@ -140,6 +142,32 @@ export const useWorkspace = create<State>((set, get) => {
     const all = Object.values(lists).flat();
     const st = await platform.stat(all.map((r) => joinPath(dir, r)));
     return { path, dir, nome: String(meta.nome ?? stem(path)), lists, exists: Object.fromEntries(all.map((r, i) => [r, st[i] !== null])) };
+  };
+
+  /**
+   * .sm do SMath Studio (ADENDO 05, E7): converte para <nome>.prsf na mesma pasta, extrai as imagens para
+   * <nome>_arquivos/ e abre a folha. O .sm só é lido. Se o .prsf já existe, pergunta antes de sobrescrever.
+   */
+  const importSmath = async (path: string) => {
+    const nome = stem(path);
+    const target = joinPath(dirname(path), `${nome}.prsf`);
+    try {
+      const r = importSm(await platform.read(path), nome);
+      const [exists] = await platform.stat([target]);
+      if (exists !== null) {
+        const q = await get().ask({ title: 'Importar do SMath', message: `Já existe ${nome}.prsf nesta pasta. Substituir pelo que veio de ${basename(path)}?`, buttons: [{ id: 'yes', label: 'Substituir', primary: true }, { id: 'no', label: 'Cancelar' }] });
+        if (q.id !== 'yes') return;
+        const open = get().openDocs.find((d) => d.path && samePath(d.path, target));
+        if (open) set({ openDocs: get().openDocs.filter((d) => d !== open) });
+      }
+      for (const img of r.images) await platform.writeBase64(joinPath(dirname(path), img.path), img.base64);
+      await platform.write(target, normalizeForSave(r.text));
+      await get().openFile(target);
+      const kinds = [...new Set(r.unsupported.map((u) => u.reason.replace(/ \(.*$/, '')))];
+      say(`Importado: ${r.regions} regiões${r.unsupported.length ? `, ${r.unsupported.length} não suportadas (${kinds.join(', ')})` : ''}`);
+    } catch (e) {
+      say(`Não foi possível importar ${basename(path)}: ${errMsg(e)}`);
+    }
   };
 
   const writeProject = async (mutate: (lists: Record<ProjectList, string[]>) => void) => {
@@ -207,6 +235,7 @@ export const useWorkspace = create<State>((set, get) => {
     },
 
     openFile: async (path) => {
+      if (extOf(path) === 'sm') return importSmath(path);
       const open = get().openDocs.find((d) => d.path && samePath(d.path, path));
       if (open) return get().activate(open.id);
       try {

@@ -1,17 +1,18 @@
 // Avaliação pura e síncrona (roda no worker e nos testes). Ordem: bibliotecas, depois blocos na ordem dada.
 import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
-import { math } from './math';
+import { math, smath } from './math';
 import { classify, fromMath, toMath, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtComplex, fmtNum, prettyUnit, type FormatOpts } from './format';
 
 export type LibInput = { id: string; constants: [string, string][]; functions: string[] };
 /** atencao: margem de ATENÇÃO do bloco (atributo atencao=10%), em fração; vence a margem geral. */
-/** casas: casas decimais só deste bloco (atributo casas=2, o decimalPlaces do SMath, E4.2). */
-export type BlockInput = { key: string; type: string; lines: string[]; atencao?: number; casas?: number };
+/** fmt: formato só deste bloco (casas=2, modo=, zeros_a_direita=; o decimalPlaces do SMath, E4.2). */
+export type BlockInput = { key: string; type: string; lines: string[]; atencao?: number; fmt?: Partial<FormatOpts> };
 /** margem: margem de ATENÇÃO geral (config.yaml, verificacao.margem_atencao), em fração; padrão 0,2. */
 /** symbolic: folha livre (ADENDO 05, E3.3): nome indefinido não é erro, a expressão fica em aberto. */
-export type EvalInput = { libs: LibInput[]; blocks: BlockInput[]; format?: FormatOpts; margem?: number; symbolic?: boolean };
+/** keepRaw: devolve também o valor do math.js de cada resultado (teste do corpus SMath; não usar no worker). */
+export type EvalInput = { libs: LibInput[]; blocks: BlockInput[]; format?: FormatOpts; margem?: number; symbolic?: boolean; keepRaw?: boolean };
 
 export type LineResult = {
   kind: LineKind;
@@ -27,22 +28,27 @@ export type LineResult = {
   symbolic?: string; // resultado ainda com nome em aberto, na sintaxe linear: "10*x" (E3.3)
   missing?: string[]; // nomes que faltam definir
   factor?: string; // conversão por expressão: resultado = número·factor, "= ? 10^-6" (E4.3)
+  raw?: unknown; // valor do math.js, só com keepRaw
+  matrix?: string[][]; // vetor ou matriz: células já formatadas (E4.1)
 };
 /** Biblioteca efetivamente usada (preenchido fora do worker, por engine/run.ts). */
 export type LibInfo = { id: string; nome: string; versao: string; origem: 'projeto' | 'usuário' | 'fábrica'; path: string; duplicate?: string; readOnly?: boolean; extension?: { path: string; versao: string } };
 /** Gráfico (bloco grafico): pontos já convertidos para as unidades pedidas. */
 export type PlotResult = { titulo: string; xs: number[]; ys: (number | null)[]; xUnit: string; yUnit: string; limite?: { valor: number; rotulo: string }; error?: string };
-export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[] };
+export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[]; shadow?: { name: string; value: string } };
 
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const isUnit = (v: unknown): v is Unit => math.isUnit(v);
 const isUnitName = (n: string) => { try { return math.Unit.isValuelessUnit(n); } catch { return false; } };
 
-type Shown = { text: string; value?: number; unit?: string; numText?: string; unitRaw?: string; factor?: string };
+type Shown = { text: string; value?: number; unit?: string; numText?: string; unitRaw?: string; factor?: string; matrix?: string[][] };
 type Cx = { re: number; im: number };
 const num = (x: unknown, fmt: FormatOpts) => (math.isComplex(x) ? fmtComplex((x as Cx).re, (x as Cx).im, fmt) : fmtNum(x as number, fmt));
 const real = (x: unknown) => (math.isComplex(x) ? ((x as Cx).im === 0 ? (x as Cx).re : undefined) : (x as number));
 const cannot = (from: string, to: string) => new Error(`Não é possível converter ${from} em ${to}`);
+
+/** show que não falha num valor sem exibição (o for devolve o último valor do corpo). */
+const safeShow = (v: unknown, target: string | undefined, fmt: FormatOpts): Partial<Shown> => { try { return show(v, target, fmt); } catch { return {}; } };
 
 export function show(v: unknown, target: string | undefined, fmt: FormatOpts): Shown {
   if (typeof v === 'boolean') return { text: v ? 'verdadeiro' : 'falso' };
@@ -81,6 +87,13 @@ export function show(v: unknown, target: string | undefined, fmt: FormatOpts): S
     const n: unknown = units ? u.toNumeric(units) : (u.value ?? 0); // complexo também (impedância em Ω, E4.1)
     const unit = prettyUnit(units);
     return { text: unit ? `${num(n, fmt)} ${unit}` : num(n, fmt), value: real(n), unit, numText: num(n, fmt), unitRaw: units };
+  }
+  // vetor e matriz (E4.1): cada elemento com o formato do arquivo; vetor do SMath é coluna
+  if (math.isMatrix(v) || Array.isArray(v)) {
+    const a = (math.isMatrix(v) ? v.toArray() : v) as unknown[];
+    const cell = (x: unknown): string => (typeof x === 'string' ? `"${x}"` : math.isMatrix(x) || Array.isArray(x) ? show(x, undefined, fmt).text : num(x, fmt));
+    const rows = a.map((r) => (Array.isArray(r) ? r.map(cell) : [cell(r)]));
+    return { text: `[${rows.map((r) => r.join('; ')).join(' | ')}]`, matrix: rows };
   }
   return { text: math.format(v as never, { precision: 4 }).replace(/\./g, fmt.sep === ',' ? ',' : '.') };
 }
@@ -163,9 +176,12 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
 
   // E3.3 (só na folha): definição com nome em aberto guarda a expressão; a avaliação resolve com os
   // valores daquele ponto, e o que sobrar indefinido aparece como expressão, sem erro.
+  const withRaw = (v: unknown) => (input.keepRaw ? { raw: v } : {});
   const open = new Map<string, MathNode>();
   type Sym = MathNode & { name: string };
   const known = (n: string) => scope.has(n) || open.has(n) || n in math || isUnitName(n);
+  // v[i] na leitura passa pela função el (E2.3); math.parse local já faz isso
+  const P = (src: string) => smath.readIndexAsEl(math.parse(src));
   const expand = (node: MathNode): MathNode => node.transform((n) => (math.isSymbolNode(n) && !scope.has((n as Sym).name) && open.has((n as Sym).name) ? new math.ParenthesisNode(expand(open.get((n as Sym).name)!)) : n));
   const missingOf = (node: MathNode) => [...new Set(node.filter((n) => math.isSymbolNode(n) && !known((n as Sym).name)).map((n) => (n as Sym).name))];
   const symbolicText = (node: MathNode) => {
@@ -175,16 +191,33 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
   };
 
   const blocks: Record<string, LineResult[]> = {};
+  const fromLibs = new Set(defined);
   for (const b of input.blocks) {
     if (!EVALUATED.has(b.type)) continue;
-    const bfmt: FormatOpts = b.casas !== undefined ? { ...fmt, decimals: b.casas, mode: fmt.mode ? 'decimais' : undefined } : fmt;
+    // casas= sozinho num arquivo com formato do SMath é casas decimais (o decimalPlaces do SMath)
+    const bfmt: FormatOpts = b.fmt ? { ...fmt, ...(b.fmt.decimals !== undefined && fmt.mode && !b.fmt.mode ? { mode: 'decimais' as const } : {}), ...b.fmt } : fmt;
     blocks[b.key] = b.lines.map((raw, i) => {
       const c = classify(raw, b.type === 'verificar');
       if (c.kind === 'empty') return { kind: 'empty' };
       onLine?.(b.key, i);
       try {
+        // v[j] := x e for(j, faixa, v[j] := ...): executam direto; o vetor de destino nasce se não existir
+        const imperative = (c.kind === 'assign' || c.kind === 'eval') && /\[|\bfor\(/.test(c.src) ? P(c.src) : null;
+        if (imperative && ((imperative as MathNode & { index?: unknown }).index || imperative.filter((n) => math.isFunctionNode(n) && (n as MathNode & { fn: Sym }).fn.name === 'for').length)) {
+          smath.prepareTargets(imperative, scope);
+          const v = imperative.compile().evaluate(scope);
+          if (c.name) defined.add(c.name);
+          // a variável do laço continua definida com o último valor, como no SMath (E8-28); o vetor de destino também
+          imperative.traverse((n) => {
+            const x = n as MathNode & { fn?: Sym; args?: MathNode[]; object?: Sym };
+            if (math.isFunctionNode(n) && x.fn!.name === 'for' && math.isSymbolNode(x.args![0])) defined.add(fromMath((x.args![0] as Sym).name));
+            if (math.isAssignmentNode(n) && math.isSymbolNode(x.object)) defined.add(fromMath(x.object!.name));
+          });
+          if (c.kind === 'assign') return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : {}) };
+          return { kind: 'eval', ...(c.target !== undefined || v !== undefined ? safeShow(v, c.target, bfmt) : {}), ...withRaw(v) };
+        }
         if (c.kind === 'assign' && input.symbolic) {
-          const node = math.parse(c.src) as MathNode & { object: Sym; value: MathNode };
+          const node = P(c.src) as MathNode & { object: Sym; value: MathNode };
           const value = expand(node.value);
           const name = node.object.name;
           if (c.name) defined.add(c.name);
@@ -197,20 +230,21 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           const v = value.compile().evaluate(scope);
           scope.set(name, v);
           open.delete(name);
-          return { kind: 'assign', writes: c.name, ...(c.show ? show(v, c.target, bfmt) : {}) };
+          return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : {}) };
         }
         if (c.kind === 'assign' || c.kind === 'func') {
-          const v = math.evaluate(c.src, scope);
+          const v = P(c.src).compile().evaluate(scope);
           if (c.name) defined.add(c.name);
-          return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? show(v, c.target, bfmt) : {}) };
+          return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? { ...show(v, c.target, bfmt), ...withRaw(v) } : {}) };
         }
         if (input.symbolic && c.kind === 'eval') {
-          const node = expand(math.parse(c.src));
+          const node = expand(P(c.src));
           const miss = missingOf(node);
           if (miss.length) return { kind: 'eval', symbolic: symbolicText(node), missing: miss, text: '' };
-          return { kind: 'eval', ...show(node.compile().evaluate(scope), c.target, bfmt) };
+          const v = node.compile().evaluate(scope);
+          return { kind: 'eval', ...show(v, c.target, bfmt), ...withRaw(v) };
         }
-        const v = math.evaluate(c.src, scope);
+        const v = P(c.src).compile().evaluate(scope);
         if (c.kind === 'check') {
           if (typeof v !== 'boolean') return { kind: 'check', error: 'A verificação precisa ser uma condição, como x < 1 %' };
           const r = usage(c.src, scope);
@@ -220,7 +254,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           const status = !v ? 'fail' : r !== undefined && r >= 1 - m ? 'warn' : 'ok';
           return { kind: 'check', status, limit: c.limit, ...shown };
         }
-        return { kind: 'eval', ...show(v, c.target, bfmt) };
+        return { kind: 'eval', ...show(v, c.target, bfmt), ...withRaw(v) };
       } catch (e) {
         return { kind: c.kind, error: message(e, c.src, scope) };
       }
@@ -228,7 +262,10 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
   }
   const plots: Record<string, PlotResult> = {};
   for (const b of input.blocks) if (b.type === 'grafico') plots[b.key] = plot(b.lines.join(''), scope, fmt);
-  return { blocks, plots, libErrors, defined: [...defined], ms: performance.now() - t0 };
+  // i ou e definidos pelo usuário (inclusive como variável de laço): a tela avisa uma vez (E8-29)
+  const sh = ['i', 'e'].find((n) => defined.has(n) && !fromLibs.has(n) && scope.has(n) && typeof scope.get(n) !== 'function');
+  const shadow = sh ? { name: sh, value: math.format(scope.get(sh) as never, { precision: 6 }).replace(/\./g, fmt.sep === ',' ? ',' : '.') } : undefined;
+  return { blocks, plots, libErrors, defined: [...defined], ms: performance.now() - t0, ...(shadow ? { shadow } : {}) };
 }
 
 type PlotSpec = { titulo?: unknown; x?: { var?: unknown; valores?: unknown; unidade?: unknown }; y?: { expr?: unknown; unidade?: unknown }; limite?: { valor?: unknown; rotulo?: unknown } };
@@ -238,6 +275,8 @@ export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts)
   let spec: PlotSpec;
   try { spec = (parseYaml(body) ?? {}) as PlotSpec; } catch (e) { return { titulo: 'Gráfico', xs: [], ys: [], xUnit: '', yUnit: '', error: `YAML inválido: ${e instanceof Error ? e.message : e}` }; }
   const titulo = String(spec.titulo ?? 'Gráfico');
+  // importado do SMath (E7.1): eixos e rótulos estão no bloco, as séries ainda não são desenhadas
+  if ((spec as { origem?: unknown }).origem === 'smath') return { titulo: titulo || 'Gráfico do SMath', xs: [], ys: [], xUnit: '', yUnit: '', error: 'Gráfico importado do SMath: as séries ainda não são desenhadas nesta versão' };
   const xVar = String(spec.x?.var ?? '');
   const xUnit = String(spec.x?.unidade ?? '');
   const yUnit = String(spec.y?.unidade ?? '');

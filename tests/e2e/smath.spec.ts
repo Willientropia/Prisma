@@ -149,7 +149,7 @@ test('[E8-16] região desativada não define nada; o menu de contexto liga e des
   await expect.poll(() => resultTexts(page)).toEqual(['5,00']);
 });
 
-test('[E8-28] moldura e descrição da região', async ({ page }) => {
+test('[E8-30] moldura e descrição da região', async ({ page }) => {
   await start(page);
   await dev(page).write(F, sheetText(`${fence}calc {#a x=40 y=60 moldura descricao="Tensão de linha"}\nV := 2\n${fence}\n`));
   await dev(page).open(F);
@@ -187,4 +187,61 @@ test('[E8-17] Inserir > Organizar > Área envolve as regiões selecionadas', asy
   await expect.poll(() => dev(page).text()).toMatch(/```area \{#area-1 titulo="Área" y=40\}\n```\n\n```calc \{#a x=40 y=60\}\nx := 2\n```\n\n```fim-area \{#area-1 y=\d+\}\n```/);
   await expect(page.locator('[data-area="area-1"]')).toBeVisible();
   await expect.poll(() => resultTexts(page)).toEqual(['2,00']);
+});
+
+// --- item 4: abrir .sm do SMath ---
+const SM = 'C:/Users/voce/Documents/smath';
+
+test('[E8-23] abrir 08do10.sm cria 08do10.prsf ao lado, com os resultados do SMath, sem alterar o .sm', async ({ page }) => {
+  await start(page);
+  const before = await dev(page).read(`${SM}/08do10.sm`);
+  await dev(page).open(`${SM}/08do10.sm`);
+  await expect(page.locator('[aria-label="Documentos abertos"] [role="tab"]').last()).toContainText('08do10.prsf');
+  await expect(page.locator('footer')).toContainText('Importado: 29 regiões');
+  expect(await dev(page).read(`${SM}/08do10.sm`)).toBe(before); // o original não muda
+  const prsf = (await dev(page).read(`${SM}/08do10.prsf`))!;
+  expect(prsf).toMatch(/^---\ntipo: folha\n/);
+  expect(prsf).toContain('exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}');
+  expect(prsf).toContain('Z_0 := sqrt(L/C) = ?');
+  await expect.poll(async () => (await resultTexts(page)).includes('387,3')).toBe(true);
+  // abrir de novo pergunta antes de sobrescrever (sem esperar a abertura: ela espera a resposta do diálogo)
+  await page.evaluate((p) => { void (window as unknown as { prismaDev: { open(p: string): Promise<void> } }).prismaDev.open(p); }, `${SM}/08do10.sm`);
+  const dlg = page.getByRole('alertdialog', { name: 'Importar do SMath' });
+  await expect(dlg).toContainText('Já existe 08do10.prsf');
+  await dlg.getByRole('button', { name: 'Cancelar' }).click();
+  expect(await dev(page).read(`${SM}/08do10.sm`)).toBe(before);
+});
+
+test('[E8-20] região de plugin fica no lugar, desativada, com o aviso; imagem extraída para <nome>_arquivos', async ({ page }) => {
+  await start(page);
+  await dev(page).open(`${SM}/Test_ExcelOUT_1.sm`);
+  await expect(page.locator('footer')).toContainText('não suportadas (excel_OUT)');
+  await expect(page.locator('main')).toContainText('Não suportado: excel_OUT (plugin do SMath)');
+  expect(await dev(page).read(`${SM}/Test_ExcelOUT_1.prsf`)).toContain('```smath-original {#');
+  await dev(page).open(`${SM}/Motor_CC.sm`);
+  const img = (await dev(page).read(`${SM}/Motor_CC.prsf`))!.match(/```imagem \{[^}]*\}\n([^\n]+)\n/)![1];
+  expect(img).toMatch(/^Motor_CC_arquivos\/.+\.png$/);
+  expect(await dev(page).read(`${SM}/${img}`)).toMatch(/^iVBORw0KGgo/); // PNG em base64
+  await expect(page.locator('main img')).toHaveCount(1);
+});
+
+test('[E8-31] vetor e matriz aparecem como matriz na tela', async ({ page }) => {
+  await openSheet(page, ['M := mat(1, 2, 3, 4, 2, 2)', 'M = ?']);
+  const r = page.locator('.mresult-value');
+  await expect(r).toHaveCount(1);
+  // o MathLive monta a matriz por colunas no DOM: [1 2; 3 4] sai como 1 3 2 4
+  await expect.poll(() => r.innerText().then((t) => t.replace(/[\s​]+/g, ''))).toBe('[1324]');
+  expect(await r.locator('.ML__mtable').count()).toBe(1);
+});
+
+test('[E8-28] depois do for, i continua definido com o último valor (8)', async ({ page }) => {
+  await openSheet(page, ['for(i, range(1, 8), q[i] := i)', 'i = ?']);
+  await expect.poll(() => resultTexts(page)).toContain('8');
+});
+
+test('[E8-29] i definido pelo laço: aviso na barra de status; 𝐢 continua imaginário', async ({ page }) => {
+  await openSheet(page, ['for(i, range(1, 8), q[i] := i)', 'z := 3 + 𝐢', 'z = ?']);
+  await expect(page.locator('footer')).toContainText('i agora é uma variável (vale 8). A unidade imaginária continua disponível como 𝐢 no ribbon Matemática.');
+  await expect.poll(() => resultTexts(page)).toContain('3+1⋅i');
+  expect((await shownLatex(page)).join('')).toContain('ML__mathbf');
 });

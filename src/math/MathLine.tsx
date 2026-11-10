@@ -46,6 +46,8 @@ export function numberLatex(t: string): string {
 }
 
 function resultLatexOf(r: LineResult): string {
+  // vetor ou matriz (E4.1); texto entre aspas fica reto
+  if (r.matrix) return `\\begin{bmatrix}${r.matrix.map((row) => row.map((c) => (c.startsWith('"') ? `\\text{${c.replace(/[\\{}]/g, '')}}` : numberLatex(c))).join('&')).join('\\\\')}\\end{bmatrix}`;
   let num = numberLatex(r.numText ?? r.text ?? '');
   if (r.factor) {
     // conversão por expressão (E4.3): (0,2 + 3,77·i)·10⁻⁶
@@ -132,7 +134,7 @@ export function MathLine(props: Props) {
 
   const err = result?.error;
   const symbolic = result?.symbolic !== undefined && !err;
-  const showResult = (shows && result && !err && (result.numText !== undefined || symbolic)) || unitEdit;
+  const showResult = (shows && result && !err && (result.numText !== undefined || symbolic || !!result.matrix)) || unitEdit;
   return (
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
       <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}

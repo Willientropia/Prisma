@@ -171,7 +171,14 @@ export function texOutline(text: string): TexSection[] {
 }
 
 /** Nome definido numa linha linear: "x := 2", "f(a, b) := a + b", "Z_0 := sqrt(L/C) = ?". */
-export const definedName = (raw: string): string | null => /^\s*([^\s(:=#]+)\s*(?:\([^)]*\))?\s*:=/.exec(raw)?.[1] ?? null;
+export const definedName = (raw: string): string | null => /^\s*([^\s(:=#[]+)\s*(?:\([^)]*\)|\[[^\]]*\])?\s*:=/.exec(raw)?.[1] ?? null;
+
+/** Todos os nomes que a linha define: a definição, a variável de cada for e os vetores com v[i] := (E8-28). */
+export const definedNames = (raw: string): string[] => [...new Set([
+  definedName(raw),
+  ...[...raw.matchAll(/\bfor\s*\(\s*([^\s,;()]+)\s*[,;]/gu)].map((m) => m[1]),
+  ...[...raw.matchAll(/([\p{L}][\p{L}\p{N}_.%]*)\s*\[[^\]]*\]\s*:=/gu)].map((m) => m[1]),
+].filter((x): x is string => !!x))];
 
 /**
  * Para o "=" inteligente (ADENDO 05, E2.1): before(chave, linha)(nome) diz se o nome já foi definido
@@ -183,8 +190,7 @@ export function definedBefore(blocks: { key: string; lines: string[] }[], extra:
   let n = 0;
   for (const b of blocks) b.lines.forEach((l, i) => {
     ord.set(`${b.key}:${i}`, n);
-    const name = definedName(l);
-    if (name && !first.has(name)) first.set(name, n);
+    for (const name of definedNames(l)) if (!first.has(name)) first.set(name, n);
     n++;
   });
   const always = new Set(extra);

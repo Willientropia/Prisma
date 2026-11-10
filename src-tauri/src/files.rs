@@ -52,9 +52,63 @@ fn key(p: &Path) -> String {
     if cfg!(windows) { s.to_lowercase() } else { s }
 }
 
+/// Leitura aceita também .sm (SMath Studio, ADENDO 05): o app só lê, nunca grava um .sm (E8-23).
+pub fn checked_read(path: &str) -> Res<PathBuf> {
+    let p = PathBuf::from(path);
+    if p.is_absolute() && p.extension().is_some_and(|e| e.eq_ignore_ascii_case("sm")) { Ok(p) } else { checked(path) }
+}
+
 #[tauri::command]
 pub fn file_read(path: String) -> Res<String> {
-    fs::read_to_string(checked(&path)?).map_err(err)
+    fs::read_to_string(checked_read(&path)?).map_err(err)
+}
+
+const IMAGES: &[&str] = &["png", "jpg", "jpeg", "gif", "bmp"];
+
+/// Imagem extraída de um .sm, em base64 (ADENDO 05, E7.1). Só extensões de imagem; cria a pasta.
+#[tauri::command]
+pub fn file_write_base64(path: String, data: String) -> Res<()> {
+    let p = PathBuf::from(&path);
+    let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
+    if !p.is_absolute() || !IMAGES.contains(&ext.as_str()) {
+        return Err(format!("Tipo de arquivo não permitido: {path}"));
+    }
+    let bytes = base64_decode(&data).ok_or_else(|| "Imagem em base64 inválida".to_string())?;
+    if let Some(dir) = p.parent() { fs::create_dir_all(dir).map_err(err)?; }
+    fs::write(&p, bytes).map_err(err)
+}
+
+/// Lê uma imagem como base64 (a folha mostra as imagens extraídas de um .sm).
+#[tauri::command]
+pub fn file_read_base64(path: String) -> Res<String> {
+    let p = PathBuf::from(&path);
+    let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
+    if !p.is_absolute() || !IMAGES.contains(&ext.as_str()) { return Err(format!("Tipo de arquivo não permitido: {path}")); }
+    let b = fs::read(&p).map_err(err)?;
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut s = String::with_capacity(b.len() * 4 / 3 + 4);
+    for c in b.chunks(3) {
+        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        for i in 0..4 { s.push(if i <= c.len() { T[(n >> (18 - 6 * i) & 63) as usize] as char } else { '=' }); }
+    }
+    Ok(s)
+}
+
+/// Base64 padrão (com ou sem quebras de linha e "="). Sem dependência nova para uma função de 15 linhas.
+fn base64_decode(s: &str) -> Option<Vec<u8>> {
+    let val = |c: u8| -> Option<u32> {
+        Some(match c { b'A'..=b'Z' => c - b'A', b'a'..=b'z' => c - b'a' + 26, b'0'..=b'9' => c - b'0' + 52, b'+' => 62, b'/' => 63, _ => return None } as u32)
+    };
+    let clean: Vec<u8> = s.bytes().filter(|c| !c.is_ascii_whitespace() && *c != b'=').collect();
+    let mut out = Vec::with_capacity(clean.len() * 3 / 4);
+    for chunk in clean.chunks(4) {
+        let mut n = 0u32;
+        for (i, &c) in chunk.iter().enumerate() { n |= val(c)? << (18 - 6 * i); }
+        out.push((n >> 16) as u8);
+        if chunk.len() > 2 { out.push((n >> 8) as u8); }
+        if chunk.len() > 3 { out.push(n as u8); }
+    }
+    Some(out)
 }
 
 #[tauri::command]
@@ -142,6 +196,23 @@ pub mod tests {
             assert!(checked(&d.join(bad).to_string_lossy()).is_err(), "{bad}");
         }
         assert!(checked("relativo/a.prsm").is_err());
+        fs::remove_dir_all(d).unwrap();
+    }
+
+    // ADENDO 05: .sm só se lê; imagem só com extensão de imagem
+    #[test]
+    fn sm_so_leitura_e_imagem_em_base64() {
+        let d = tmp("sm");
+        let sm = d.join("a.sm").to_string_lossy().to_string();
+        assert!(checked_read(&sm).is_ok());
+        assert!(checked(&sm).is_err(), "gravar .sm não pode");
+        assert!(file_write(sm, "x".into()).is_err());
+        let png = d.join("a_arquivos/x.png");
+        file_write_base64(png.to_string_lossy().to_string(), "UHJpc21h".into()).unwrap(); // "Prisma"
+        assert_eq!(fs::read(&png).unwrap(), b"Prisma");
+        assert!(file_write_base64(d.join("x.exe").to_string_lossy().to_string(), "UHJpc21h".into()).is_err());
+        assert_eq!(base64_decode("aGk=").unwrap(), b"hi");
+        assert_eq!(file_read_base64(png.to_string_lossy().to_string()).unwrap(), "UHJpc21h");
         fs::remove_dir_all(d).unwrap();
     }
 

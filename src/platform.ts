@@ -16,6 +16,8 @@ export type Platform = {
   saveDialog(defaultPath: string, filters: Filter[]): Promise<string | null>;
   read(path: string): Promise<string>;
   write(path: string, content: string): Promise<void>;
+  writeBase64(path: string, data: string): Promise<void>; // imagem extraída de um .sm
+  readBase64(path: string): Promise<string>;
   stat(paths: string[]): Promise<(number | null)[]>;
   listDir(dir: string): Promise<string[]>;
   rename(from: string, to: string): Promise<void>;
@@ -44,6 +46,8 @@ const tauriPlatform: Platform = {
   saveDialog: async (defaultPath, filters) => { const r = await saveDialog({ defaultPath, filters, title: 'Salvar como' }); return r ? normPath(r) : null; },
   read: (path) => invoke('file_read', { path }),
   write: (path, content) => invoke('file_write', { path, content }),
+  writeBase64: (path, data) => invoke('file_write_base64', { path, data }),
+  readBase64: (path) => invoke('file_read_base64', { path }),
   stat: (paths) => invoke('file_stat', { paths }),
   listDir: (path) => invoke('dir_list', { path }),
   rename: (from, to) => invoke('file_rename', { from, to }),

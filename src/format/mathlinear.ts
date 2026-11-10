@@ -12,7 +12,9 @@ export type Node =
   | { t: 'neg'; a: Node }
   | { t: 'paren'; a: Node }
   | { t: 'call'; f: string; args: Node[] }
-  | { t: 'mat'; rows: Node[][] };
+  | { t: 'mat'; rows: Node[][] }
+  | { t: 'str'; v: string } // texto entre aspas (ADENDO 05, E4.1)
+  | { t: 'idx'; a: Node; i: Node[] }; // elemento de vetor ou matriz: v[2], M[2, 3] (ADENDO 05, E2.3)
 export type Line =
   | { kind: 'def'; lhs: Node; rhs: Node; show?: boolean; unit?: Unit; conv?: Node } // show: "x := expr = ?" (ADENDO 05, E2.1)
   | { kind: 'eval'; expr: Node; unit?: Unit; conv?: Node } // conv: conversão por expressão, "= ? 10^-6" (E4.3)
@@ -29,8 +31,9 @@ const prec = (n: Node): number => (n.t === 'bin' ? PREC[n.op] : n.t === 'neg' ? 
 export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'min', 'max', 'round', 'ceil', 'floor', 'sum', 'mean', 'root', 'integral', 'deriv', 'interp', 'polyroots', 'solve', 'det', 'inv', 'transpose']);
 
 // ---------- linear: leitura ----------
-type Tok = { k: 'num' | 'id' | 'op' | 'ws'; v: string };
-const TOKEN = /\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°][\p{L}\p{N}_]*|%|[+\-*/^()[\],;<>=?]/uy;
+type Tok = { k: 'num' | 'id' | 'op' | 'ws' | 'str'; v: string };
+// nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05)
+const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?]/uy;
 
 function lex(src: string): Tok[] {
   const s = src.replace(/[·×]/g, '*').replace(/−/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=').replace(/≔/g, ':=');
@@ -41,7 +44,7 @@ function lex(src: string): Tok[] {
     const m = TOKEN.exec(s);
     if (!m) fail(`Caractere inesperado: ${s[at]}`);
     const v = m![0];
-    out.push({ k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%]/u.test(v) ? 'id' : 'op', v });
+    out.push(v.startsWith('"') ? { k: 'str', v: v.slice(1, -1) } : { k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%]/u.test(v) ? 'id' : 'op', v });
   }
   return out;
 }
@@ -107,9 +110,22 @@ class LinearParser {
     if (this.isOp('^')) { this.i++; return { t: 'bin', op: '^', a, b: this.unary() }; }
     return a;
   }
+  /** Átomo seguido de índices: v[2], M[2, 3], v[range(2, 7)] (o "[" colado; "[1, 2]" sozinho é matriz). */
   private atom(): Node {
+    let a = this.atom0();
+    while (this.toks[this.i]?.k === 'op' && this.toks[this.i].v === '[') {
+      this.i++;
+      const idx = [this.expr()];
+      while (this.isOp(',')) { this.i++; idx.push(this.expr()); }
+      this.eat(']');
+      a = { t: 'idx', a, i: idx };
+    }
+    return a;
+  }
+  private atom0(): Node {
     const t = this.peek();
     if (!t) return fail('Expressão incompleta');
+    if (t.k === 'str') { this.i++; return { t: 'str', v: t.v }; }
     if (t.k === 'num') {
       this.i++;
       const n: Node = { t: 'num', v: t.v };
@@ -196,11 +212,13 @@ export function nodeToLinear(n: Node): string {
   const wrap = (c: Node, op: string, right: boolean) => (needParens(c, op, right) ? `(${nodeToLinear(c)})` : nodeToLinear(c));
   switch (n.t) {
     case 'num': return n.v;
+    case 'str': return `"${n.v}"`;
     case 'id': return n.name;
     case 'qty': return `${nodeToLinear(n.n)} ${unitToLinear(n.u)}`;
     case 'neg': return `-${prec(n.a) < 4 ? `(${nodeToLinear(n.a)})` : nodeToLinear(n.a)}`;
     case 'paren': return `(${nodeToLinear(n.a)})`;
     case 'call': return `${n.f}(${n.args.map(nodeToLinear).join(', ')})`;
+    case 'idx': return `${prec(n.a) < 6 ? `(${nodeToLinear(n.a)})` : nodeToLinear(n.a)}[${n.i.map(nodeToLinear).join(', ')}]`;
     case 'mat': return `[${n.rows.map((r) => r.map(nodeToLinear).join(', ')).join('; ')}]`;
     case 'bin': {
       const a = wrap(n.a, n.op, false), b = wrap(n.b, n.op, true);
@@ -259,9 +277,11 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
   const wrap = (c: Node, op: string, right: boolean) => (needParens(c, op, right) ? `\\left(${L(c)}\\right)` : L(c));
   switch (n.t) {
     case 'num': return numLatex(n.v);
+    case 'str': return `\\text{"${n.v.replace(/[\\{}]/g, '')}"}`; // reto, entre aspas
     case 'id': {
       const user = ctx.defined?.has(n.name) || ctx.params?.has(n.name);
       if (n.name === 'i' && !user) return '\\mathbf{i}'; // unidade imaginária: negrito reto (ADENDO 05, E2.3)
+      if (n.name === '𝐢' || n.name === '𝐞') return `\\class{imag}{\\mathbf{${n.name === '𝐢' ? 'i' : 'e'}}}`; // símbolo próprio
       const known = !ctx.defined || user || n.name === 'pi' || n.name === 'e';
       return known ? idLatex(n.name) : `\\class{undef}{${idLatex(n.name)}}`;
     }
@@ -276,6 +296,7 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
     case 'neg': return `-${prec(n.a) < 4 ? `\\left(${L(n.a)}\\right)` : L(n.a)}`;
     case 'paren': return `\\left(${L(n.a)}\\right)`;
     case 'mat': return `\\begin{bmatrix}${n.rows.map((r) => r.map(L).join('&')).join('\\\\')}\\end{bmatrix}`;
+    case 'idx': return `{${L(n.a)}}_{\\lbrack ${n.i.map(L).join(';\\,')}\\rbrack}`; // índice de elemento: colchetes finos (E5)
     case 'call': {
       if (n.f === 'sqrt' && n.args.length === 1) return `\\sqrt{${L(strip(n.args[0]))}}`;
       if (n.f === 'abs' && n.args.length === 1) return `\\left\\lvert ${L(n.args[0])}\\right\\rvert`;
@@ -427,7 +448,7 @@ class LatexParser {
     for (;;) {
       const t = this.peek();
       if (isLetter(t)) { s += letterOf(this.next()); continue; }
-      if (t?.k === 'cmd' && (t.v === 'mathrm' || t.v === 'operatorname' || t.v === 'text' || t.v === 'mathit')) { this.i++; s += this.sub(this.group()).plain(); continue; }
+      if (t?.k === 'cmd' && (t.v === 'mathrm' || t.v === 'operatorname' || t.v === 'text' || t.v === 'mathit' || t.v === 'mathbf')) { this.i++; s += this.sub(this.group()).plain(); continue; }
       break;
     }
     if (this.peek()?.k === 'sub') { this.i++; s += `_${this.sub(this.group()).plain()}`; }
@@ -529,6 +550,7 @@ class LatexParser {
           this.i++;
           const cls = this.sub(this.group()).plain();
           const body = this.group();
+          if (cls === 'imag') return { t: 'id', name: body.some((x) => x.k === 'ch' && x.v === 'e') ? '𝐞' : '𝐢' };
           if (cls === 'u') { const u = this.unitPow(this.sub(body).unitBody()); return u.terms.length === 1 && !u.terms[0].exp ? { t: 'id', name: u.terms[0].name } : fail('Unidade sem número'); }
           return this.sub(body).exprAll();
         }
@@ -551,7 +573,7 @@ class LatexParser {
           return { t: 'mat', rows: rows.filter((r) => r.length) };
         }
       }
-      if (isLetter(t) || ['mathrm', 'operatorname', 'mathit', 'text'].includes(t.v)) return this.named();
+      if (isLetter(t) || ['mathrm', 'operatorname', 'mathit', 'text', 'mathbf'].includes(t.v)) return this.named(); // \mathbf{i}: BUG-007
       if (['sin', 'cos', 'tan', 'ln', 'log', 'exp', 'min', 'max', 'det', 'arcsin', 'arccos', 'arctan'].includes(t.v)) {
         this.i++;
         const f = t.v.replace(/^arc/, 'a');
@@ -619,7 +641,40 @@ class LatexParser {
   }
 }
 
-export const latexToLine = (latex: string): Line => new LatexParser(llex(latex)).line();
+/**
+ * Índice de elemento na tela, {v}_{\lbrack i\rbrack}: antes de ler vira \operatorname{el}(v; i) e, depois,
+ * volta a ser v[i] (o "el" do SMath, ADENDO 05).
+ */
+function indexToEl(latex: string): string {
+  const MARK = '}_{\\lbrack ';
+  let s = latex;
+  for (let k = s.indexOf(MARK); k >= 0; k = s.indexOf(MARK)) {
+    let depth = 0, open = -1; // chave que abre o {v}
+    for (let j = k; j >= 0; j--) { if (s[j] === '}') depth++; else if (s[j] === '{' && --depth === 0) { open = j; break; } }
+    const end = s.indexOf('\\rbrack}', k);
+    if (open < 0 || end < 0) break;
+    s = `${s.slice(0, open)}\\operatorname{el}\\left(${s.slice(open + 1, k)};${s.slice(k + MARK.length, end)}\\right)${s.slice(end + '\\rbrack}'.length)}`;
+  }
+  return s;
+}
+/** el(v, i) -> v[i] em toda a árvore. */
+function elToIndex(n: Node): Node {
+  const r = (x: Node): Node => elToIndex(x);
+  switch (n.t) {
+    case 'call': return n.f === 'el' && n.args.length >= 2 ? { t: 'idx', a: r(n.args[0]), i: n.args.slice(1).map(r) } : { ...n, args: n.args.map(r) };
+    case 'bin': return { ...n, a: r(n.a), b: r(n.b) };
+    case 'neg': case 'paren': return { ...n, a: r(n.a) };
+    case 'qty': return { ...n, n: r(n.n) };
+    case 'idx': return { ...n, a: r(n.a), i: n.i.map(r) };
+    case 'mat': return { ...n, rows: n.rows.map((row) => row.map(r)) };
+    default: return n;
+  }
+}
+export const latexToLine = (latex: string): Line => {
+  const l = new LatexParser(llex(indexToEl(latex))).line();
+  if (l.kind === 'def') return { ...l, lhs: elToIndex(l.lhs), rhs: elToIndex(l.rhs), ...(l.conv ? { conv: elToIndex(l.conv) } : {}) };
+  return { ...l, expr: elToIndex(l.expr), ...('conv' in l && l.conv ? { conv: elToIndex(l.conv) } : {}) } as Line;
+};
 /** Unidade digitada no campo do marcador (B5): "mV", "\%", "\mathrm{kWh}". */
 /** Conversão digitada no marcador (E4.3): unidade ou, se não for, expressão ("10^{-6}"). */
 export function latexToTarget(latex: string): { unit?: Unit; conv?: Node } {

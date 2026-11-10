@@ -5,7 +5,7 @@ import { fnName, resolveLibraries, sameDef } from '../../format/library';
 import { readLibraryFiles } from '../../engine/run';
 import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
 import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
-import { definedBefore, definedName, outline, type OutlineItem } from '../../format/views';
+import { definedBefore, definedNames, outline, type OutlineItem } from '../../format/views';
 import { dirname, displayPath } from '../../format/display';
 import { recalc } from '../../engine/run';
 import type { LineResult } from '../../engine/evaluate';
@@ -103,7 +103,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   // nomes definidos antes de cada linha, na ordem do arquivo (ADENDO 05, E2.1)
   const before = useMemo(() => {
     const ordered = items.flatMap((it) => (it.kind === 'block' ? [{ key: it.key, lines: lines(it.block.body).map((l) => l.replace(/\r?\n$/, '')) }] : []));
-    const own = new Set(ordered.flatMap((b) => b.lines.map(definedName).filter((x): x is string => !!x)));
+    const own = new Set(ordered.flatMap((b) => b.lines.flatMap(definedNames)));
     return definedBefore(ordered, (result?.defined ?? []).filter((d) => !own.has(d)));
   }, [items, result]);
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];

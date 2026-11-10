@@ -34,7 +34,8 @@ const checked = (p: string) => {
   if (!EXT.test(p) && base(p) !== '.gitignore') throw `Tipo de arquivo não permitido: ${base(p)}`;
   return p;
 };
-const read = (p: string) => { const f = find(checked(p)); if (!f) throw `O sistema não pode encontrar o arquivo especificado: ${p}`; return disk.get(f)!.text; };
+// leitura aceita também .sm (como checked_read no Rust): o app só lê um .sm, nunca grava
+const read = (p: string) => { const f = find(/\.sm$/i.test(p) ? p : checked(p)); if (!f) throw `O sistema não pode encontrar o arquivo especificado: ${p}`; return disk.get(f)!.text; };
 
 type Recent = { path: string; tipo: string; data: number };
 let recents: Recent[] = [];
@@ -55,7 +56,9 @@ const slug = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u
 
 const handlers: Record<string, (a: Record<string, unknown>) => unknown> = {
   file_read: (a) => read(String(a.path)),
-  file_write: (a) => { put(checked(String(a.path)), String(a.content)); return null; },
+  file_write: (a) => { if (/\.sm$/i.test(String(a.path))) throw `Tipo de arquivo não permitido: ${String(a.path)}`; put(checked(String(a.path)), String(a.content)); return null; },
+  file_write_base64: (a) => { put(String(a.path), String(a.data)); return null; },
+  file_read_base64: (a) => { const f = find(String(a.path)); if (!f) throw `O sistema não pode encontrar o arquivo especificado: ${String(a.path)}`; return disk.get(f)!.text; },
   file_stat: (a) => (a.paths as string[]).map((p) => disk.get(find(p) ?? '')?.modified ?? null),
   file_rename: (a) => {
     const from = find(checked(String(a.from)));

@@ -330,3 +330,85 @@
   expr: "3.2936 V"
   unidade: mV
   esperado: {valor: 3293.6, texto: "3293,60 mV"}
+
+# --- ADENDO 05, item 5: vetores, matrizes e programação do SMath (índices a partir de 1) ---
+- id: E8-31
+  descricao: "range(1, 7, 3): o segundo elemento define o passo"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 5}
+  expr: "range(1, 7, 3)"
+  sem_unidade: true
+  esperado: {texto: "[1 | 3 | 5 | 7]"}
+- id: E8-31
+  descricao: "elemento de vetor contando de 1: v[2]"
+  folha: true
+  definicoes: ["v := range(10, 13)"]
+  expr: "v[2]"
+  sem_unidade: true
+  esperado: {valor: 11}
+- id: E8-31
+  descricao: "for com atribuição a elemento cria o vetor"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 5}
+  definicoes: ["for(j, range(1, 3), q[j] := j^2)"]
+  expr: "q"
+  sem_unidade: true
+  esperado: {texto: "[1 | 4 | 9]"}
+- id: E8-31
+  descricao: "mat preenche por linha; augment põe lado a lado"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 5}
+  expr: "augment(range(1, 2), range(3, 4))"
+  sem_unidade: true
+  esperado: {texto: "[1; 3 | 2; 4]"}
+- id: E8-31
+  descricao: "vectorize: operação elemento a elemento"
+  folha: true
+  expr: "sum(vectorize(range(1, 3)^2))"
+  sem_unidade: true
+  esperado: {valor: 14}
+- id: E8-31
+  descricao: "xy2pol: forma polar (módulo e ângulo)"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 5}
+  expr: "xy2pol(3 + 4*i)"
+  sem_unidade: true
+  esperado: {texto: "[5 | 0,9273]"}
+- id: E8-31
+  descricao: "v[range(2, 3)]: vários elementos de uma vez"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 5}
+  definicoes: ["v := mat(5, 6, 7, 8, 4, 1)"]
+  expr: "v[range(2, 3)]"
+  sem_unidade: true
+  esperado: {texto: "[6 | 7]"}
+# --- ADENDO 05: variável do laço e símbolos próprios 𝐢 e 𝐞 (colisão do fft com o for do SMath) ---
+- id: E8-28
+  descricao: "depois de for(i, range(1, 8), ...), i continua definido com o último valor"
+  folha: true
+  definicoes: ["for(i, range(1, 8), q[i] := i)"]
+  expr: "i"
+  sem_unidade: true
+  esperado: {valor: 8}
+- id: E8-28
+  descricao: "o vetor criado pelo for também fica definido"
+  folha: true
+  definicoes: ["for(i, range(1, 8), q[i] := i^2)"]
+  expr: "q[8]"
+  sem_unidade: true
+  esperado: {valor: 64}
+- id: E8-29
+  descricao: "𝐢 continua sendo a unidade imaginária com i = 8 definido pelo laço"
+  folha: true
+  exibicao: {casas: 4, modo: significativos, zeros_a_direita: false, limite_exponencial: 3}
+  definicoes: ["for(i, range(1, 8), q[i] := i)"]
+  expr: "3 + 𝐢"
+  sem_unidade: true
+  esperado: {texto: "3 + 1·i"}
+- id: E8-29
+  descricao: "𝐞 continua sendo a constante de Euler com e := 2 definido"
+  folha: true
+  definicoes: ["e := 2"]
+  expr: "ln(𝐞) + e"
+  sem_unidade: true
+  esperado: {valor: 3}

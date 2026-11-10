@@ -170,3 +170,7 @@
 .areaToggle { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: none; background: transparent; color: var(--text-muted); }
 .areaOpen { transform: rotate(90deg); }
 .areaTitle { white-space: nowrap; }
+
+/* ADENDO 05, E7.1: regiões vindas do SMath */
+.regionUnsupported { padding: 4px 8px; border: 1px solid var(--warn-text); color: var(--warn-text); font: 11px Inter, sans-serif; white-space: nowrap; }
+.regionImported { padding: 4px 8px; color: var(--text-muted); font: 11px Inter, sans-serif; white-space: nowrap; }

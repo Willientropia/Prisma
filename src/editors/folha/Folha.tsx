@@ -2,13 +2,14 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
 import { lines, parse, withAttr, type BlockSegment } from '../../format/doc';
-import { assignments, byPosition, definedBefore, definedName } from '../../format/views';
+import { assignments, byPosition, definedBefore, definedNames } from '../../format/views';
 import { dirname, fmtNumber } from '../../format/display';
 import { idLatex, nodeLatex, parseLinear, parseUnit, unitLatex } from '../../format/mathlinear';
 import { recalc } from '../../engine/run';
 import { run } from '../../commands/registry';
 import { useWorkspace, type OpenDoc } from '../../store/workspace';
 import { ContextMenu, LeftPanel, type MenuState } from '../../shell/ProjectPanel';
+import { platform } from '../../platform';
 import { Icon } from '../../components/Icon';
 import { register } from '../../commands/registry';
 import { MathLine, isKnownUnit } from '../../math/MathLine';
@@ -20,6 +21,20 @@ import { Plot } from './Plot';
 import s from '../editors.module.css';
 
 const GRID = 20;
+/** Imagem extraída de um .sm, ao lado da folha (<nome>_arquivos/...). */
+function SheetImage({ dir, path, width, height }: { dir: string; path: string; width?: number; height?: number }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [bad, setBad] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    const ext = path.split('.').pop()?.toLowerCase() === 'jpg' ? 'jpeg' : path.split('.').pop()?.toLowerCase() ?? 'png';
+    platform.readBase64(dir ? `${dir}/${path}` : path).then((b) => alive && setSrc(`data:image/${ext};base64,${b}`)).catch(() => alive && setBad(true));
+    return () => { alive = false; };
+  }, [dir, path]);
+  if (bad) return <div className={s.regionImported}>Imagem não encontrada: {path}</div>;
+  return src ? <img src={src} alt={path} width={width} height={height} draggable={false} /> : null;
+}
+
 /** Altura da linha de título de uma área (E6). */
 const AREA_HEAD = 20;
 const snap = (v: number) => Math.max(0, Math.round(v / GRID) * GRID);
@@ -82,7 +97,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   // nomes definidos antes de cada linha, na ordem de leitura da folha (ADENDO 05, E2.1 e E3.1)
   const before = useMemo(() => {
     const ordered = byPosition(regions.filter((r) => !('desativado' in r.seg.attrs)).map((r) => r.seg)).map((seg) => ({ key: regions.find((r) => r.seg === seg)!.key, lines: lines(seg.body).map((l) => l.replace(/\r?\n$/, '')) }));
-    const own = new Set(ordered.flatMap((b) => b.lines.map(definedName).filter((x): x is string => !!x)));
+    const own = new Set(ordered.flatMap((b) => b.lines.flatMap(definedNames)));
     return definedBefore(ordered, (result?.defined ?? []).filter((d) => !own.has(d)));
   }, [regions, result]);
 
@@ -367,11 +382,18 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       );
     } else if (b.type === 'grafico') {
       content = <Plot data={result?.plots?.[r.key]} width={num(b, 'largura', 400)} height={num(b, 'altura', 200)} />;
+    } else if (b.type === 'smath-original') {
+      // região do SMath sem equivalente (E7.1): fica no lugar, com o aviso; o XML original está no bloco
+      content = <div className={s.regionUnsupported}>{b.attrs.descricao ?? 'Não suportado (região do SMath)'}</div>;
+    } else if (b.type === 'imagem') {
+      content = <SheetImage dir={doc.path ? dirname(doc.path) : ''} path={b.body.trim()} width={num(b, 'largura', 0) || undefined} height={num(b, 'altura', 0) || undefined} />;
+    } else if (b.type === 'tabela' && /^origem: smath/m.test(b.body)) {
+      content = <div className={s.regionImported}>Tabela importada do SMath (os dados ainda não são mostrados)</div>;
     } else content = <pre className={s.regionPre}>{b.body}</pre>;
     return (
       <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDown={(e) => onRegionDown(e, r.id)} onContextMenu={(e) => regionMenu(e, r)}
         {...(locked(r.id) ? ({ inert: '' } as object) : {})} /* área travada: nada de dentro recebe foco (E6) */ title={'desativado' in b.attrs ? 'Avaliação desativada' : undefined}>
-        {b.attrs.descricao && <div className={s.regionDesc}>{b.attrs.descricao}</div>}
+        {b.attrs.descricao && b.type !== 'smath-original' && <div className={s.regionDesc}>{b.attrs.descricao}</div>}
         {content}
       </div>
     );

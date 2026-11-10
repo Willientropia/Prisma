@@ -1,5 +1,6 @@
 // Instância do math.js com as unidades e as funções nativas da v1 (SPEC 8.6).
 import { all, create, type Complex, type Unit } from 'mathjs';
+import { smathFunctions } from './smathfns';
 
 export const math = create(all);
 
@@ -7,6 +8,12 @@ math.createUnit({
   Wp: { definition: '1 W', prefixes: 'short' }, // watt-pico (painel FV)
   dia: '1 day',
 });
+// Como no SMath (ADENDO 05, E4.1): ângulo é número puro (rad = 1, deg = π/180), então e^(80 deg·i) e
+// sin(30 deg) funcionam; rpm é rotação por minuto em rad/s.
+math.createUnit(
+  { rad: { definition: '1' }, deg: { definition: `${Math.PI / 180}` }, rpm: { definition: `${(2 * Math.PI) / 60} Hz` } },
+  { override: true },
+);
 
 type V = number | Unit;
 const isUnit = (v: unknown): v is Unit => math.isUnit(v);
@@ -119,3 +126,12 @@ math.import(
   },
   { override: true },
 );
+
+// Vetores, matrizes e programação do SMath (ADENDO 05, E4.1): mat, sys, el, range, stack, augment, for...
+export const smath = smathFunctions(math);
+const { prepareTargets: _p, readIndexAsEl: _r, ...smathFns } = smath;
+void _p; void _r;
+math.import(smathFns, { override: true });
+// 𝐢 e 𝐞 da sintaxe linear chegam aqui como ⅈ e ℯ (syntax.ts): a unidade imaginária e a constante de Euler
+// nunca são a variável i ou e do usuário (ADENDO 05, colisão do fft com o for do SMath)
+math.import({ 'ⅈ': math.complex(0, 1), 'ℯ': Math.E });

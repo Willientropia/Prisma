@@ -87,3 +87,15 @@ export function fmtComplex(re: number, im: number, o: FormatOpts = DEFAULT_FORMA
   if (zero(re)) return im < 0 ? `−${ims}` : ims;
   return `${fmtNum(re, o)} ${im < 0 ? '−' : '+'} ${ims}`;
 }
+
+/**
+ * Aviso de i ou e definidos pelo usuário (ADENDO 05, E8-29), uma vez por documento e nome; seen guarda
+ * os já avisados. Sem aviso: undefined.
+ */
+export function shadowNotice(seen: Set<string>, docId: string, sh?: { name: string; value: string }): string | undefined {
+  if (!sh || seen.has(`${docId}:${sh.name}`)) return undefined;
+  seen.add(`${docId}:${sh.name}`);
+  return sh.name === 'i'
+    ? `i agora é uma variável (vale ${sh.value}). A unidade imaginária continua disponível como 𝐢 no ribbon Matemática.`
+    : `e agora é uma variável (vale ${sh.value}). A constante de Euler continua disponível como 𝐞 no ribbon Matemática.`;
+}

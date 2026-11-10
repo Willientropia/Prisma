@@ -1,16 +1,15 @@
 // Liga o documento aberto + bibliotecas ao worker, e guarda o resultado na store.
-import { lines, parse } from '../format/doc';
-import { byPosition } from '../format/views';
+import { parse } from '../format/doc';
 import { joinPath } from '../format/display';
 import { resolveLibraries, type LibFile, type LibOrigin } from '../format/library';
 import { useWorkspace } from '../store/workspace';
 import { platform } from '../platform';
 import { evaluateAsync, LINE_LIMIT_MS, stop } from './client';
-import type { BlockInput, EvalResult, LibInfo, LibInput } from './evaluate';
-import { DEFAULT_FORMAT, parseMargin, type FormatOpts } from './format';
+import type { EvalResult, LibInfo, LibInput } from './evaluate';
+import { DEFAULT_FORMAT, parseMargin, shadowNotice } from './format';
+import { blockInputs, exibicao } from './prepare';
 
-/** Chave do bloco = índice do segmento no arquivo (a mesma usada na estrutura do caderno). */
-export const blockKey = (segIndex: number) => `b${segIndex}`;
+export { blockKey } from './prepare';
 
 /**
  * Arquivos de biblioteca na ordem de busca (ADENDO 01, A3): 1) do projeto, se o arquivo está num projeto
@@ -46,35 +45,12 @@ async function loadLibs(ids: string[], inProject: boolean, errors: string[]): Pr
   return { libs, info };
 }
 
-/**
- * "exibicao:" no cabeçalho (ADENDO 05, E4.2): casas, modo (decimais | significativos), zeros_a_direita e
- * limite_exponencial. Sem ele, vale o formato de sempre do Prisma (arquivo novo não muda).
- */
-export function exibicao(x: unknown, base: FormatOpts): FormatOpts {
-  if (!x || typeof x !== 'object') return base;
-  const o = x as Record<string, unknown>;
-  return {
-    ...base,
-    decimals: typeof o.casas === 'number' ? o.casas : base.decimals,
-    mode: o.modo === 'significativos' ? 'significativos' : 'decimais',
-    trailingZeros: o.zeros_a_direita === true,
-    expThreshold: typeof o.limite_exponencial === 'number' ? o.limite_exponencial : 5,
-  };
-}
-
 export async function recalc(docId: string): Promise<void> {
   const st = useWorkspace.getState();
   const doc = st.openDocs.find((d) => d.id === docId);
   if (!doc || (doc.type !== 'caderno' && doc.type !== 'folha')) return;
   const parsed = parse(doc.text);
-  let bs = parsed.segments.flatMap((s, i) => (s.kind === 'block' ? [{ seg: s, key: blockKey(i) }] : []));
-  if (doc.type === 'folha') {
-    const order = byPosition(bs.map((b) => b.seg));
-    bs = order.map((seg) => bs.find((b) => b.seg === seg)!);
-  }
-  bs = bs.filter(({ seg }) => !('desativado' in seg.attrs)); // E3.6: região desativada não é avaliada nem define nada
-  const casas = (v: string | undefined) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : undefined); // casas=2 na região
-  const blocks: BlockInput[] = bs.map(({ seg, key }) => ({ key, type: seg.type, lines: lines(seg.body), atencao: parseMargin(seg.attrs.atencao), casas: casas(seg.attrs.casas) }));
+  const blocks = blockInputs(parsed, doc.type === 'folha'); // ordem, desativadas e casas= (prepare.ts)
   const libErrors: string[] = [];
   const ids = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
   const { libs, info } = await loadLibs(ids, !!st.projectPathOf(doc.path), libErrors);
@@ -101,7 +77,12 @@ export async function recalc(docId: string): Promise<void> {
   } else result = { blocks: {}, libErrors: [...libErrors, `Erro no motor: ${out.message}`], defined: [], ms: 0, libs: info };
 
   useWorkspace.setState((s) => ({ results: { ...s.results, [docId]: result } }));
+  // i ou e virou variável do usuário: avisa uma vez por documento (E8-29)
+  const msg = shadowNotice(warned, docId, result.shadow);
+  if (msg) useWorkspace.setState({ status: msg });
 }
+
+const warned = new Set<string>();
 
 export function interrupt(): void {
   stop();

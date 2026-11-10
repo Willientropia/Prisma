@@ -58,3 +58,11 @@
 - {id: E8-10, linear: "S_trafo := 5 kV*A"}
 - {id: E8-19, linear: "Y = ? 10^(-6)", digitado: 'Y=?\,10^{-6}'}
 - {id: E8-19, linear: "arg(γ) = ? deg"}
+- {id: E8-31, linear: "V_barra[j] := Xt[j]*I_h[j]"}
+- {id: E8-31, linear: "M[2, 3] = ?"}
+- {id: E8-29, linear: "3 + 𝐢", tela_contem: ['\class{imag}{\mathbf{i}}']}
+- {id: E8-29, linear: "ln(𝐞)", tela_contem: ['\class{imag}{\mathbf{e}}']}
+# BUG-007: o i imaginário da tela voltava para o arquivo como mathbf*i
+- id: BUG-007
+  linear: "3 + i"
+  digitado: '3+\mathbf{i}'
