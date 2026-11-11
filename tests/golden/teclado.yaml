@@ -71,3 +71,14 @@
   teclas: "L:25m{Enter}"
   linear: "L := 25 m"
   latex_contem: ['\class{u}{\mathrm{m}}']
+# BUG-009 (T02): dígito de nome (R1) não é número decimal
+- id: BUG-009
+  descricao: "nome com dígito grava sem virar produto"
+  contexto: folha
+  teclas: "R1:5{Enter}"
+  linear: "R1 := 5"
+- id: BUG-009
+  descricao: "vírgula depois de nome com dígito abre o índice, como depois de qualquer nome"
+  contexto: folha
+  teclas: "R1,tensao:5{Enter}"
+  linear: "R1_tensao := 5"

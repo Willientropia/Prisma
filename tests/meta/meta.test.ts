@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 import { checkMatriz } from '../../scripts/check-matriz';
@@ -93,12 +93,15 @@ describe('sistema de testes', () => {
   it('[C9-08] o pre-commit roda npm run test e bloqueia commit com teste falhando', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     expect(pkg['simple-git-hooks']).toEqual({ 'pre-commit': 'npm run test', 'pre-push': 'npm run verify' });
-    const hook = join(ROOT, '.git/hooks/pre-commit');
+    // dentro do próprio gancho o git define GIT_DIR e afins; sem limpar, os comandos git do teste herdam o repositório de fora
+    const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+    // numa worktree ".git" é um arquivo: pergunta ao git onde o gancho está
+    const hook = resolve(ROOT, spawnSync('git rev-parse --git-path hooks/pre-commit', { cwd: ROOT, shell: true, encoding: 'utf8', env }).stdout.trim());
     expect(existsSync(hook) && readFileSync(hook, 'utf8')).toContain('npm run test');
     // mesmo gancho num repositório temporário cujo "npm run test" falha: o commit não acontece
     const dir = tmp('hook');
     try {
-      const git = (args: string) => spawnSync(`git -c user.name=t -c user.email=t@t -c core.hooksPath=.git/hooks ${args}`, { cwd: dir, shell: true, encoding: 'utf8' });
+      const git = (args: string) => spawnSync(`git -c user.name=t -c user.email=t@t -c core.hooksPath=.git/hooks ${args}`, { cwd: dir, shell: true, encoding: 'utf8', env });
       git('init -q');
       copyFileSync(hook, join(dir, '.git/hooks/pre-commit'));
       writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node -e "process.exit(1)"' } }));

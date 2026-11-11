@@ -427,7 +427,9 @@ class LatexParser {
   }
   private mul(): Node {
     let a = this.unary();
-    for (;;) {
+    for (let last = -1; ; ) {
+      if (this.i === last) return fail('Expressão inválida'); // guarda de progresso (T01)
+      last = this.i;
       const op = opOf(this.peek());
       if (op === '*' || op === '/') { this.i++; a = { t: 'bin', op, a, b: this.unary() }; continue; }
       if (this.startsAtom(this.peek())) { a = { t: 'bin', op: '*', a, b: this.unary() }; continue; } // justaposição: 2(x+1)
@@ -448,6 +450,7 @@ class LatexParser {
     for (;;) {
       const t = this.peek();
       if (isLetter(t)) { s += letterOf(this.next()); continue; }
+      if (s && isDigit(t)) { s += this.next().v; continue; } // R1, xy2pol, log10: dígito depois de letra faz parte do nome (T02)
       if (t?.k === 'cmd' && (t.v === 'mathrm' || t.v === 'operatorname' || t.v === 'text' || t.v === 'mathit' || t.v === 'mathbf')) { this.i++; s += this.sub(this.group()).plain(); continue; }
       break;
     }
@@ -529,6 +532,7 @@ class LatexParser {
         if (x?.k === 'open' && this.peek(1)?.v === ',' && this.peek(2)?.k === 'close' && isDigit(this.peek(3))) { this.i += 3; v += '.'; continue; }
         break;
       }
+      if (!/\d/.test(v)) return fail('Número incompleto'); // "." solto não consome nada: sem isto o mul() girava para sempre (T01)
       const n: Node = { t: 'num', v };
       const nx = this.peek();
       const unitNext = (nx?.k === 'cmd' && (nx.v === 'class' || nx.v === 'unit' || nx.v === '%' || nx.v === 'degree' || nx.v === 'mathrm' || FROM_CMD.has(nx.v))) || (nx?.k === 'ch' && /^[\p{L}°]$/u.test(nx.v));
@@ -537,7 +541,8 @@ class LatexParser {
         const nameAhead = isLetter(nx) ? this.sub(this.t.slice(this.i)).nameLen() : 0;
         // letras seguidas de "(" são chamada de função (2 f(x)), não unidade
         if (!(nameAhead && (this.t[this.i + nameAhead]?.v === '(' || (this.t[this.i + nameAhead]?.v === 'left')))) {
-          try { return { t: 'qty', n, u: this.unitFrom() }; } catch { this.i = save; }
+          try { const u = this.unitFrom(); if (this.i - save >= nameAhead) return { t: 'qty', n, u }; } catch { /* não é unidade */ } // 2R1: nome com dígito não é unidade (T02)
+          this.i = save;
         }
       }
       return n;

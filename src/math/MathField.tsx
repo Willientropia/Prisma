@@ -70,9 +70,19 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  */
 type FieldState = { script: 'sub' | 'sup' | null; edited: boolean; lastCommit?: Commit | null };
 
+const GREEK_CMD = /^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
+
 function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current: FieldProps }): boolean {
   const before = () => beforeCaret(mf);
-  const afterDigit = () => /\d$/.test(before());
+  // dígitos coladas numa letra ou grega (R1, ρ1) fazem parte do nome; o texto antes do cursor não basta (perde "(" e cola \coloneq no número)
+  const nameDigit = () => {
+    let k = mf.position;
+    const at = (i: number) => mf.getValue(i - 1, i, 'latex').trim();
+    if (!/^\d$/.test(at(k))) return false;
+    while (k > 0 && /^\d$/.test(at(k))) k--;
+    return k > 0 && (/^\p{L}$/u.test(at(k)) || GREEK_CMD.test(at(k)));
+  };
+  const afterDigit = () => /\d$/.test(before()) && !nameDigit();
   const atEnd = () => mf.position === mf.lastOffset;
   const insert = (latex: string) => mf.insert(latex, { selectionMode: latex.includes('#0') ? 'placeholder' : 'after', format: 'latex' });
   const leaveSub = () => { if (state.script === 'sub') mf.executeCommand('moveAfterParent'); if (state.script === 'sub') state.script = null; };
@@ -126,13 +136,13 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
       // depois de letra abre o índice do nome, como no SMath: s,tensao (ADENDO 05, E2.2)
-      if (!state.script && /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$|[\u00C0-\u024F\u0370-\u03FF]\s*$/.test(before())) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      if (!state.script && (nameDigit() || /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$|[\u00C0-\u024F\u0370-\u03FF]\s*$/.test(before()))) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
       insert(';'); return true; // senão separa argumentos
     }
     case ';': insert(';'); return true;
     case '.': {
       if (afterDigit()) { insert('{,}'); return true; }
-      if (/(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$/.test(before())) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      if (nameDigit() || /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$/.test(before())) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
       return false;
     }
     case '_': state.script = 'sub'; return false;
