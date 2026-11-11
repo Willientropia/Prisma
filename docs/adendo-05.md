@@ -69,3 +69,10 @@
 - **Corpus:** das 713 linhas de cálculo importadas, as que não fazem ida e volta caem de 153 para 91 (62 corrigidas). As 91 restantes são `for`, `%`, texto entre aspas e `#` (T03 e T04).
 - **Pendente, fora do T02:** a ida e volta remove parênteses que mudam o sentido, como em `e^(80.5 deg*i)`, que volta `e^80.5 deg*i` (linhas `a1` e `a6` do corpus). Não está na auditoria.
 - **Pendências achadas na revisão do T02, já existentes antes dele:** `3\sin x1` vira `3*sin(1)` (o `x` some); `\log10(x)` vira `log(0*(x))`, mas o MathLive grava `log10(x)` sem `\log` ao digitar, então o usuário não cai nele; o `case '.'` do `MathField.tsx` não tem a guarda `!state.script` do `case ','`; `GREEK_CMD` do campo repete a lista de gregas de `mathlinear.ts` e deveria sair de lá.
+
+## F02 (TICKETS-FOLHA, lote F1): várias regiões selecionadas não arrastam juntas
+
+- **Causa:** `moveRegions` (`src/editors/folha/Folha.tsx`) lê as posições de todas as regiões uma só vez e edita o texto região por região, de cima para baixo. A edição troca a linha de abertura (`x=60` vira `x=100`), que muda de tamanho; as posições das regiões seguintes ficam deslocadas e o arquivo corrompe (cercas coladas, `}` solto). Só aparece quando o número de dígitos de `x` ou `y` muda.
+- **Correção:** as edições passam a ser aplicadas de trás para a frente, como em `removeRegions`. Uma linha.
+- **Teste:** `BUG-011` em `tests/regressao/bugs.spec.ts`: seleciona 3 regiões por laço, arrasta pela moldura (+40 px em x, +20 em y, x de 2 para 3 dígitos) e confere o arquivo inteiro. Falhava antes da correção.
+- **Pendente:** nada deste ticket. O Playwright reaproveita qualquer servidor aberto em `localhost:1420` (`reuseExistingServer`); com várias sessões em worktrees diferentes, os testes podem rodar contra o código de outra.
