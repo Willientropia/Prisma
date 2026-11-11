@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Prisma: guias matemáticas do ribbon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#15131c}
+a{color:#a78bfa}a:hover{color:#c4b5fd}
+.m{font-family:'STIX Two Text',Georgia,serif}
+.v{font-style:italic}
+.rt{min-height:32px;padding:0 14px;border:none;border-bottom:2px solid transparent;background:transparent;color:#b6b0c3;font:500 12px Inter,sans-serif;cursor:pointer}
+.rt:hover{color:#ffffff}
+.rt-on{min-height:32px;padding:0 14px;border:none;border-bottom:2px solid #a78bfa;background:#26222f;color:#ffffff;font:600 12px Inter,sans-serif;cursor:pointer}
+.rt-ctx{min-height:32px;padding:0 14px;border:none;border-bottom:2px solid transparent;background:#2e2350;color:#ddd3ff;font:600 12px Inter,sans-serif;cursor:pointer}
+.rt-ctx-on{min-height:32px;padding:0 14px;border:none;border-bottom:2px solid #a78bfa;background:#3b2a63;color:#ffffff;font:600 12px Inter,sans-serif;cursor:pointer}
+.grp{display:flex;flex-direction:column;border-right:1px solid #363042;padding:4px 8px 0;height:92px;box-sizing:border-box}
+.grpt{font:11px Inter,sans-serif;color:#a29bb3;text-align:center;height:18px;line-height:18px;white-space:nowrap}
+.rb{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;min-width:54px;height:66px;padding:6px 5px 0;border:1px solid transparent;border-radius:4px;background:transparent;color:#e2dfea;font:11px/1.2 Inter,sans-serif;cursor:pointer;text-align:center;box-sizing:border-box}
+.rb:hover{background:#322c3e;border-color:#4a4359}
+.sb{display:flex;align-items:center;gap:6px;height:22px;padding:0 6px;border:1px solid transparent;border-radius:3px;background:transparent;color:#e2dfea;font:11px Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.sb:hover{background:#322c3e;border-color:#4a4359}
+.gb{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:3px;background:transparent;color:#e2dfea;font:17px 'STIX Two Text',serif;cursor:pointer;padding:0}
+.gb:hover{background:#322c3e;border-color:#4a4359}
+.tb{height:22px;padding:0 6px;border:1px solid transparent;border-radius:3px;background:transparent;color:#e2dfea;font:15px 'STIX Two Text',serif;cursor:pointer}
+.tb:hover{background:#322c3e;border-color:#4a4359}
+.kw{height:22px;padding:0 7px;border:1px solid transparent;border-radius:3px;background:transparent;color:#e2dfea;font:600 12px 'JetBrains Mono',monospace;cursor:pointer}
+.kw:hover{background:#322c3e;border-color:#4a4359}
+.dots{background-color:#16131d;background-image:linear-gradient(#201c29 1px,transparent 1px),linear-gradient(90deg,#201c29 1px,transparent 1px);background-size:20px 20px}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #e2dfea; background: #15131c; min-height: 620px; display: flex; flex-direction: column">
+
+<div style="display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 8px; background: #110f17; border-bottom: 1px solid #27222f">
+<svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,50 50,8 86,29" fill="#a78bfa"></polygon><polygon points="50,50 86,29 86,71" fill="#4c1d95"></polygon><polygon points="50,50 86,71 50,92" fill="#2a2440"></polygon><polygon points="50,50 50,92 14,71" fill="#15121f"></polygon><polygon points="50,50 14,71 14,29" fill="#1f1b2e"></polygon><polygon points="50,50 14,29 50,8" fill="#3f2d6e"></polygon></svg>
+<div style="flex: 1; text-align: center; font-size: 12px; color: #b6b0c3">Prisma 2026 <span style="color: #6e6780; margin: 0 6px">|</span> string-3.prsf</div>
+<label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #b6b0c3"><input type="checkbox" checked="{{plotSel}}" onChange="{{togglePlot}}"> Simular gráfico selecionado</label>
+</div>
+
+<div style="display: flex; height: 32px; background: #191620; border-bottom: 1px solid #363042; padding-left: 6px">
+<button type="button" aria-label="Início" style="width: 40px; border: none; background: transparent; color: #a29bb3; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10"></path></svg></button>
+<button type="button" style="display: flex; align-items: center; gap: 8px; padding: 0 12px; border: none; border-bottom: 2px solid #a78bfa; background: #26222f; color: #ffffff; font: 500 12px Inter, sans-serif"><span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 18px; border-radius: 3px; background: #0f766e; color: #ffffff; font: 600 9px 'JetBrains Mono', monospace">FOL</span>string-3.prsf</button>
+</div>
+
+<div style="background: #26222f; border-bottom: 1px solid #363042; height: 124px; box-sizing: border-box">
+<div role="tablist" aria-label="Guias" style="display: flex; height: 32px; background: #1f1b28; padding: 0 6px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="8">
+<sc-if value="{{t.on}}" hint-placeholder-val="{{false}}"><button type="button" role="tab" aria-selected="true" class="{{t.clsOn}}" onClick="{{t.go}}">{{t.label}}</button></sc-if>
+<sc-if value="{{t.off}}" hint-placeholder-val="{{true}}"><button type="button" role="tab" aria-selected="false" class="{{t.clsOff}}" onClick="{{t.go}}">{{t.label}}</button></sc-if>
+</sc-for>
+</div>
+<div style="display: flex; height: 92px; overflow: hidden">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<div class="grp">
+<div style="display: flex; gap: 2px; flex: 1; align-items: flex-start">
+
+<sc-if value="{{g.isBig}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{g.items}}" as="b" hint-placeholder-count="3">
+<button type="button" class="rb" title="{{b.tip}}" onMouseEnter="{{b.hover}}">
+<sc-if value="{{b.hasIc}}" hint-placeholder-val="{{true}}"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="{{b.f}}" fill="#a78bfa" opacity="0.55"></path><path d="{{b.s}}" fill="none" stroke="#cfcadb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{b.hasSym}}" hint-placeholder-val="{{false}}"><span class="m" style="height: 26px; display: flex; align-items: center; font-size: 22px; color: #ffffff">{{b.sym}}</span></sc-if>
+<span>{{b.label}}</span>
+</button>
+</sc-for>
+</sc-if>
+
+<sc-if value="{{g.isSmall}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-rows: repeat(3, 22px); grid-auto-flow: column; gap: 1px 4px">
+<sc-for list="{{g.items}}" as="b" hint-placeholder-count="6">
+<button type="button" class="sb" title="{{b.tip}}" onMouseEnter="{{b.hover}}">
+<sc-if value="{{b.hasIc}}" hint-placeholder-val="{{true}}"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="{{b.f}}" fill="#a78bfa" opacity="0.55"></path><path d="{{b.s}}" fill="none" stroke="#cfcadb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{b.hasSym}}" hint-placeholder-val="{{false}}"><span class="m" style="width: 16px; text-align: center; font-size: 14px; color: #ffffff">{{b.sym}}</span></sc-if>
+{{b.label}}
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{g.isGrid}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: repeat({{g.cols}}, 26px); gap: 1px; padding-top: 6px">
+<sc-for list="{{g.items}}" as="b" hint-placeholder-count="8">
+<button type="button" class="gb" title="{{b.tip}}" aria-label="{{b.tip}}" onMouseEnter="{{b.hover}}">{{b.sym}}</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{g.isText}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: repeat({{g.cols}}, auto); gap: 1px 2px; padding-top: 2px">
+<sc-for list="{{g.items}}" as="b" hint-placeholder-count="8">
+<button type="button" class="{{g.btnCls}}" title="{{b.tip}}" onMouseEnter="{{b.hover}}">{{b.sym}}</button>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+<div class="grpt">{{g.title}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex: 1; min-height: 380px">
+<div class="dots" style="flex: 1; position: relative">
+<div class="m" style="position: absolute; left: 40px; top: 36px; font-size: 20px; color: #e9e6f0"><span class="v">x</span> <span style="color: #cbc6d6">≔</span> 2</div>
+<div class="m" style="position: absolute; left: 40px; top: 80px; font-size: 20px; color: #e9e6f0"><span class="v">s</span><sub style="font-style: normal; font-size: 13px">tensao</sub> <span style="color: #cbc6d6">≔</span> 10·<span class="v">x</span></div>
+<div class="m" style="position: absolute; left: 40px; top: 124px; font-size: 20px; color: #e9e6f0; outline: 1px solid #a78bfa; outline-offset: 3px; padding: 0 2px"><span class="v">s</span><sub style="font-style: normal; font-size: 13px">tensao</sub> <span style="color: #cbc6d6">=</span> <b style="font-weight: 600; color: #ffffff">20</b><span style="display: inline-block; width: 6px; height: 6px; background: #6e6780; margin-left: 4px; vertical-align: middle"></span></div>
+</div>
+<aside style="width: 340px; background: #1c1924; border-left: 1px solid #363042; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="font: 600 11px Inter, sans-serif; letter-spacing: 0.6px; text-transform: uppercase; color: #cbc6d6">Dica do botão</div>
+<div style="background: #1f1b28; border: 1px solid #4a4359; border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; gap: 8px"><span style="font: 600 13px Inter, sans-serif; color: #ffffff">{{hov.label}}</span><span style="font: 12px 'JetBrains Mono', monospace; color: #a78bfa">{{hov.key}}</span></div>
+<div style="font-size: 12px; line-height: 1.5; color: #cbc6d6">{{hov.desc}}</div>
+</div>
+<div style="font-size: 12px; line-height: 1.5; color: #a29bb3">Passe o mouse sobre os botões do ribbon. Todo botão mostra o atalho de teclado correspondente, para o usuário aprender a digitar sem o mouse, como no SMath.</div>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":620}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'mat', plot: false, hov: null };
+  }
+  renderVals() {
+    const s = this.state;
+    const I = {
+      frac: { f: 'M9 3h6v6H9zM9 15h6v6H9z', s: 'M5 12h14' },
+      pow: { f: 'M4 9h9v11H4zM15 3h6v6h-6z', s: '' },
+      sub: { f: 'M4 4h9v11H4zM15 15h6v6h-6z', s: '' },
+      sqrt: { f: 'M13 8h7v8h-7z', s: 'M2 13l3-2 3 9 4-17h10' },
+      nroot: { f: 'M13 8h7v8h-7zM2 4h4v4H2z', s: 'M2 13l3-2 3 9 4-17h10' },
+      abs: { f: 'M8 8h8v8H8z', s: 'M5 4v16M19 4v16' },
+      paren: { f: 'M9 8h6v8H9z', s: 'M8 3c-4 5-4 13 0 18M16 3c4 5 4 13 0 18' },
+      cases: { f: 'M12 6h8v4h-8zM12 14h8v4h-8z', s: 'M10 3c-3 0-3 2-3 5s-1 4-3 4c2 0 3 1 3 4s0 5 3 5' },
+      matrix: { f: 'M6 6h5v5H6zM13 6h5v5h-5zM6 13h5v5H6zM13 13h5v5h-5z', s: 'M6 3H3v18h3M18 3h3v18h-3' },
+      vector: { f: 'M5 12h12v8H5z', s: 'M4 7h15M15 3l4 4-4 4' },
+      elem: { f: 'M3 4h10v12H3z', s: 'M15 13h2v8h-2M21 13h-2v8h2' },
+      fx: { f: '', s: 'M11 4c-3 0-3 2-3 5v11M5 10h7M14 12l6 7M20 12l-6 7' },
+      rotate: { f: '', s: 'M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5M18 3v4h-4M6 21v-4h4' },
+      move: { f: '', s: 'M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3' },
+      zoom: { f: '', s: 'M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4M8 11h6M11 8v6' },
+      reset: { f: '', s: 'M4 12a8 8 0 108-8M4 4v5h5' },
+      points: { f: 'M5 15h3v3H5zM11 9h3v3h-3zM17 5h3v3h-3z', s: 'M3 21h18M3 3v18' },
+      lines: { f: '', s: 'M3 21h18M3 3v18M6 16l5-6 4 3 5-8' },
+      grid: { f: '', s: 'M4 4h16v16H4zM4 12h16M12 4v16M4 8h16M4 16h16M8 4v16M16 4v16' },
+      legend: { f: 'M4 6h4v3H4zM4 14h4v3H4z', s: 'M11 7.5h9M11 15.5h9' },
+      axes: { f: '', s: 'M4 20h17M4 20V3M4 20l-1-1M8 20v2M12 20v2M16 20v2M4 16H2M4 12H2M4 8H2' },
+      prog: { f: 'M6 8h12v3H6zM6 14h12v3H6z', s: 'M3 4v16' },
+    };
+    const B = (label, key, desc, x) => ({ label, key, desc, tip: label + (key ? '  (' + key + ')' : ''), ...(typeof x === 'string' ? { sym: x, hasSym: true, hasIc: false, f: '', s: '' } : { ...x, hasIc: true, hasSym: false }), hover: () => this.setState({ hov: { label, key: key || 'sem atalho', desc } }) });
+    const G = (title, kind, items, cols, btnCls) => ({ title, isBig: kind === 'big', isSmall: kind === 'small', isGrid: kind === 'grid', isText: kind === 'text', items, cols: cols || 4, btnCls: btnCls || 'tb' });
+    const sy = (sym, tip, key) => B(tip, key, 'Insere ' + sym + ' no cursor.', sym);
+    const fn = (name, desc) => B(name + '( )', '', desc, name);
+    const lc = 'α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω'.split(' ');
+    const uc = 'Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω'.split(' ');
+    const lat = 'a b g d e z h q i k l m n x o p r s t u f c y w'.split(' ');
+    const R = {
+      mat: [
+        G('Definir e avaliar', 'big', [B('Definir', ':', 'Cria uma definição. O = também define quando o nome à esquerda ainda não existe.', '≔'), B('Avaliar', '=', 'Mostra o resultado. Depois do resultado, o marcador aceita uma unidade ou escala para converter.', '=')]),
+        G('Estruturas', 'small', [B('Fração', '/', 'Cria uma fração com o termo à esquerda no numerador.', I.frac), B('Potência', '^', 'Abre o expoente.', I.pow), B('Índice', '. ou ,', 'Índice de nome (subscrito literal), como em S.trafo.', I.sub), B('Raiz', '\\', 'Raiz quadrada.', I.sqrt), B('Raiz n-ésima', 'Ctrl+\\', 'Raiz de qualquer índice.', I.nroot), B('Módulo', 'abs(', 'Valor absoluto ou módulo de complexo. Digitar abs( também cria as barras.', I.abs), B('Parênteses', '(', 'Envolve a seleção em parênteses.', I.paren), B('Fatorial', '!', 'n!', 'n!'), B('Mais ou menos', '', 'Operador ±. A tecla % insere a unidade porcento, como no SMath.', '±')]),
+        G('Constantes', 'grid', [sy('π', 'Pi', 'Ctrl+Shift+P'), sy('∞', 'Infinito', 'Ctrl+Shift+Z'), sy('𝐢', 'Unidade imaginária', 'i'), sy('e', 'Número de Euler', 'e')], 2),
+        G('Funções', 'text', [fn('sin', 'Seno'), fn('cos', 'Cosseno'), fn('tan', 'Tangente'), fn('cot', 'Cotangente'), fn('ln', 'Logaritmo natural'), fn('log', 'Logaritmo na base 10, ou na base dada como 2º argumento'), fn('exp', 'Exponencial'), fn('sign', 'Sinal'), fn('arg', 'Argumento de complexo, em radianos (converta para deg no marcador)'), fn('re', 'Parte real'), fn('im', 'Parte imaginária'), fn('conj', 'Conjugado')], 4),
+        G('Catálogo', 'big', [B('Todas as funções', 'Ctrl+E', 'Abre o catálogo com todas as funções nativas e das bibliotecas, com busca e descrição.', I.fx)]),
+        G('Cálculo', 'big', [B('Somatório', 'sum(', 'Somatório com índice, início e fim.', 'Σ'), B('Produtório', 'product(', 'Produtório com índice, início e fim.', 'Π'), B('Derivada', 'diff(', 'Derivada em relação a uma variável.', 'd⁄dx'), B('Integral', 'int(', 'Integral definida.', '∫')]),
+        G('Condições', 'small', [B('Por partes', '', 'Função definida por casos.', I.cases), B('a < x < b', '', 'Intervalo aberto.', '<'), B('a ≤ x ≤ b', '', 'Intervalo fechado.', '≤')]),
+      ],
+      mtz: [
+        G('Inserir', 'big', [B('Matriz', 'Ctrl+M', 'Abre o diálogo de linhas e colunas.', I.matrix), B('Vetor', '', 'Vetor coluna.', I.vector)]),
+        G('Elementos', 'small', [B('Elemento', '[', 'Índice de elemento: v[2], M[2;3]. Índices começam em 1.', I.elem), B('Intervalo', 'range(', 'range: 1..n.', '‥'), B('Intervalo com passo', '', 'range com início, fim e passo.', '⋯')]),
+        G('Operações', 'small', [B('Transposta', 'Ctrl+1', 'Aᵀ', 'ᵀ'), B('Inversa', '^-1', 'A⁻¹', '⁻¹'), B('Determinante', 'det(', '|A|', '‖'), B('Menor', '', 'M com índices i, j.', 'M'), B('Cofator', '', 'A com índices i, j.', 'A'), B('Produto vetorial', 'Ctrl+8', 'a × b', '×')]),
+        G('Funções de matriz', 'text', [fn('rows', 'Número de linhas'), fn('cols', 'Número de colunas'), fn('length', 'Número de elementos'), fn('stack', 'Empilha matrizes'), fn('augment', 'Junta matrizes lado a lado'), fn('row', 'Extrai uma linha'), fn('col', 'Extrai uma coluna'), fn('sum', 'Soma dos elementos'), fn('max', 'Maior elemento'), fn('min', 'Menor elemento'), fn('sort', 'Ordena'), fn('fft', 'Transformada rápida de Fourier')], 4),
+      ],
+      log: [
+        G('Comparação', 'grid', [sy('=', 'Igual lógico', 'Ctrl+='), sy('≠', 'Diferente', 'Ctrl+3'), sy('<', 'Menor', '<'), sy('>', 'Maior', '>'), sy('≤', 'Menor ou igual', 'Ctrl+9'), sy('≥', 'Maior ou igual', 'Ctrl+0'), sy('≈', 'Aproximadamente igual', ''), sy('≉', 'Não aproximadamente igual', '')], 4),
+        G('Lógica', 'grid', [sy('∧', 'E', '&'), sy('∨', 'OU', '|'), sy('¬', 'NÃO', '~'), sy('⊕', 'OU exclusivo', 'xor(')], 2),
+        G('Programação', 'big', [B('if', '', 'Condição com ramo senão.', 'if'), B('for', '', 'Laço com contador e intervalo.', 'for'), B('while', '', 'Laço com condição.', 'while'), B('try', '', 'Tenta e captura erro.', 'try'), B('Bloco', '[', 'Bloco de várias linhas (line do SMath).', I.prog)]),
+        G('Controle', 'small', [B('continue', '', 'Pula para a próxima volta do laço.', '↷'), B('break', '', 'Sai do laço.', '⤓')]),
+      ],
+      sim: [
+        G('Gregas minúsculas', 'grid', lc.map((c, k) => sy(c, 'Letra grega ' + c, lat[k] + ', Ctrl+G')), 12),
+        G('Gregas maiúsculas', 'grid', uc.map((c, k) => sy(c, 'Letra grega ' + c, lat[k].toUpperCase() + ', Ctrl+G')), 12),
+        G('Outros', 'grid', ['∂', '∇', '°', '′', '″', 'ℏ', '∅', '∈', '∠', '‰'].map((c) => sy(c, 'Símbolo ' + c, '')), 5),
+      ],
+      graf: [
+        G('Navegar', 'big', [B('Girar', '', 'Gira gráfico 3D arrastando.', I.rotate), B('Mover', '', 'Arrasta a área visível.', I.move), B('Zoom', 'roda do mouse', 'Aproxima ou afasta.', I.zoom), B('Restaurar', 'duplo clique', 'Volta à vista original.', I.reset)]),
+        G('Exibição', 'big', [B('Pontos', '', 'Mostra os pontos.', I.points), B('Linhas', '', 'Liga os pontos.', I.lines), B('Grade', '', 'Liga ou desliga a grade.', I.grid), B('Legenda', '', 'Mostra a legenda das séries.', I.legend)]),
+        G('Eixos', 'big', [B('Limites e rótulos', '', 'Mínimo, máximo, passo e nome de cada eixo.', I.axes)]),
+      ],
+    };
+    const tabsDef = [['inicio', 'Início'], ['mat', 'Matemática'], ['mtz', 'Matrizes'], ['log', 'Lógica e programação'], ['sim', 'Símbolos'], ['ins', 'Inserir'], ['exi', 'Exibir'], ['sai', 'Saída']];
+    if (s.plot) tabsDef.push(['graf', 'Ferramentas de gráfico']);
+    const tab = !s.plot && s.tab === 'graf' ? 'mat' : s.tab;
+    const tabs = tabsDef.map(([id, label]) => ({ label, on: tab === id, off: tab !== id, clsOn: id === 'graf' ? 'rt-ctx-on' : 'rt-on', clsOff: id === 'graf' ? 'rt-ctx' : 'rt', go: () => this.setState({ tab: id }) }));
+    const groups = R[tab] || [G('Esta guia já existe no protótipo v3 (sem mudança)', 'small', [])];
+    const hov = s.hov || { label: 'Fração', key: '/', desc: 'Cria uma fração com o termo à esquerda no numerador.' };
+    return { tabs, groups, hov, plotSel: s.plot, togglePlot: () => this.setState({ plot: !s.plot, tab: !s.plot ? 'graf' : 'mat' }) };
+  }
+}
+</script>
+</body>
+</html>
