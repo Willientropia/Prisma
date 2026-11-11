@@ -75,3 +75,10 @@
 - **Texto entre aspas:** `mat("3º Harmônica", ...)` voltava `"3ºHarmônica"`. O `llex` descartava todo espaço em branco, inclusive dentro de `\text{...}`. Agora o conteúdo de `\text{...}` é lido como texto, com espaços preservados (também repetidos). Testes: T03-01 e BUG-010.
 - **Corpus:** as linhas que não fazem ida e volta caem de 91 para 84. As 84 restantes são `for`, `%` e `#` (T04), mais duas com caminho de arquivo.
 - **Pendente, fora do T03:** texto com barra invertida ou chaves perde esses caracteres na tela (`"C:\Users\...\Book1.xlsx"` volta `"C:UsersYourUserDownloadsBook1.xlsx"`), porque `nodeLatex` remove `\`, `{` e `}` do texto. Linhas `EXCELpath` do corpus.
+## F01 (TICKETS-FOLHA, lote F1)
+
+- **Problema:** na folha livre a região só andava para a direita e para baixo; depois de movida não voltava. `snap()` fazia `Math.max(0, …)` e era usado no deslocamento do arrasto, então todo dx/dy negativo virava 0.
+- **Correção (`src/editors/folha/Folha.tsx`):** `snap()` só arredonda para a grade de 20 px. O novo `pos()` (`Math.max(0, snap(v))`) limita só a posição final e é usado em `moveRegions`, na prévia do arrasto e na cruz de criação. Os demais usos de `snap()` ficam como estavam (valores já positivos).
+- **Teste:** `BUG-011` em `tests/regressao/bugs.spec.ts` (e2e). Arrasta a região `s` de `string-3.prsf` para a esquerda e para cima (`x=180 y=40`) e depois além da borda (trava em `x=0 y=0`). Falhava antes da correção.
+- **Verificação:** tipos, lint, Vitest, Rust, cobertura e `check-matriz` ok. No `npm run verify` rodado com três sessões em paralelo, o Playwright teve duas falhas só de tempo: C7-02 com 518 ms (limite 500) e B10-07 com 157 ms (limite 150). Rodados sozinhos, `edicao-visual`, `desempenho` e `bugs` passaram. A instabilidade é a do ticket F00; nenhum teste foi alterado.
+- **Pendente:** nada do F01. O `verify` completo não foi repetido depois do ajuste final da matriz (só `check-matriz` e o `bugs.spec.ts`).

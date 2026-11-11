@@ -37,7 +37,8 @@ function SheetImage({ dir, path, width, height }: { dir: string; path: string; w
 
 /** Altura da linha de título de uma área (E6). */
 const AREA_HEAD = 20;
-const snap = (v: number) => Math.max(0, Math.round(v / GRID) * GRID);
+const snap = (v: number) => Math.round(v / GRID) * GRID; // deslocamentos podem ser negativos
+const pos = (v: number) => Math.max(0, snap(v)); // posição final nunca fica antes da borda
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const num = (b: BlockSegment, k: string, d = 0) => Number(b.attrs[k] ?? d) || d;
 
@@ -241,7 +242,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const moveRegions = (ids: string[], dx: number, dy: number) => {
     for (const r of fresh().filter((x) => ids.includes(x.id))) {
       const first = lines(r.seg.raw)[0];
-      edit(doc.id, r.start, r.start + first.length, withPos(first, snap(num(r.seg, 'x') + dx), snap(num(r.seg, 'y') + dy)));
+      edit(doc.id, r.start, r.start + first.length, withPos(first, pos(num(r.seg, 'x') + dx), pos(num(r.seg, 'y') + dy)));
     }
   };
 
@@ -277,7 +278,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       } else {
         // cursor em cruz no ponto da grade mais próximo (como no SMath)
         setSelected(new Set());
-        setCross({ x: snap(p0.x), y: snap(p0.y) });
+        setCross({ x: pos(p0.x), y: pos(p0.y) });
       }
       sheet.current?.focus();
     };
@@ -353,7 +354,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const moving = drag?.ids.includes(r.id);
     // prévia já encaixada na grade, igual ao que fica ao soltar
     const lift = shiftAt(num(b, 'y'));
-    const style = moving ? { left: snap(num(b, 'x') + drag!.dx), top: snap(num(b, 'y') + drag!.dy) - lift } : { left: num(b, 'x'), top: num(b, 'y') - lift };
+    const style = moving ? { left: pos(num(b, 'x') + drag!.dx), top: pos(num(b, 'y') + drag!.dy) - lift } : { left: num(b, 'x'), top: num(b, 'y') - lift };
     const cls = [s.region, selected.has(r.id) ? s.regionOn : s.regionOff, 'desativado' in b.attrs && s.regionDisabled, 'moldura' in b.attrs && s.regionFrame].filter(Boolean).join(' ');
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
     let content;
