@@ -15,7 +15,7 @@ const parser = {
 };
 
 export default [
-  { ignores: ['dist/**', 'src-tauri/**', 'node_modules/**', 'test-results/**', 'playwright-report/**'] },
+  { ignores: ['dist/**', 'src-tauri/**', 'node_modules/**', 'test-results/**', 'playwright-report/**', '.claude/**'] },
   { files: ['**/*.{ts,tsx,js,mjs}'], languageOptions: parser },
   {
     files: ['src/**/*.test.{ts,tsx}', 'tests/meta/**/*.ts'],
