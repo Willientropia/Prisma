@@ -18,6 +18,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Adendo 03: testes | C9, C7 | concluída |
 | Bugs corrigidos | BUG | concluída |
 | Auditoria Fable, lote A: travamentos do editor | T01, T02, T03 | concluída |
+| Auditoria Fable, lote F1: teclado preso na folha | F03 | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
@@ -210,3 +211,6 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F00-03 | O passo 4 do CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push | tests/meta/meta.test.ts | meta | ok |
 | BUG-011 | Região da folha só andava para a direita/baixo: `snap()` limitava o deslocamento do arrasto a >= 0; agora deslocamento negativo vale e só a posição final é limitada a >= 0 | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-012 | Arrastar 3 regiões selecionadas (x de 2 para 3 dígitos) move as 3 e o arquivo continua íntegro; antes corrompia: posições do texto calculadas antes da 1ª edição (ticket F02) | tests/regressao/bugs.spec.ts | e2e | ok |
+| F03-01 | Folha: se a região nova não monta (folha somente leitura), o teclado da folha volta ao normal em até 2 s (`creating` com prazo) | tests/regressao/bugs.spec.ts | e2e | ok |
+| F03-02 | Caderno: se a linha nova não monta (caderno somente leitura), `holdKeys` solta o teclado do app em até 1 s | tests/regressao/bugs.spec.ts | e2e | ok |
+| BUG-013 | Teclado preso: `creating` da folha e `holdKeys` sem prazo engoliam as teclas para sempre quando o campo novo não montava | tests/regressao/bugs.spec.ts | e2e | ok |

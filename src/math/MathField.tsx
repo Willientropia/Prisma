@@ -169,7 +169,8 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
  * Teclas digitadas enquanto um campo novo ainda não tem foco (linha nova do caderno depois de Enter):
  * ficam guardadas aqui, em vez de cair no campo anterior, e o campo que receber o foco as aplica.
  */
-let held: { keys: Key[]; listener: (e: KeyboardEvent) => void } | null = null;
+let held: { keys: Key[]; listener: (e: KeyboardEvent) => void; timer: number } | null = null;
+const HOLD_MS = 1000; // prazo: se nenhum campo assumir (documento somente leitura, campo desmontado), o teclado volta
 export function holdKeys(): void {
   releaseKeys();
   const keys: Key[] = [];
@@ -180,7 +181,7 @@ export function holdKeys(): void {
     keys.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey });
   };
   window.addEventListener('keydown', listener, true);
-  held = { keys, listener };
+  held = { keys, listener, timer: window.setTimeout(releaseKeys, HOLD_MS) };
 }
 /** Acrescenta teclas à fila guardada (se houver uma esperando o próximo campo). */
 function holdMore(keys: Key[]): void {
@@ -189,6 +190,7 @@ function holdMore(keys: Key[]): void {
 function releaseKeys(): Key[] {
   if (!held) return [];
   window.removeEventListener('keydown', held.listener, true);
+  clearTimeout(held.timer);
   const k = held.keys;
   held = null;
   return k;

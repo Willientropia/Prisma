@@ -114,6 +114,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [band, setBand] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const pendingKeys = useRef<Key[]>([]); // teclas digitadas enquanto a região nova monta
   const creating = useRef(false);
+  const creatingTimer = useRef(0);
+  const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; };
   const [msg, setMsg] = useState('Clique na grade e digite para criar uma região.');
 
   // B10.6: resultados e gráfico aparecem sem nenhum clique
@@ -325,6 +327,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     } else {
       pendingKeys.current = [{ key: e.key }];
       creating.current = true;
+      creatingTimer.current = window.setTimeout(doneCreating, 2000); // prazo: se o campo não montar, a folha volta a aceitar teclas (F03)
       setFocus({ id: appendRegion('calc', at.x, at.y), line: 0 });
     }
     setCross(null);
@@ -365,7 +368,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         return (
           <div key={i} className={s.regionLine}>
             <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20}
-              focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={() => { creating.current = false; }}
+              focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={doneCreating}
               onWrite={(w) => writeLine(r.id, i, w)}
               onEnter={(shift) => { (document.activeElement as HTMLElement | null)?.blur?.(); if (shift) regionBelow(r.id); else crossBelow(r.id); }}
               onBackspaceEmpty={() => writeLine(r.id, i, '')}
