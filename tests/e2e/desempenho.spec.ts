@@ -5,10 +5,10 @@ import { CALC, DOCS, armTimer, dev, focusField, resultTexts, start, tabs, timerM
 test('[C7-01] recálculo da string-3 em até 150 ms depois da última tecla', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   await focusField(page, page.locator('[data-region="s"] math-field'));
   await page.keyboard.press('Control+a');
-  await armTimer(page, ['2,20V', '0,55%']);
+  await armTimer(page, ['2,1957V', '0,5489%']);
   await page.keyboard.type("S:6'mm^2", { delay: 30 });
   await expect.poll(() => timerMs(page)).not.toBeNull();
   const ms = (await timerMs(page))!;

@@ -5,7 +5,7 @@ import { CALC, dev, resultTexts, start, tabs } from './helpers';
 test('[F3-01] [F3-03] string-3 mostra 3,29 V e 0,82 %; gráfico com linha de limite', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const fig = page.locator('figure');
   await expect(fig).toContainText('limite 1 %');
   await expect(fig.locator('canvas')).toHaveCount(1);
@@ -14,7 +14,7 @@ test('[F3-01] [F3-03] string-3 mostra 3,29 V e 0,82 %; gráfico com linha de lim
 test('[F3-04] arrastar a região pela moldura move com encaixe na grade de 20 px', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const region = page.locator('[data-region="s"]');
   const box = (await region.boundingBox())!;
   await page.mouse.move(box.x + 1, box.y + 1); // a moldura (borda + folga), fora do campo
@@ -28,7 +28,7 @@ test('[F3-04] arrastar a região pela moldura move com encaixe na grade de 20 px
 test('[F3-05] a ordem é por posição: região movida para baixo dos resultados deixa de valer para eles', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const region = page.locator('[data-region="s"]');
   const box = (await region.boundingBox())!;
   await page.mouse.move(box.x + 1, box.y + 1);
@@ -62,6 +62,6 @@ test('[F3-07] linha de comando: "ir cabos-cc" abre o arquivo', async ({ page }) 
 test('[F3-02] [F3-12] string-3 mostra ATENÇÃO · limite 1 % na região de verificação', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   await expect(page.locator('[data-region="criterio"]')).toContainText('ATENÇÃO · limite 1 %');
 });

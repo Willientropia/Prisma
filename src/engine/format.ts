@@ -1,14 +1,14 @@
-// Exibição de números e unidades (config.yaml: casas decimais e separador; padrão 2 e vírgula).
+// Exibição de números e unidades (config.yaml: casas decimais e separador; padrão do SMath: 4 casas, sem zeros à direita, vírgula).
 /**
- * mode ausente: o formato de sempre do Prisma (arquivo novo). Com mode, o do SMath (ADENDO 05, E4.2):
+ * mode ausente: o formato antigo do Prisma (casas fixas), só para quem monta FormatOpts à mão. O padrão (DEFAULT_FORMAT) e o do arquivo trazem mode, o do SMath (ADENDO 05, E4.2; ADENDO 06, 1.3):
  * decimals = casas (decimais) ou algarismos (significativos); trailingZeros; expThreshold = notação
  * científica a partir de 10^n e abaixo de 10^-n. A notação científica sai como "1,475e-3"; a tela
  * desenha 1,475·10⁻³ (nunca "e-3" na tela).
  */
 export type FormatOpts = { decimals: number; sep: string; mode?: 'decimais' | 'significativos'; trailingZeros?: boolean; expThreshold?: number };
-export const DEFAULT_FORMAT: FormatOpts = { decimals: 2, sep: ',' };
+export const DEFAULT_FORMAT: FormatOpts = { decimals: 4, sep: ',', mode: 'decimais', trailingZeros: false, expThreshold: 5 };
 
-/** |x| >= 0,1: casas fixas (1,79; 2,20; 712,80). Menor: 3 algarismos (0,0214). Extremos: notação científica. */
+/** Sem mode (formato antigo): |x| >= 0,1 com casas fixas (1,79; 2,20; 712,80); menor, 3 algarismos (0,0214); extremos em notação científica. Com mode (o padrão): fmtSmath. */
 export function fmtNum(x: number, opts: FormatOpts = DEFAULT_FORMAT): string {
   const { decimals, sep } = opts;
   if (!Number.isFinite(x)) return String(x);

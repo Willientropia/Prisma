@@ -27,19 +27,19 @@ describe('SPEC seção 8: testes obrigatórios', () => {
   it('[F2-02] ΔV(32 m, 11.5 A, 4 mm^2) = 3,29 V', () => {
     const r = last(['ΔV(32 m, 11.5 A, 4 mm^2) = ? V']);
     near(r.value, 3.29);
-    expect(r.text).toBe('3,29 V');
+    expect(r.text).toBe('3,2936 V');
   });
 
   it('[F2-03] 3,29 V / 400 V = 0,82 %', () => {
     const r = last(['3.29 V / 400 V = ? %']);
     near(r.value, 0.8225);
-    expect(r.text).toBe('0,82 %');
+    expect(r.text).toBe('0,8225 %');
   });
 
   it('[F2-04] E_mes(5.5 kWp, 5.4 h/dia, 0.8) = P·HSP·PR·30 dia = 712,8 kWh', () => {
     const r = last(['E_mes(P, HSP, PR) := P*HSP*PR*30 dia', 'E_mes(5.5 kWp, 5.4 h/dia, 0.8) = ? kWh']);
     near(r.value, 712.8);
-    expect(r.text).toBe('712,80 kWh');
+    expect(r.text).toBe('712,8 kWh');
   });
 
   it('[F2-05] ρ_T(70 °C) = ρ_cu·(1 + 0,00393·50) = 0,0214 Ω·mm²/m', () => {
@@ -88,9 +88,13 @@ describe('regras do motor', () => {
     expect(classify('x <= 2 m', true)).toMatchObject({ kind: 'check', limit: '2 m' });
   });
 
+  it('[A6-05] formato padrão do SMath: 4 casas, sem zeros à direita, expoente a partir de 10^5', () => {
+    expect([fmtNum(14), fmtNum(1 / 3), fmtNum(3.2936), fmtNum(1.5), fmtNum(123456), fmtNum(0.00001234)]).toEqual(['14', '0,3333', '3,2936', '1,5', '1,2346e5', '1,234e-5']);
+  });
   it('[F2-16] formata números e unidades', () => {
-    expect([fmtNum(1.7899999), fmtNum(712.8), fmtNum(0.02141), fmtNum(0), fmtNum(1e-7), fmtNum(-3.5)]).toEqual(['1,79', '712,80', '0,0214', '0,00', '1,00e-7', '-3,50']);
-    expect([fmtNum(2 * 0.0179 * 25 * 12 / 4), fmtNum(-2.685), fmtNum(0.125), fmtNum(5, { decimals: 3, sep: '.' })]).toEqual(['2,69', '-2,69', '0,13', '5.000']);
+    expect([fmtNum(1.7899999), fmtNum(712.8), fmtNum(0.02141), fmtNum(0), fmtNum(1e-7), fmtNum(-3.5)]).toEqual(['1,79', '712,8', '0,0214', '0', '1e-7', '-3,5']);
+    const duas = { decimals: 2, sep: ',', mode: 'decimais' as const, trailingZeros: true }; // casas fixas pedidas pelo arquivo
+    expect([fmtNum(2 * 0.0179 * 25 * 12 / 4, duas), fmtNum(-2.685, duas), fmtNum(0.125, duas), fmtNum(5, { decimals: 3, sep: '.' })]).toEqual(['2,69', '-2,69', '0,13', '5.000']);
     expect(prettyUnit('(ohm mm^2) / m')).toBe('Ω·mm²/m');
   });
 });
@@ -117,7 +121,7 @@ describe('funções nativas', () => {
     expect(v('det([[1, 2], [3, 4]])').value).toBeCloseTo(-2);
   });
   it('[F2-10] root com unidades', () => {
-    expect(v('root(g, 1 m)', ['g(x) := x^2 - 4 m^2']).text).toBe('2,00 m');
+    expect(v('root(g, 1 m)', ['g(x) := x^2 - 4 m^2']).text).toBe('2 m');
   });
 });
 
@@ -135,13 +139,13 @@ describe('exemplos da seção 3', () => {
   it('[F2-07] cabos-cc: 1,79 V, 0,45 % e APROVADO', () => {
     const r = evaluate(inputFrom('calculos/cabos-cc.prsm'));
     expect(r.libErrors).toEqual([]);
-    expect(r.blocks.trecho.filter((l) => l.kind === 'eval').map((l) => l.text)).toEqual(['1,79 V', '0,45 %']);
-    expect(r.blocks.criterio[0]).toMatchObject({ status: 'ok', text: '0,45 %', limit: '1 %' });
+    expect(r.blocks.trecho.filter((l) => l.kind === 'eval').map((l) => l.text)).toEqual(['1,79 V', '0,4475 %']);
+    expect(r.blocks.criterio[0]).toMatchObject({ status: 'ok', text: '0,4475 %', limit: '1 %' });
   });
 
-  it('[F3-01] [F3-05] string-3 (ordem y, x): 3,29 V, 0,82 %', () => {
+  it('[F3-01] [F3-05] string-3 (ordem y, x): 3,2936 V, 0,8234 %', () => {
     const r = evaluate(inputFrom('calculos/string-3.prsf', byPosition));
-    expect(r.blocks.resultado.map((l) => l.text)).toEqual(['3,29 V', '0,82 %']);
+    expect(r.blocks.resultado.map((l) => l.text)).toEqual(['3,2936 V', '0,8234 %']);
   });
 });
 
@@ -156,8 +160,8 @@ describe('ADENDO 02: gráfico e partes do resultado', () => {
   });
 
   it('[B10-08] resultado traz número e unidade separados', () => {
-    expect(last(['ΔV(25 m, 12 A, 6 mm^2) = ? mV'])).toMatchObject({ numText: '1790,00', unitRaw: 'mV' });
-    expect(last(['3.29 V / 400 V = ? %'])).toMatchObject({ numText: '0,82', unitRaw: '%' });
+    expect(last(['ΔV(25 m, 12 A, 6 mm^2) = ? mV'])).toMatchObject({ numText: '1790', unitRaw: 'mV' });
+    expect(last(['3.29 V / 400 V = ? %'])).toMatchObject({ numText: '0,8225', unitRaw: '%' });
   });
 
   it('[F3-09] margem de ATENÇÃO lida do config.yaml e do atributo: "20 %", "12,5%", 20; fora de 0 a 100 % não vale', () => {

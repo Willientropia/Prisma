@@ -87,12 +87,17 @@ export function MathLine(props: Props) {
   const [invalid, setInvalid] = useState(false);
   const [unitEdit, setUnitEdit] = useState(false);
   const live = useRef(0);
+  // A6-1 (ADENDO 06, 1.2): a região é reclassificada a cada edição, pelo que está no campo agora.
+  // cleared: a expressão foi toda apagada, então a avaliação antiga acabou (nada dela vai para a linha nova);
+  // pending: o campo está vazio ou incompleto, então o resultado antigo some na hora.
+  const cleared = useRef(false);
+  const [pending, setPending] = useState(false);
   const set = useWorkspace((s) => s.set);
 
   // o campo mostra a expressão; o resultado fica fora dele
   const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : `\\text{${code.trim().replace(/[\\{}]/g, '')}}`;
   // linha que mostra resultado: avaliação ("x = ?") ou definição com "= ?" (ADENDO 05, E2.1)
-  const shows = parsed?.kind === 'eval' || (parsed?.kind === 'def' && !!parsed.show);
+  const shows = !pending && (parsed?.kind === 'eval' || (parsed?.kind === 'def' && !!parsed.show));
   const evalUnit = parsed?.kind === 'eval' || parsed?.kind === 'def' ? parsed.unit : undefined;
   const evalConv = parsed?.kind === 'eval' || parsed?.kind === 'def' ? parsed.conv : undefined; // conversão por expressão (E4.3)
 
@@ -101,8 +106,10 @@ export function MathLine(props: Props) {
     if (!latex.trim()) return '';
     let l: Line;
     try { l = latexToLine(latex); } catch { return null; }
-    if ((asEval || parsed?.kind === 'eval') && l.kind === 'expr') l = { kind: 'eval', expr: l.expr, unit: evalUnit, conv: evalConv };
-    if (l.kind === 'def' && (asEval || (parsed?.kind === 'def' && parsed.show))) l = { ...l, show: true, unit: evalUnit, conv: evalConv };
+    const old = cleared.current ? null : parsed; // sem resto da avaliação apagada
+    const [unit, conv] = old ? [evalUnit, evalConv] : [undefined, undefined];
+    if ((asEval || old?.kind === 'eval') && l.kind === 'expr') l = { kind: 'eval', expr: l.expr, unit, conv };
+    if (l.kind === 'def' && (asEval || (old?.kind === 'def' && old.show))) l = { ...l, show: true, unit, conv };
     return lineToLinear(l) + (comment ? ` ${comment.trim()}` : '');
   };
 
@@ -114,17 +121,24 @@ export function MathLine(props: Props) {
   };
 
   useEffect(() => () => clearTimeout(live.current), []);
+  useEffect(() => { cleared.current = false; setPending(false); }, [raw]); // a linha mudou (gravação, desfazer, outra visão): o estado de edição recomeça
 
   const onInput = (latex: string) => {
     clearTimeout(live.current);
-    live.current = window.setTimeout(() => { const n = toRaw(latex, false); if (n !== null && n !== '') write(n); }, LIVE_MS);
+    const n = toRaw(latex, false);
+    if (n === '') cleared.current = true;
+    setPending(n === null || n === '');
+    live.current = window.setTimeout(() => { if (n !== null && n !== '') { write(n); cleared.current = false; } }, LIVE_MS);
   };
 
   const onCommit = (latex: string, how: Commit) => {
     clearTimeout(live.current);
     // depois do "=", o que se digita vai para o marcador de conversão (ADENDO 05, E2.1 e E8-08)
-    if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { holdKeys(); setUnitEdit(true); } return; }
-    const ok = write(toRaw(latex, false));
+    if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { cleared.current = false; setPending(false); holdKeys(); setUnitEdit(true); } return; }
+    const next = toRaw(latex, false);
+    if (next === null && cleared.current && how === 'blur') { cleared.current = false; setPending(false); props.onWrite(''); return; } // saiu com o que sobrou incompleto: a avaliação apagada não volta
+    const ok = write(next);
+    cleared.current = false; setPending(false); // saiu: vale o que está gravado; sem gravação, o resultado antigo (ainda no arquivo) volta
     if (!ok && how !== 'blur') { set({ status: 'Expressão incompleta: termine ou apague antes de sair' }); return; }
     if (how === 'enter' || how === 'shift-enter') props.onEnter?.(how === 'shift-enter');
     if (how === 'escape') props.onExit?.();

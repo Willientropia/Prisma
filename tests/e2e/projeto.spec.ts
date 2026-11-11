@@ -17,7 +17,7 @@ test('[A9-07] criar projeto gera .prsp e .gitignore; mover a pasta e abrir o .pr
   await expect(panel).toContainText('Projeto: Usina Boa Vista');
   await expect(panel).not.toContainText('não encontrado');
   await panel.getByRole('button', { name: /cabos-cc\.prsm/ }).dblclick();
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
 });
 
 test('[A9-08] arquivo listado no .prsp e apagado do disco aparece como "não encontrado"', async ({ page }) => {

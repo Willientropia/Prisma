@@ -44,7 +44,7 @@ test('[A9-06] arquivo com CRLF e BOM abre normalmente e é salvo em UTF-8 sem BO
   const raw = (await dev(page).read(file))!;
   expect(raw.startsWith('\uFEFF') && raw.includes('\r\n')).toBe(true);
   await dev(page).open(file);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await page.keyboard.press('Control+s');
   await expect(page.locator('footer')).toContainText('Salvo');
   const saved = (await dev(page).read(file))!;

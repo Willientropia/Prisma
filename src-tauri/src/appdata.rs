@@ -10,7 +10,7 @@ use tauri::{AppHandle, Manager};
 const APP: &str = "Prisma";
 const CONFIG: &str = "# Configuração do Prisma
 unidades: SI
-casas_decimais: 2
+casas_decimais: 4
 separador_decimal: \",\"
 motor_latex: tectonic
 tema: grafite-violeta

@@ -81,7 +81,7 @@ const handlers: Record<string, (a: Record<string, unknown>) => unknown> = {
     return file;
   },
   app_paths: () => ({ docs: APP_DOCS, libraries: `${APP_DOCS}/Bibliotecas`, models: `${APP_DOCS}/Modelos`, skills: `${APP_DOCS}/Skills`, factory: FACTORY }),
-  config_read: () => '# Configuração do Prisma\nunidades: SI\ncasas_decimais: 2\nseparador_decimal: ","\nmotor_latex: tectonic\ntema: grafite-violeta\nverificacao:\n  margem_atencao: 20 %\n',
+  config_read: () => '# Configuração do Prisma\nunidades: SI\ncasas_decimais: 4\nseparador_decimal: ","\nmotor_latex: tectonic\ntema: grafite-violeta\nverificacao:\n  margem_atencao: 20 %\n',
   library_files: () => ({
     user: [...disk.keys()].filter((k) => key(dir(k)) === key(`${APP_DOCS}/Bibliotecas`) && /\.prsl$/i.test(k)).sort(),
     factory: [...disk.keys()].filter((k) => key(dir(k)) === key(`${FACTORY}/bibliotecas`) && /\.prsl$/i.test(k)).sort(),
