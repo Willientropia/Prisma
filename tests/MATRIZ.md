@@ -17,6 +17,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Adendo 04: posição das abas | D6 | concluída |
 | Adendo 03: testes | C9, C7 | concluída |
 | Bugs corrigidos | BUG | concluída |
+| Auditoria Fable, lote A: travamentos do editor | T01, T02 | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
@@ -197,3 +198,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-005 | Na folha, "ir <nome>" não achava arquivo da mesma pasta sem projeto aberto (a pasta nunca era listada) | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-006 | Abrir um .prsm de 1 MB levava 728 ms: o editor de texto serializava o Markdown inteiro ao montar | tests/e2e/desempenho.spec.ts | e2e | ok |
 | BUG-007 | O i imaginário da tela (mathbf{i}) voltava para o arquivo como "mathbf*i" | tests/golden/conversao.yaml | unit | ok |
+| T01-01 | `.` solto no campo (`2.`, `x.`, `.`, `Relação.`, `batata.`) não trava o conversor: termina em menos de 100 ms, com resultado ou erro de sintaxe | src/format/mathlinear.test.ts | unit | ok |
+| BUG-008 | Digitar `.` sem dígito depois (`2.`) travava o editor em laço infinito (átomo numérico sem progresso) | src/format/mathlinear.test.ts | unit | ok |
+| T02-01 | Nome com dígito (`R1`, `I1`, `xy2pol`, `sys2mat`, `log10`) volta do campo sem virar produto: ida e volta idêntica | tests/golden/conversao.yaml | unit | ok |
+| BUG-009 | Nome com dígito no campo matemático virava produto ao confirmar (`R1` gravava `R*1`) | tests/golden/conversao.yaml | unit | ok |

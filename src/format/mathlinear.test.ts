@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { latexToLine, lineToLinear, parseLinear, toLatex, toLinear, unitFromMathjs } from './mathlinear';
@@ -53,5 +54,26 @@ describe('conversor: regras', () => {
     expect(unitFromMathjs('kWh')).toBe('kWh');
     expect(latexToLine('x=?\\,\\class{u}{\\mathrm{mV}}')).toEqual(parseLinear('x = ? mV'));
     expect(lineToLinear(parseLinear('x  =  ?  V'))).toBe('x = ? V');
+  });
+});
+
+// T01 / BUG-008: "." solto travava o conversor em laço infinito. Cada entrada roda num processo
+// próprio com prazo, porque um laço síncrono não pode ser interrompido dentro do vitest.
+describe('[T01-01][BUG-008] ponto solto não trava', () => {
+  for (const s of ['2.', 'x.', '.', 'Relação.', 'batata.', '2{,}']) {
+    it(JSON.stringify(s), () => {
+      const code = `import { toLinear, MathSyntaxError } from './src/format/mathlinear'; const t0 = performance.now(); try { toLinear(${JSON.stringify(s)}); } catch (e) { if (!(e instanceof MathSyntaxError)) throw e; } console.log(performance.now() - t0);`;
+      const r = spawnSync(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', code], { cwd: ROOT, timeout: 5000, encoding: 'utf8' });
+      expect(r.error, 'travou').toBeUndefined();
+      expect(r.status, r.stderr).toBe(0);
+      expect(Number(r.stdout.trim())).toBeLessThan(100);
+    });
+  }
+});
+
+describe('[T02-01] nome com dígito', () => {
+  it('R1, I1, xy2pol, sys2mat e log10 fazem ida e volta e não viram produto', () => {
+    for (const l of ['R1 := 5', 'I1 + I2', 'xy2pol(z)', 'sys2mat(v)', 'log10(x)', '2*R1']) expect(toLinear(toLatex(l))).toBe(l);
+    expect(toLinear('2R1')).toBe('2*R1'); // digitado: o dígito não vira unidade nem produto
   });
 });
