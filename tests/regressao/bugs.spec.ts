@@ -1,4 +1,5 @@
 // Regressão: cada bug corrigido ganha um teste que falhava antes da correção (CLAUDE.md, ADENDO 03 C7).
+import type { Page } from '@playwright/test';
 import { expect, test } from '../e2e/fixtures';
 import { CALC, dev, focusField, resultTexts, start, tabs } from '../e2e/helpers';
 
@@ -58,4 +59,43 @@ test('[BUG-005] na folha, "ir <nome>" acha o arquivo da mesma pasta sem projeto 
   await cmd.fill('ir cabos-cc');
   await cmd.press('Enter');
   await expect(tabs(page).last()).toContainText('cabos-cc.prsm');
+});
+
+// F03 (AUDITORIA B5/B6): documento somente leitura (versao_formato maior que o suportado) recusa a edição,
+// então o campo novo nunca monta; antes, o teclado ficava preso para sempre.
+const READONLY = `${CALC}/futuro`;
+const listenKeys = (page: Page) => page.evaluate(() => {
+  const w = window as unknown as { __kd: boolean[] };
+  w.__kd = [];
+  addEventListener('keydown', (e) => { setTimeout(() => w.__kd.push(e.defaultPrevented), 0); /* depois de todos os ouvintes */ }, true); // captura: o ouvinte de holdKeys para a propagação
+});
+const lastPrevented = (page: Page) => page.evaluate(() => { const k = (window as unknown as { __kd: boolean[] }).__kd; return k[k.length - 1]; });
+
+test('[BUG-012] [F03-01] folha cuja região nova não monta não engole o teclado para sempre', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${READONLY}.prsf`, '---\ntipo: folha\ntitulo: Futuro\nbibliotecas: []\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 99\n---\n');
+  await dev(page).open(`${READONLY}.prsf`);
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.press('a'); // tenta criar região: recusada, o campo nunca monta
+  await listenKeys(page);
+  await page.keyboard.press('b');
+  expect(await lastPrevented(page)).toBe(true); // ainda dentro do prazo, a tecla espera o campo
+  await page.waitForTimeout(2300);
+  await page.keyboard.press('Control+b');
+  expect(await lastPrevented(page)).toBe(false); // prazo vencido: a folha voltou a tratar as teclas
+});
+
+test('[BUG-012] [F03-02] caderno cuja linha nova não monta solta o teclado do app em até 1 s', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${READONLY}.prsm`, '---\ntipo: caderno\ntitulo: Futuro\nbibliotecas: []\nunidades: SI\nversao_formato: 99\n---\n\n# Futuro\n\n```calc\nx := 1\n```\n');
+  await dev(page).open(`${READONLY}.prsm`);
+  await focusField(page, page.locator('article math-field').first());
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter'); // holdKeys(), mas a edição é recusada e nenhum campo monta
+  await listenKeys(page);
+  await page.keyboard.press('Control+b');
+  expect(await lastPrevented(page)).toBe(true);
+  await page.waitForTimeout(1300);
+  await page.keyboard.press('Control+b');
+  expect(await lastPrevented(page)).toBe(false);
 });
