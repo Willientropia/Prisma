@@ -1,6 +1,6 @@
 // Regressão: cada bug corrigido ganha um teste que falhava antes da correção (CLAUDE.md, ADENDO 03 C7).
 import { expect, test } from '../e2e/fixtures';
-import { CALC, dev, focusField, resultTexts, start, tabs } from '../e2e/helpers';
+import { CALC, DOCS, dev, focusField, resultTexts, start, tabs } from '../e2e/helpers';
 
 test('[BUG-001] Backspace numa linha vazia do caderno apaga só ela, não a linha de baixo', async ({ page }) => {
   await start(page);
@@ -76,4 +76,27 @@ test('[BUG-011] arrastar a região da folha para a esquerda e para cima a move; 
   await expect.poll(() => dev(page).text()).toContain('```calc {#s x=180 y=40}');
   await drag(-400, -400); // passa da borda: trava em 0
   await expect.poll(() => dev(page).text()).toContain('```calc {#s x=0 y=0}');
+});
+
+test('[BUG-012] arrastar várias regiões selecionadas move todas e não corrompe o arquivo', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const reg = (id: string, y: number, body: string) => `${f}calc {#${id} x=60 y=${y}}\n${body}\n${f}\n`;
+  const head = '---\ntipo: folha\ntitulo: Arrasto\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n';
+  const file = `${DOCS}/arrasto.prsf`;
+  await dev(page).write(file, `${head}${reg('a', 60, 'a := 1')}\n${reg('b', 120, 'b := 2')}\n${reg('c', 180, 'c := 3')}`);
+  await dev(page).open(file);
+  const sheet = (await page.getByLabel('Folha').boundingBox())!;
+  await page.mouse.move(sheet.x + 10, sheet.y + 20); // laço em volta das 3 regiões
+  await page.mouse.down();
+  await page.mouse.move(sheet.x + 400, sheet.y + 300, { steps: 5 });
+  await page.mouse.up();
+  const box = (await page.locator('[data-region="a"]').boundingBox())!;
+  await page.mouse.move(box.x + 1, box.y + 1);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 41, box.y + 21, { steps: 5 });
+  await page.mouse.up();
+  // x passa de 2 para 3 dígitos: a linha de abertura de cada região muda de tamanho
+  const moved = (id: string, y: number, body: string) => `${f}calc {#${id} x=100 y=${y}}\n${body}\n${f}\n`;
+  await expect.poll(() => dev(page).text()).toBe(`${head}${moved('a', 80, 'a := 1')}\n${moved('b', 140, 'b := 2')}\n${moved('c', 200, 'c := 3')}`);
 });

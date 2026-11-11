@@ -240,7 +240,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   };
 
   const moveRegions = (ids: string[], dx: number, dy: number) => {
-    for (const r of fresh().filter((x) => ids.includes(x.id))) {
+    // de trás para a frente: a linha de abertura muda de tamanho (x=60 vira x=100) e deslocaria as posições seguintes
+    for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) {
       const first = lines(r.seg.raw)[0];
       edit(doc.id, r.start, r.start + first.length, withPos(first, pos(num(r.seg, 'x') + dx), pos(num(r.seg, 'y') + dy)));
     }

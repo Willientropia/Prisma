@@ -82,3 +82,9 @@
 - **Teste:** `BUG-011` em `tests/regressao/bugs.spec.ts` (e2e). Arrasta a região `s` de `string-3.prsf` para a esquerda e para cima (`x=180 y=40`) e depois além da borda (trava em `x=0 y=0`). Falhava antes da correção.
 - **Verificação:** tipos, lint, Vitest, Rust, cobertura e `check-matriz` ok. No `npm run verify` rodado com três sessões em paralelo, o Playwright teve duas falhas só de tempo: C7-02 com 518 ms (limite 500) e B10-07 com 157 ms (limite 150). Rodados sozinhos, `edicao-visual`, `desempenho` e `bugs` passaram. A instabilidade é a do ticket F00; nenhum teste foi alterado.
 - **Pendente:** nada do F01. O `verify` completo não foi repetido depois do ajuste final da matriz (só `check-matriz` e o `bugs.spec.ts`).
+## F02 (TICKETS-FOLHA, lote F1): várias regiões selecionadas não arrastam juntas
+
+- **Causa:** `moveRegions` (`src/editors/folha/Folha.tsx`) lê as posições de todas as regiões uma só vez e edita o texto região por região, de cima para baixo. A edição troca a linha de abertura (`x=60` vira `x=100`), que muda de tamanho; as posições das regiões seguintes ficam deslocadas e o arquivo corrompe (cercas coladas, `}` solto). Só aparece quando o número de dígitos de `x` ou `y` muda.
+- **Correção:** as edições passam a ser aplicadas de trás para a frente, como em `removeRegions`. Uma linha.
+- **Teste:** `BUG-012` em `tests/regressao/bugs.spec.ts`: seleciona 3 regiões por laço, arrasta pela moldura (+40 px em x, +20 em y, x de 2 para 3 dígitos) e confere o arquivo inteiro. Falhava antes da correção.
+- **Pendente:** nada deste ticket. O Playwright reaproveita qualquer servidor aberto em `localhost:1420` (`reuseExistingServer`); com várias sessões em worktrees diferentes, os testes podem rodar contra o código de outra.

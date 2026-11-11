@@ -209,3 +209,4 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F00-02 | Os testes de desempenho C7-01 e C7-02 só rodam no `verify:full` e não foram apagados | tests/meta/meta.test.ts | meta | ok |
 | F00-03 | O passo 4 do CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push | tests/meta/meta.test.ts | meta | ok |
 | BUG-011 | Região da folha só andava para a direita/baixo: `snap()` limitava o deslocamento do arrasto a >= 0; agora deslocamento negativo vale e só a posição final é limitada a >= 0 | tests/regressao/bugs.spec.ts | e2e | ok |
+| BUG-012 | Arrastar 3 regiões selecionadas (x de 2 para 3 dígitos) move as 3 e o arquivo continua íntegro; antes corrompia: posições do texto calculadas antes da 1ª edição (ticket F02) | tests/regressao/bugs.spec.ts | e2e | ok |
