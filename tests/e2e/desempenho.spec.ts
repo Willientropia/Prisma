@@ -9,7 +9,7 @@ test('[C7-01] recálculo da string-3 em até 150 ms depois da última tecla', as
   await focusField(page, page.locator('[data-region="s"] math-field'));
   await page.keyboard.press('Control+a');
   await armTimer(page, ['2,20V', '0,55%']);
-  await page.keyboard.type('S:6mm^2', { delay: 30 });
+  await page.keyboard.type("S:6'mm^2", { delay: 30 });
   await expect.poll(() => timerMs(page)).not.toBeNull();
   const ms = (await timerMs(page))!;
   console.log(`C7-01: recálculo em ${ms.toFixed(0)} ms`);

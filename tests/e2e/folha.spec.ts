@@ -36,7 +36,10 @@ test('[F3-05] a ordem é por posição: região movida para baixo dos resultados
   await page.mouse.move(box.x + 1, box.y + 120, { steps: 5 });
   await page.mouse.move(box.x + 1, box.y + 230, { steps: 5 });
   await page.mouse.up();
-  await expect(page.locator('[data-region="resultado"] .mline-error')).toHaveCount(2);
+  // E3.3: S ficou depois dos resultados e não é mais a unidade siemens; os 2 resultados ficam em aberto, sem erro
+  await expect(page.locator('[data-region="resultado"] .mresult-symbolic')).toHaveCount(2);
+  await expect(page.locator('[data-region="resultado"] [title="S ainda não foi definido"]')).toHaveCount(2);
+  await expect(page.locator('[data-region="resultado"] .mline-error')).toHaveCount(0);
   expect(Number(/\{#s x=\d+ y=(\d+)\}/.exec((await dev(page).text())!)?.[1])).toBeGreaterThan(230); // abaixo de #resultado
 });
 

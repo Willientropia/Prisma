@@ -25,7 +25,7 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | A6-1 | Parte 1: estrutura da região (um só `=`, reclassifica a cada edição) e formato padrão (4 casas, sem zeros) | Sonnet [R] | **mostrar a lista de valores que mudam e esperar autorização antes de mexer em teste ou imagem** |
 | A6-2 | Parte 2.1 e 2.2: tabela de atalhos e funções digitadas pelo nome viram estrutura | Sonnet | um caso por linha em `teclado.yaml` |
 | A6-3 | Parte 2.3 a 2.5: Espaço amplia a seleção, `Ctrl+.`, comportamentos conferidos no SMath | Sonnet [R] | 2.5 corrige o E8-08 |
-| A6-4 | Parte 3: assistente dinâmico (lista ao digitar, Tab/Enter aceita, unidades em cor própria) | opusplan [R] | liga com a decisão do F04 |
+| A6-4 | Parte 3: assistente dinâmico (lista ao digitar, Tab/Enter aceita, unidades em cor própria) | opusplan [R] | liga com a decisão do F04. **No SMath (usuário, 11/11):** digitar `v` abre o assistente com a variável v (se existir) antes da unidade volt; Tab ou Enter aceita. A unidade também entra pelo campo de unidade (▫) do resultado. Quando o assistente existir, os testes de unidade ganham uma versão digitando com o assistente, além da versão com `'`. Conferir com o ADENDO 06 3.5, que diz que Enter não aceita (o texto do usuário é posterior; decidir no A6-4). Sem aceitar a sugestão, o nome é variável (F04), não "nome definido vence unidade" |
 | A6-5 | Parte 4.1, 4.2, 4.7, 4.8: guias e guia Matemática (operadores, integral, derivada, raiz…) | Sonnet [R] | seguir a referência visual exata |
 | A6-6 | Parte 4.3 a 4.5: Matrizes, Lógica e programação, Símbolos (letras gregas) | Sonnet | |
 | A6-7 | Parte 4.9: catálogo de funções (`Ctrl+E`) e de unidades (`Ctrl+W`) | Sonnet | |
@@ -54,3 +54,4 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 |---|------|--------|
 | F13 | Levantar o que falta para a folha igualar o SMath no uso do usuário → `docs/FOLHA-CHECKLIST.md` (seleção, arrasto, copiar/colar, desfazer, áreas, teclado, formatação) | Opus, sessão curta, só ADENDO-05 e `Folha.tsx` |
 | F14+ | Um ticket por item do checklist | Sonnet |
+| F-U1 | Unidades do usuário em biblioteca (ex.: `kWp` como apelido de `kW`). **Pendente:** o usuário confirmar no SMath como ele define unidade nova. Hoje as unidades extras só vêm de `src/engine/math.ts` (`createUnit`: Wp, dia, rad, deg, rpm) | Opus |

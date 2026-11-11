@@ -4,7 +4,8 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { blocks, parse } from './doc';
-import { importSm } from './smath';
+import { fromRpn, importSm } from './smath';
+import { nodeToLinear } from './mathlinear';
 import { definedBefore, definedNames } from './views';
 import { evaluate } from '../engine/evaluate';
 import { DEFAULT_FORMAT, shadowNotice } from '../engine/format';
@@ -111,5 +112,18 @@ describe('variável do laço e símbolos próprios', () => {
     expect(shadowNotice(seen, 'd1', r.shadow)).toBeUndefined();
     expect(shadowNotice(seen, 'd2', r.shadow)).toBeDefined();
     expect(shadowNotice(seen, 'd1', { name: 'e', value: '2' })?.startsWith('e agora é uma variável (vale 2). A constante de Euler')).toBe(true);
+  });
+});
+
+// F04-03: unidade solta do SMath (style="unit" sem número antes) vira unidade explícita na folha
+describe('[F04-03] unidade solta importada do SMath', () => {
+  const op = (v: string, style?: string) => ({ type: 'operand', args: 0, v, ...(style ? { style } : {}) });
+  it('[F04-03] A/100 vira \'A/100; 128 volt * continua 128 volt', () => {
+    const solta = fromRpn([op('A', 'unit'), op('100'), { type: 'operator', args: 2, v: '/' }]);
+    expect(nodeToLinear(solta.node)).toBe("'A/100");
+    const medida = fromRpn([op('128'), op('volt', 'unit'), { type: 'operator', args: 2, v: '*' }]);
+    expect(nodeToLinear(medida.node)).toBe('128 volt');
+    const produto = fromRpn([op('x'), op('m', 'unit'), { type: 'operator', args: 2, v: '*' }]);
+    expect(nodeToLinear(produto.node)).toBe("x*'m");
   });
 });

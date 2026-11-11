@@ -11,8 +11,8 @@ async function typeInNewSheet(page: Page, keys: string, at = { x: 100, y: 100 })
   await page.keyboard.type(keys, { delay: 40 });
 }
 
-test('[B10-01] S:4mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava S := 4 mm^2', async ({ page }) => {
-  await typeInNewSheet(page, 'S:4mm^2');
+test(`[B10-01] S:4'mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava S := 4 mm^2`, async ({ page }) => {
+  await typeInNewSheet(page, "S:4'mm^2");
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('S := 4 mm^2');
   // forma canônica na tela (o MathLive pode guardar ^2 ou ^{2})
@@ -25,8 +25,8 @@ test('[B10-01] S:4mm^2 Enter vira S ≔ 4 mm² (mm² em azul) e o arquivo grava 
   expect(unit.color).toBe('rgb(143, 180, 255)'); // --math-unit
 });
 
-test('[B10-02] V_mp:400V vira V com índice reto mp; arquivo V_mp := 400 V', async ({ page }) => {
-  await typeInNewSheet(page, 'V_mp:400V');
+test(`[B10-02] V_mp:400'V vira V com índice reto mp; arquivo V_mp := 400 V`, async ({ page }) => {
+  await typeInNewSheet(page, "V_mp:400'V");
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('V_mp := 400 V');
   expect((await fieldValues(page))[0]).toContain('V_{\\mathrm{mp}}');
@@ -47,8 +47,8 @@ test('[B10-04] r Ctrl+G vira ρ', async ({ page }) => {
   await expect.poll(async () => (await fieldValues(page))[0]).toContain('\\rho');
 });
 
-test('[B10-05] I:11,5A mostra I ≔ 11,5 A e grava I := 11.5 A', async ({ page }) => {
-  await typeInNewSheet(page, 'I:11,5A');
+test(`[B10-05] I:11,5'A mostra I ≔ 11,5 A e grava I := 11.5 A`, async ({ page }) => {
+  await typeInNewSheet(page, "I:11,5'A");
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('I := 11.5 A');
   const shown = await page.evaluate(() => document.querySelector('math-field')!.shadowRoot!.textContent ?? '');
@@ -72,7 +72,7 @@ test('[B10-07] mudar S de 4 para 6 atualiza para 2,20 V e 0,55 % logo depois da 
   await focusField(page, page.locator('[data-region="s"] math-field'));
   await page.keyboard.press('Control+a');
   await armTimer(page, ['2,20V', '0,55%']);
-  await page.keyboard.type('S:6mm^2', { delay: 30 });
+  await page.keyboard.type("S:6'mm^2", { delay: 30 });
   await expect.poll(() => resultTexts(page)).toEqual(['2,20V', '0,55%']);
   const ms = (await timerMs(page))!; // medido dentro da página, da última tecla ao resultado novo
   console.log(`B10-07: resultado novo ${ms.toFixed(0)} ms depois da última tecla`);

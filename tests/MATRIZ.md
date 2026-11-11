@@ -19,6 +19,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Bugs corrigidos | BUG | concluída |
 | Auditoria Fable, lote A: travamentos do editor | T01, T02, T03 | concluída |
 | Auditoria Fable, lote F1: teclado preso na folha | F03 | concluída |
+| Auditoria Fable, lote F1: nome é variável, unidade explícita | F04 | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
@@ -214,3 +215,8 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F03-01 | Folha: se a região nova não monta (folha somente leitura), o teclado da folha volta ao normal em até 2 s (`creating` com prazo) | tests/regressao/bugs.spec.ts | e2e | ok |
 | F03-02 | Caderno: se a linha nova não monta (caderno somente leitura), `holdKeys` solta o teclado do app em até 1 s | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-013 | Teclado preso: `creating` da folha e `holdKeys` sem prazo engoliam as teclas para sempre quando o campo novo não montava | tests/regressao/bugs.spec.ts | e2e | ok |
+| BUG-014 | Nome solto que coincide com unidade do math.js (`L`, `m`, `b`, `S`) é variável: `s := 10*L` com L indefinido fica em aberto (`10*L`) na folha e dá "Variável não definida: L" no caderno; não vira litro, metro nem bit | src/engine/engine.test.ts, tests/regressao/bugs.spec.ts | unit, e2e | ok |
+| F04-01 | Digitar `9j` ou `2x` (número e letras sem `'`) grava multiplicação: `9*j`, `2*x`; `S:4mm^2` grava `S := 4*mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
+| F04-02 | Unidade explícita: `número espaço unidade` continua unidade; unidade sem número ganha `'` (`x*'m`, `'A/100`) e faz ida e volta; `4'mm^2` grava `4 mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
+| F04-03 | Unidade solta vinda do `.sm` (`style="unit"` sem número antes) grava `'unidade` na folha convertida | src/format/smath.test.ts | unit | ok |
+| F04-04 | Arquivos antigos abrem iguais: o mesmo texto e o mesmo resultado (`L := 25 m`, `0.0179 Ω*mm^2/m`, `= ? mV`); `2 x` legado com x variável continua 2·x | src/engine/engine.test.ts, src/format/mathlinear.test.ts | unit | ok |

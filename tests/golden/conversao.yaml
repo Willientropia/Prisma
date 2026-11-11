@@ -31,12 +31,12 @@
 - {id: B10-10, linear: "P := 2^(n + 1)"}
 
 # --- LaTeX produzido pelo MathLive ao digitar (antes da forma canônica) ---
-- {id: B10-01, linear: "S := 4 mm^2", digitado: 'S\coloneq4mm^2'}
+- {id: B10-01, linear: "S := 4 mm^2", digitado: 'S\coloneq4\class{u}{\mathrm{mm}}^{2}'}
 - {id: B10-01, linear: "4 mm^2", digitado: '4\,\class{u}{\mathrm{mm}}^{2}'}
-- {id: B10-02, linear: "V_mp := 400 V", digitado: 'V_{mp}\coloneq400V'}
+- {id: B10-02, linear: "V_mp := 400 V", digitado: 'V_{mp}\coloneq400\class{u}{\mathrm{V}}'}
 - {id: B10-03, linear: "(a + b)/2", digitado: '\frac{\left(a+b\right)}{2}'}
-- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11,5A'}
-- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11{,}5A'}
+- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11,5\class{u}{\mathrm{A}}'}
+- {id: B10-05, linear: "I := 11.5 A", digitado: 'I\coloneq11{,}5\class{u}{\mathrm{A}}'}
 - {id: B10-10, linear: "2*r*L*I/S", digitado: '2\cdot r\cdot L\cdot\frac{I}{S}'}
 - {id: B10-10, linear: "f(x, y)", digitado: 'f\left(x;y\right)'}
 - {id: B10-10, linear: "25 °C", digitado: '25\degree C'}
@@ -84,3 +84,8 @@
 - {id: BUG-010, linear: 'a := "um  dois   três"'}
 - {id: BUG-010, linear: 'a := "x+y = z"'}
 - {id: BUG-010, linear: 'a := "um dois"', digitado: 'a\coloneq\text{"um dois"}'}
+# F04: nome colado ao número é produto; unidade explícita (apóstrofo ou número + espaço)
+- {id: F04-01, linear: "9*j", digitado: '9j'}
+- {id: F04-01, linear: "2*x", digitado: '2x'}
+- {id: F04-02, linear: "x*'m", digitado: 'x\cdot\class{u}{\mathrm{m}}'}
+- {id: F04-02, linear: "'A/100", tela_contem: ['\class{u}{\mathrm{A}}']}
