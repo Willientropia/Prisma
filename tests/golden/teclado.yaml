@@ -99,3 +99,41 @@
   teclas: "k:x*'m{Enter}"
   linear: "k := x*'m"
   latex_contem: ['\class{u}{\mathrm{m}}']
+# A6-1 (ADENDO 06, 1.2; testes 06-01 a 06-04 do adendo = A6-01 a A6-04 aqui): a região tem uma estrutura, reclassificada a cada edição.
+# inicial: linha já gravada ("2+2 = ?"); definidos: nomes já definidos; raw_final: linha gravada no fim;
+# raw_sem: pedaços que a linha gravada não pode ter. sem_resultado: nenhum "= resultado" na tela; sair: tira o foco no fim.
+- id: A6-01
+  descricao: "2+2= apagado e s= : vira s ≔ □, sem resto da avaliação antiga"
+  contexto: folha
+  inicial: "2+2 = ?"
+  teclas: "{End}{Backspace}{Backspace}{Backspace}s="
+  sem_resultado: true
+  sair: true
+  raw_final: ""  # sai com s ≔ □ incompleto: a avaliação apagada não volta (uma definição sem lado direito não é gravável)
+  latex_contem: ['\coloneq']
+  latex_nao_contem: ['\class{u}']
+  tela_contem: ["≔"]
+- id: A6-02
+  descricao: "um = a mais numa avaliação não cria outro"
+  contexto: folha
+  inicial: "2 + 2 = ?"
+  teclas: "{End}="
+  raw_final: "2 + 2 = ?"
+  tela_nao_contem: ["≔", "=="]
+- id: A6-03
+  descricao: "s= com a unidade s e a variável s indefinida: definição, s variável"
+  contexto: folha
+  teclas: "s="
+  sem_resultado: true
+  latex_contem: ['\coloneq']
+  latex_nao_contem: ['\class{u}']
+  tela_contem: ["≔"]
+- id: A6-04
+  descricao: "x= apagado até o fim: região vazia, sem nenhum resto"
+  contexto: folha
+  inicial: "x = ?"
+  definidos: [x]
+  teclas: "{End}{Backspace}"
+  sem_resultado: true
+  sair: true
+  raw_final: ""

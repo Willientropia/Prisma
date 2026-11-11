@@ -56,6 +56,7 @@ export async function recalc(docId: string): Promise<void> {
   const { libs, info } = await loadLibs(ids, !!st.projectPathOf(doc.path), libErrors);
   const cfg = st.config;
   const base = {
+    ...DEFAULT_FORMAT, // modo, zeros à direita e limite do padrão novo (A6-1); a config só troca casas e separador
     decimals: typeof cfg.casas_decimais === 'number' ? cfg.casas_decimais : DEFAULT_FORMAT.decimals,
     sep: typeof cfg.separador_decimal === 'string' ? cfg.separador_decimal : DEFAULT_FORMAT.sep,
   };

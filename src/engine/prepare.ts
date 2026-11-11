@@ -10,7 +10,7 @@ export const blockKey = (segIndex: number) => `b${segIndex}`;
 
 /**
  * "exibicao:" no cabeçalho (ADENDO 05, E4.2): casas, modo (decimais | significativos), zeros_a_direita e
- * limite_exponencial. Sem ele, vale o formato de sempre do Prisma (arquivo novo não muda).
+ * limite_exponencial. Sem ele, vale o padrão do SMath (DEFAULT_FORMAT: 4 casas, sem zeros à direita; ADENDO 06, 1.3).
  */
 export function exibicao(x: unknown, base: FormatOpts = DEFAULT_FORMAT): FormatOpts {
   if (!x || typeof x !== 'object') return base;

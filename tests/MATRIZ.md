@@ -24,6 +24,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
 | Folha livre: verificação rápida (TICKETS-FOLHA) | F00 | concluída |
+| Adendo 06: teclado, assistente, ribbon e gráficos (lote F-A6) | A6 | em andamento |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -220,3 +221,8 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F04-02 | Unidade explícita: `número espaço unidade` continua unidade; unidade sem número ganha `'` (`x*'m`, `'A/100`) e faz ida e volta; `4'mm^2` grava `4 mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
 | F04-03 | Unidade solta vinda do `.sm` (`style="unit"` sem número antes) grava `'unidade` na folha convertida | src/format/smath.test.ts | unit | ok |
 | F04-04 | Arquivos antigos abrem iguais: o mesmo texto e o mesmo resultado (`L := 25 m`, `0.0179 Ω*mm^2/m`, `= ? mV`); `2 x` legado com x variável continua 2·x | src/engine/engine.test.ts, src/format/mathlinear.test.ts | unit | ok |
+| A6-01 | ADENDO 06 06-01: `2+2=`, apagar o `2+2`, `s=` dá `s ≔ □`, sem `= 1 s` e sem segundo `=` (a avaliação apagada não deixa resto na linha) | tests/golden/teclado.yaml | browser | ok |
+| A6-02 | ADENDO 06 06-02: `=` numa região que já é avaliação não cria outro `=` | tests/golden/teclado.yaml | browser | ok |
+| A6-03 | ADENDO 06 06-03: `s=` com a unidade s e a variável s indefinida dá definição, com s variável (itálico) | tests/golden/teclado.yaml | browser | ok |
+| A6-04 | ADENDO 06 06-04: apagar tudo numa avaliação deixa a região vazia, sem resultado e sem resto na linha | tests/golden/teclado.yaml | browser | ok |
+| A6-05 | ADENDO 06 1.3: formato padrão do resultado igual ao SMath: 4 casas, sem zeros à direita (2·7 = 14, 1/3 = 0,3333, 3,2936 V) | tests/golden/calculos.yaml, src/engine/engine.test.ts | unit | ok |

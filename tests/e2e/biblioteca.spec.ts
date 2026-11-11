@@ -67,7 +67,7 @@ test('[F4-02b] [F4-03] a função salva aparece na biblioteca eletrica e funcion
   await expect(page.locator('main h2')).toHaveText('P_perda(I, R)');
   await dev(page).write(`${DOCS}/perdas.prsf`, `---\ntipo: folha\ntitulo: Perdas\nbibliotecas: [eletrica]\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n${fence}calc {#p x=40 y=40}\nP_perda(10 A, 2 Ω) = ? W\n${fence}\n`);
   await dev(page).open(`${DOCS}/perdas.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['400,00W']);
+  await expect.poll(() => resultTexts(page)).toEqual(['400W']);
 });
 
 test('[F4-02c] função com o nome de uma de fábrica: vale a da extensão; sem a extensão volta a de fábrica', async ({ page }) => {
@@ -191,7 +191,7 @@ test('[F4-07] [F4-07a] biblioteca de fábrica: somente leitura, com cadeado, e b
 test('[F4-06] Ctrl+K e "Inserir função" buscam funções das bibliotecas e inserem a escolhida', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await page.getByRole('button', { name: 'Inserir função' }).click();
   const dlg = page.getByRole('dialog', { name: 'Inserir função' });
   await expect(dlg.getByRole('option')).toContainText(['Elétrica']);

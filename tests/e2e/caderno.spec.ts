@@ -5,7 +5,7 @@ import { CALC, DOCS, dev, resultTexts, start } from './helpers';
 test('[F2-07] [F4-01] cabos-cc mostra 1,79 V, 0,45 % e APROVADO (biblioteca Elétrica de fábrica)', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await expect(page.locator('article')).toContainText('APROVADO · limite 1 %');
   await expect(page.locator('aside').first()).toContainText(/Elétrica\s*v1\.4 · fábrica/);
 });

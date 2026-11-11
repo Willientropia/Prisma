@@ -20,14 +20,14 @@ test('[F0-11] tela inicial', async ({ page }) => {
 test('[F0-11] caderno cabos-cc, guia Início', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await shot(page, 'caderno-inicio.png');
 });
 
 test('[F0-11] caderno cabos-cc, guia Exibir', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await page.getByRole('tab', { name: 'Exibir', exact: true }).click();
   await shot(page, 'caderno-exibir.png');
 });
@@ -35,7 +35,7 @@ test('[F0-11] caderno cabos-cc, guia Exibir', async ({ page }) => {
 test('[F0-11] folha string-3 com resultados', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   await shot(page, 'folha.png');
 });
 
@@ -56,7 +56,7 @@ test('[F0-11] biblioteca eletrica com ΔV selecionada', async ({ page }) => {
 test('[F0-11] diálogo Exportar', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   const search = page.getByPlaceholder('Buscar comando ou função');
   await search.fill('Exportar');
   await search.press('Enter');
@@ -75,7 +75,7 @@ test('[F0-11] painel Projeto aberto', async ({ page }) => {
   await start(page);
   await dev(page).open(`${PROJ}/usina-boa-vista.prsp`);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await page.getByRole('tablist', { name: 'Painel esquerdo' }).getByRole('tab', { name: 'Projeto' }).click();
   await expect(page.locator('aside').first()).toContainText(/Arquivos\s*2/);
   await shot(page, 'projeto.png');

@@ -58,22 +58,22 @@ test(`[B10-05] I:11,5'A mostra I ≔ 11,5 A e grava I := 11.5 A`, async ({ page 
 test('[B10-06] string-3 sem clicar em nada: 3,29 V, 0,82 % e o gráfico com 4 seções e linha de limite', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const fig = page.locator('figure');
   await expect(fig.locator('canvas')).toHaveCount(1);
-  await expect(fig).toHaveAttribute('aria-label', /2,50: 1,32; 4,00: 0,82; 6,00: 0,55; 10,00: 0,33/);
+  await expect(fig).toHaveAttribute('aria-label', /2,5: 1,3174; 4: 0,8234; 6: 0,5489; 10: 0,3294/);
   await expect(fig).toContainText('limite 1 %');
 });
 
-test('[B10-07] mudar S de 4 para 6 atualiza para 2,20 V e 0,55 % logo depois da última tecla', async ({ page }) => {
+test('[B10-07] mudar S de 4 para 6 atualiza para 2,1957 V e 0,5489 % logo depois da última tecla', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   await focusField(page, page.locator('[data-region="s"] math-field'));
   await page.keyboard.press('Control+a');
-  await armTimer(page, ['2,20V', '0,55%']);
+  await armTimer(page, ['2,1957V', '0,5489%']);
   await page.keyboard.type("S:6'mm^2", { delay: 30 });
-  await expect.poll(() => resultTexts(page)).toEqual(['2,20V', '0,55%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['2,1957V', '0,5489%']);
   const ms = (await timerMs(page))!; // medido dentro da página, da última tecla ao resultado novo
   console.log(`B10-07: resultado novo ${ms.toFixed(0)} ms depois da última tecla`);
   expect(ms).toBeLessThanOrEqual(150);
@@ -82,7 +82,7 @@ test('[B10-07] mudar S de 4 para 6 atualiza para 2,20 V e 0,55 % logo depois da 
 test('[B10-08] marcador de unidade + mV converte para mV e grava = ? mV', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const first = page.locator('.mline').filter({ has: page.locator('.mresult-value') }).first();
   await first.hover();
   await first.locator('.unit-marker').click();
@@ -90,7 +90,7 @@ test('[B10-08] marcador de unidade + mV converte para mV e grava = ? mV', async 
   await page.keyboard.type('mV', { delay: 40 });
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('ΔV(L, I, S) = ? mV');
-  await expect.poll(() => resultTexts(page)).toEqual(['3293,60mV', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3293,6mV', '0,8234%']);
 });
 
 test('[B10-09] nenhum ":=", "^", "?" ou "_" na tela (caderno e folha)', async ({ page }) => {
@@ -113,7 +113,7 @@ test('[B10-09] nenhum ":=", "^", "?" ou "_" na tela (caderno e folha)', async ({
 test('[B10-11] clicar numa expressão e sair sem editar não muda nenhum pixel', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const region = page.locator('[data-region="entradas"]');
   await page.mouse.move(5, 5);
   const before = await region.screenshot();
@@ -129,7 +129,7 @@ test('[B10-11] clicar numa expressão e sair sem editar não muda nenhum pixel',
 test('[B7-01] no caderno, Enter cria a próxima linha; Backspace numa linha vazia apaga e volta', async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   const before = await dev(page).text();
   const lastInput = page.locator('article math-field').nth(4); // V_mp := 400 V
   await focusField(page, lastInput);

@@ -13,11 +13,11 @@
   descricao: queda de tensão CC, 4 mm²
   definicoes: ["ρ_cu := 0.0179 Ω*mm^2/m", "ΔV(L, I, S) := 2*ρ_cu*L*I/S"]
   expr: "ΔV(32 m, 11.5 A, 4 mm^2)"
-  esperado: {valor: 3.29, unidade: V, texto: "3,29 V"}
+  esperado: {valor: 3.29, unidade: V, texto: "3,2936 V"}
 - id: F2-03
   descricao: queda percentual
   expr: "3.29 V / 400 V"
-  esperado: {valor: 0.8225, unidade: "%", texto: "0,82 %"}
+  esperado: {valor: 0.8225, unidade: "%", texto: "0,8225 %"}
 - id: F2-04
   descricao: geração mensal
   definicoes: ["E_mes(P, HSP, PR) := P*HSP*PR*30 dia"]
@@ -59,11 +59,31 @@
 - id: F2-16
   descricao: casas fixas (2,20 V)
   expr: "2.2 V"
+  exibicao: {casas: 2, modo: decimais, zeros_a_direita: true, limite_exponencial: 5}
   esperado: {texto: "2,20 V"}
+- id: F2-16
+  descricao: padrão novo, sem zeros à direita (2,2 V)
+  expr: "2.2 V"
+  esperado: {texto: "2,2 V"}
 - id: F2-16
   descricao: arredondamento decimal (2,685 vira 2,69)
   expr: "2*0.0179*25*12/4 V"
+  exibicao: {casas: 2, modo: decimais, zeros_a_direita: true, limite_exponencial: 5}
   esperado: {texto: "2,69 V"}
+
+# A6-1 (ADENDO 06, 1.3): formato padrão igual ao do SMath, 4 casas sem zeros à direita
+- id: A6-05
+  descricao: 2·7 mostra 14, não 14,00
+  expr: "2*7"
+  esperado: {valor: 14, texto: "14"}
+- id: A6-05
+  descricao: 1/3 mostra 0,3333
+  expr: "1/3"
+  esperado: {texto: "0,3333"}
+- id: A6-05
+  descricao: 3,2936 V continua 3,2936 V
+  expr: "3.2936 V"
+  esperado: {texto: "3,2936 V"}
 
 # --- SPEC 8.6: funções nativas ---
 - id: F2-10
@@ -260,7 +280,7 @@
   folha: true
   definicoes: ["L := 1.5*10^-3", "C := 0.01*10^-6", "Z_0 := sqrt(L/C) = ?"]
   linha: 2
-  esperado: {valor: 387.3, texto: "387,30"}
+  esperado: {valor: 387.3, texto: "387,2983"}
 - id: E8-12
   descricao: função do usuário
   folha: true
@@ -329,7 +349,7 @@
   descricao: "conversão por unidade continua: = ? mV"
   expr: "3.2936 V"
   unidade: mV
-  esperado: {valor: 3293.6, texto: "3293,60 mV"}
+  esperado: {valor: 3293.6, texto: "3293,6 mV"}
 
 # --- ADENDO 05, item 5: vetores, matrizes e programação do SMath (índices a partir de 1) ---
 - id: E8-31

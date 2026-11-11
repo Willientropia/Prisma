@@ -6,7 +6,7 @@ import { CALC, DOCS, dev, fieldValues, focusField, resultTexts, start, tabs } fr
 test('[BUG-001] Backspace numa linha vazia do caderno apaga só ela, não a linha de baixo', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   const before = await dev(page).text();
   await focusField(page, page.locator('article math-field').nth(4)); // V_mp := 400 V
   await page.keyboard.press('End');
@@ -28,7 +28,7 @@ test('[BUG-002] teclas digitadas logo depois de criar uma região na folha não 
 test('[BUG-003] o marcador de unidade troca a unidade em vez de juntar ("VmV")', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const first = page.locator('.mline').filter({ has: page.locator('.mresult-value') }).first();
   await first.hover();
   await first.locator('.unit-marker').click();
@@ -42,14 +42,14 @@ test('[BUG-003] o marcador de unidade troca a unidade em vez de juntar ("VmV")',
 test('[BUG-004] pedir resultado com "=" e sair do campo mantém o "= ?"', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/cabos-cc.prsm`);
-  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,45%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['1,79V', '0,4475%']);
   await focusField(page, page.locator('article math-field').nth(4));
   await page.keyboard.press('End');
   await page.keyboard.press('Enter');
   await page.keyboard.type('V_mp=', { delay: 40 });
   await page.locator('article h1').first().click(); // sai do campo
   await expect.poll(() => dev(page).text()).toMatch(/V_mp := 400 V\nV_mp = \?/);
-  await expect.poll(() => resultTexts(page)).toContain('400,00V');
+  await expect.poll(() => resultTexts(page)).toContain('400V');
 });
 
 test('[BUG-005] na folha, "ir <nome>" acha o arquivo da mesma pasta sem projeto aberto', async ({ page }) => {
@@ -64,7 +64,7 @@ test('[BUG-005] na folha, "ir <nome>" acha o arquivo da mesma pasta sem projeto 
 test('[BUG-011] arrastar a região da folha para a esquerda e para cima a move; a posição final nunca fica negativa', async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
-  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   const drag = async (dx: number, dy: number) => {
     const box = (await page.locator('[data-region="s"]').boundingBox())!;
     await page.mouse.move(box.x + 1, box.y + 1); // a moldura, fora do campo

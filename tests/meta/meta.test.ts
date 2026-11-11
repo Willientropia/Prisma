@@ -53,7 +53,7 @@ describe('sistema de testes', () => {
         '- id: F2-01',
         '  descricao: caso novo de teste meta, 2 m vezes 3',
         '  expr: "2 m * 3"',
-        '  esperado: {valor: 6, unidade: m, texto: "6,00 m"}',
+        '  esperado: {valor: 6, unidade: m, texto: "6 m"}',
         '- id: F2-02',
         '  descricao: outro caso novo, 10 V sobre 4',
         '  expr: "10 V / 4"',
