@@ -66,3 +66,21 @@
 - id: BUG-007
   linear: "3 + i"
   digitado: '3+\mathbf{i}'
+# BUG-009 (T02): nome com dígito virava produto ao editar (R1 -> R*1)
+- {id: BUG-009, linear: "R1 := 5"}
+- {id: BUG-009, linear: "I1 + I2"}
+- {id: BUG-009, linear: "xy2pol(z)"}
+- {id: BUG-009, linear: "sys2mat(v)"}
+- {id: BUG-009, linear: "log10(x)"}
+- {id: BUG-009, linear: "I1 := 2 A"}
+- {id: BUG-009, linear: "ρ1*x2"}
+- {id: BUG-009, linear: "2*R1"}
+- {id: BUG-009, linear: "a_tensao1 := 3"}
+- {id: BUG-009, linear: "2*R1", digitado: '2R1'}
+- {id: BUG-009, linear: "R1 := 5", digitado: 'R1\coloneq5'}
+# BUG-010 (T03): texto entre aspas perdia os espaços na ida e volta
+- {id: BUG-010, linear: 'mat("3º Harmônica", 1)'}
+- {id: BUG-010, linear: 'Legenda := mat(N, "Nº de harmônicas sem a fundamental", 1)'}
+- {id: BUG-010, linear: 'a := "um  dois   três"'}
+- {id: BUG-010, linear: 'a := "x+y = z"'}
+- {id: BUG-010, linear: 'a := "um dois"', digitado: 'a\coloneq\text{"um dois"}'}

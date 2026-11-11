@@ -258,3 +258,13 @@ Concluído: ordem título → abas → ribbon → conteúdo → status; aba Iní
   - regiões de matriz e imagem pelo ribbon.
 - **Fase 3 em diante:**
   - **Fases 4 a 7:** bibliotecas com testes, LaTeX completo, exportação e modelos.
+
+## F00: três níveis de verificação (TICKETS-FOLHA)
+
+| Comando | Quando | O que roda |
+|---|---|---|
+| `npm run verify:rapido` | por ticket (cerca de 30 s) | tipos, matriz, Vitest só dos arquivos mudados, Playwright da folha e da regressão |
+| `npm run verify` | no fim do lote | tudo, menos o app real e os testes de desempenho C7-01 e C7-02 |
+| `npm run verify:full` | antes de push | tudo, mais o app real e os testes de desempenho |
+
+Os testes de desempenho oscilam com a carga da máquina (C7-02 reprovou por 3 ms). Nenhum foi apagado nem teve tolerância mudada: só rodam no `verify:full`. O gancho de pre-push do `package.json` continua chamando `npm run verify`.

@@ -23,7 +23,7 @@ Conflito entre adendos: vale o de número maior. MANUTENCAO-* valem sempre e nã
 1. Registrar o critério de aceite em `tests/MATRIZ.md` (com ID).
 2. Escrever primeiro o teste que falha. Bug ganha teste `BUG-<nº>`; travamento vai para `tests/regressao/` e, se for de parser, vira caso fixo no fuzz.
 3. Corrigir a causa raiz.
-4. `testador` com `npm run verify`. `verify:full` só ao fechar um lote.
+4. `testador` com `npm run verify:rapido` por ticket; `npm run verify` no fim do lote; `npm run verify:full` antes de push (inclui o app real e os testes de desempenho C7-01 e C7-02). Resumo: verify:rapido por ticket; verify no fim do lote; verify:full antes de push.
 5. Só dizer que terminou com tudo verde, testes antigos incluídos.
 6. Anotar em `docs/` o que foi feito e o que ficou pendente (uma ou duas linhas).
 7. Commit local `T<nº>: <resumo>`. **Push só com autorização do usuário.**

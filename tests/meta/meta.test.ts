@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 import { checkMatriz } from '../../scripts/check-matriz';
@@ -93,12 +93,15 @@ describe('sistema de testes', () => {
   it('[C9-08] o pre-commit roda npm run test e bloqueia commit com teste falhando', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     expect(pkg['simple-git-hooks']).toEqual({ 'pre-commit': 'npm run test', 'pre-push': 'npm run verify' });
-    const hook = join(ROOT, '.git/hooks/pre-commit');
+    // dentro do próprio gancho o git define GIT_DIR e afins; sem limpar, os comandos git do teste herdam o repositório de fora
+    const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+    // numa worktree ".git" é um arquivo: pergunta ao git onde o gancho está
+    const hook = resolve(ROOT, spawnSync('git rev-parse --git-path hooks/pre-commit', { cwd: ROOT, shell: true, encoding: 'utf8', env }).stdout.trim());
     expect(existsSync(hook) && readFileSync(hook, 'utf8')).toContain('npm run test');
     // mesmo gancho num repositório temporário cujo "npm run test" falha: o commit não acontece
     const dir = tmp('hook');
     try {
-      const git = (args: string) => spawnSync(`git -c user.name=t -c user.email=t@t -c core.hooksPath=.git/hooks ${args}`, { cwd: dir, shell: true, encoding: 'utf8' });
+      const git = (args: string) => spawnSync(`git -c user.name=t -c user.email=t@t -c core.hooksPath=.git/hooks ${args}`, { cwd: dir, shell: true, encoding: 'utf8', env });
       git('init -q');
       copyFileSync(hook, join(dir, '.git/hooks/pre-commit'));
       writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node -e "process.exit(1)"' } }));
@@ -106,5 +109,25 @@ describe('sistema de testes', () => {
       expect(git('commit -q -m teste').status).not.toBe(0);
       expect(git('rev-parse --verify HEAD').status).not.toBe(0); // nenhum commit criado
     } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[F00-01] existe npm run verify:rapido: tipos, matriz, Vitest dos arquivos mudados e Playwright da folha e da regressão', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    expect(pkg.scripts['verify:rapido']).toBe('tsx scripts/verify-rapido.ts');
+    const src = readFileSync(join(ROOT, 'scripts/verify-rapido.ts'), 'utf8');
+    for (const parte of ['tsc --noEmit', 'checkMatriz', 'vitest related', 'tests/e2e/folha.spec.ts tests/regressao']) expect(src).toContain(parte);
+  });
+
+  it('[F00-02] os testes de desempenho C7-01 e C7-02 só rodam no verify:full e continuam existindo', () => {
+    const verify = readFileSync(join(ROOT, 'scripts/verify.ts'), 'utf8');
+    expect(verify).toContain(`full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"'`);
+    expect(verify).toContain('if (full && (perf.recalc == null');
+    const spec = readFileSync(join(ROOT, 'tests/e2e/desempenho.spec.ts'), 'utf8');
+    expect(spec).toContain('[C7-01]');
+    expect(spec).toContain('[C7-02]');
+  });
+
+  it('[F00-03] o CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push', () => {
+    expect(readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8')).toContain('verify:rapido por ticket; verify no fim do lote; verify:full antes de push');
   });
 });
