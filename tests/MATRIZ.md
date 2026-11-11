@@ -17,7 +17,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Adendo 04: posição das abas | D6 | concluída |
 | Adendo 03: testes | C9, C7 | concluída |
 | Bugs corrigidos | BUG | concluída |
-| Auditoria Fable, lote A: travamentos do editor | T01, T02 | concluída |
+| Auditoria Fable, lote A: travamentos do editor | T01, T02, T03 | concluída |
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
@@ -202,3 +202,5 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-008 | Digitar `.` sem dígito depois (`2.`) travava o editor em laço infinito (átomo numérico sem progresso) | src/format/mathlinear.test.ts | unit | ok |
 | T02-01 | Nome com dígito (`R1`, `I1`, `xy2pol`, `sys2mat`, `log10`) volta do campo sem virar produto: ida e volta idêntica | tests/golden/conversao.yaml | unit | ok |
 | BUG-009 | Nome com dígito no campo matemático virava produto ao confirmar (`R1` gravava `R*1`) | tests/golden/conversao.yaml | unit | ok |
+| T03-01 | Texto entre aspas mantém os espaços (inclusive repetidos) na ida e volta do campo | src/format/mathlinear.test.ts, tests/golden/conversao.yaml | unit | ok |
+| BUG-010 | Texto entre aspas perdia os espaços ao confirmar a linha (`"3º Harmônica"` gravava `"3ºHarmônica"`) | tests/golden/conversao.yaml | unit | ok |

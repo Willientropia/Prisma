@@ -77,3 +77,9 @@ describe('[T02-01] nome com dígito', () => {
     expect(toLinear('2R1')).toBe('2*R1'); // digitado: o dígito não vira unidade nem produto
   });
 });
+
+describe('[T03-01][BUG-010] texto entre aspas', () => {
+  it('mantém os espaços, inclusive repetidos, na ida e volta', () => {
+    for (const l of ['a := "3º Harmônica"', 'a := "um  dois   três"', 'mat("Nº de harmônicas", 1)']) expect(toLinear(toLatex(l))).toBe(l);
+  });
+});

@@ -69,3 +69,9 @@
 - **Corpus:** das 713 linhas de cálculo importadas, as que não fazem ida e volta caem de 153 para 91 (62 corrigidas). As 91 restantes são `for`, `%`, texto entre aspas e `#` (T03 e T04).
 - **Pendente, fora do T02:** a ida e volta remove parênteses que mudam o sentido, como em `e^(80.5 deg*i)`, que volta `e^80.5 deg*i` (linhas `a1` e `a6` do corpus). Não está na auditoria.
 - **Pendências achadas na revisão do T02, já existentes antes dele:** `3\sin x1` vira `3*sin(1)` (o `x` some); `\log10(x)` vira `log(0*(x))`, mas o MathLive grava `log10(x)` sem `\log` ao digitar, então o usuário não cai nele; o `case '.'` do `MathField.tsx` não tem a guarda `!state.script` do `case ','`; `GREEK_CMD` do campo repete a lista de gregas de `mathlinear.ts` e deveria sair de lá.
+
+## T03 (AUDITORIA, lote A)
+
+- **Texto entre aspas:** `mat("3º Harmônica", ...)` voltava `"3ºHarmônica"`. O `llex` descartava todo espaço em branco, inclusive dentro de `\text{...}`. Agora o conteúdo de `\text{...}` é lido como texto, com espaços preservados (também repetidos). Testes: T03-01 e BUG-010.
+- **Corpus:** as linhas que não fazem ida e volta caem de 91 para 84. As 84 restantes são `for`, `%` e `#` (T04), mais duas com caminho de arquivo.
+- **Pendente, fora do T03:** texto com barra invertida ou chaves perde esses caracteres na tela (`"C:\Users\...\Book1.xlsx"` volta `"C:UsersYourUserDownloadsBook1.xlsx"`), porque `nodeLatex` remove `\`, `{` e `}` do texto. Linhas `EXCELpath` do corpus.

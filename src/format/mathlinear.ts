@@ -340,6 +340,16 @@ function llex(src: string): LTok[] {
       i += m[0].length;
       if (/^[a-zA-Z]/.test(m[1])) while (src[i] === ' ') i++;
       if (!SPACES.has(m[1])) out.push({ k: 'cmd', v: m[1] });
+      // \text{...}: o espaço é parte do texto ("3º Harmônica"), não separador (T03)
+      if (m[1] === 'text' && src[i] === '{') {
+        out.push({ k: 'open', v: '{' });
+        for (i++; i < src.length && src[i] !== '}'; i++) {
+          if (src[i] === '\\' && /[ {}\\]/.test(src[i + 1] ?? '')) i++; // "\ " é espaço; "\{" e "\\" são o próprio caractere
+          out.push({ k: 'ch', v: /\s|~/.test(src[i]) ? ' ' : src[i] });
+        }
+        out.push({ k: 'close', v: '}' });
+        i++;
+      }
       continue;
     }
     i++;
