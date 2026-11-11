@@ -83,3 +83,38 @@ describe('[T03-01][BUG-010] texto entre aspas', () => {
     for (const l of ['a := "3º Harmônica"', 'a := "um  dois   três"', 'mat("Nº de harmônicas", 1)']) expect(toLinear(toLatex(l))).toBe(l);
   });
 });
+
+// F04: número e letras sem apóstrofo é produto (nome é variável); unidade só explícita
+describe('[F04-01] nome colado ao número é produto', () => {
+  it('[F04-01] 9j, 2x e 4mm^2 digitados gravam multiplicação', () => {
+    expect(toLinear('9j')).toBe('9*j');
+    expect(toLinear('2x')).toBe('2*x');
+    expect(toLinear('4\\mathrm{mm}')).toBe('4*mm');
+    expect(toLinear('S\\coloneq4mm^{2}')).toBe('S := 4*mm^2');
+    expect(toLinear('2R1')).toBe('2*R1');
+  });
+});
+
+describe('[F04-02] unidade explícita', () => {
+  it("[F04-02] unidade solta com apóstrofo faz ida e volta, sozinha e dentro de expressão", () => {
+    for (const l of ["x*'m", "'A/100", "1/'degC", "k := 2*'m", "y := 3*'Ω*'mm^2/'m", "v := w/'s^2"]) expect(toLinear(toLatex(l)), l).toBe(l);
+    expect(toLatex("x*'m")).toContain('\\class{u}{\\mathrm{m}}');
+  });
+  it('[F04-02] unidade marcada na tela (\\class{u}) vira número + unidade só quando vem logo depois do número', () => {
+    expect(toLinear('4\\class{u}{\\mathrm{mm}}^{2}')).toBe('4 mm^2');
+    expect(toLinear('x\\cdot\\class{u}{\\mathrm{m}}')).toBe("x*'m");
+    expect(toLinear('5\\class{u}{\\mathrm{kV}}\\cdot\\class{u}{\\mathrm{A}}')).toBe('5 kV*A');
+    expect(toLinear('L\\coloneq25\\,\\class{u}{\\mathrm{m}}')).toBe('L := 25 m');
+  });
+});
+
+describe('[F04-04] arquivos antigos abrem iguais', () => {
+  it('[F04-04] número + espaço + unidade, conversão e 2 x legado', () => {
+    for (const l of ['L := 25 m', 'ρ := 0.0179 Ω*mm^2/m', 'α := 0.00393 1/°C', 'HSP := 5.4 h/dia', 'ΔV(L, I, S) = ? mV', 'x := 2 x', 'T := 25 °C', 'P := 5 kV*A']) expect(toLinear(toLatex(l)), l).toBe(l);
+    // com contexto da tela: variável definida vence a unidade (2 h com h := 3), unidade conhecida continua unidade
+    const ctx = { defined: new Set(['x', 'h']), isUnit: (n: string) => ['m', 'V', 'h'].includes(n) };
+    expect(toLatex('2 x', ctx)).toBe('2\\,x');
+    expect(toLatex('2 h', ctx)).toBe('2\\,h');
+    expect(toLatex('2 m', ctx)).toContain('\\class{u}{\\mathrm{m}}');
+  });
+});

@@ -68,7 +68,7 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-type FieldState = { script: 'sub' | 'sup' | null; edited: boolean; lastCommit?: Commit | null };
+type FieldState = { script: 'sub' | 'sup' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
 
 const GREEK_CMD = /^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
 
@@ -97,7 +97,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
 
   // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
   // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
-  const commit = (how: Commit) => { state.script = null; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
+  const commit = (how: Commit) => { state.script = null; state.unit = false; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
     const l = lastLetter(before());
@@ -108,6 +108,11 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   // Ctrl+K: busca de função (F4-06); o MathLive não deixa o atalho chegar à janela
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { run('funcao.inserir'); return true; }
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
+
+  // F04: a unidade do apóstrofo vale para um nome só; operador, expoente ou espaço fecham a unidade antes de seguir
+  // (se a unidade foi apagada, o campo não tem mais \class{u}: state.unit ficou velho; getValue(0, pos) não mostra o \class, então só dá para conferir o campo todo)
+  if (state.unit && !mf.value.includes('\\class{u}')) state.unit = false;
+  if (state.unit && (OPERATOR_KEYS.has(e.key) || ['^', ' ', '|'].includes(e.key))) { mf.executeCommand('moveAfterParent'); state.unit = false; }
 
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
   // ';' e ')': reclassificar ali tiraria o cursor de dentro dos parênteses (f(a;b)); confirmar reclassifica
@@ -131,7 +136,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     }
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
-    case "'": insert('\\class{u}{\\mathrm{#0}}'); return true; // força unidade (B4)
+    case "'": insert('\\class{u}{\\mathrm{#0}}'); state.unit = true; return true; // força unidade (B4)
     case '|': insert('\\left\\lvert #0\\right\\rvert'); return true;
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
@@ -148,7 +153,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case '_': state.script = 'sub'; return false;
     case '^': state.script = 'sup'; return false;
     case ' ': if (state.script) { mf.executeCommand('moveAfterParent'); state.script = null; } else classify(); return true;
-    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown': state.script = null; return false;
+    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown': state.script = null; state.unit = false; return false;
     case '/': {
       // (a+b)/ -> fração com a+b em cima, sem os parênteses (B4)
       // seleção/inserção do MathLive cai dentro dos parênteses; reescreve o valor e põe o cursor no denominador

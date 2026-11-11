@@ -3,7 +3,7 @@
 import { evaluate, type LineResult } from '../../src/engine/evaluate';
 import { fmtComplex, fmtNum, type FormatOpts } from '../../src/engine/format';
 import { math } from '../../src/engine/math';
-import { toMath } from '../../src/engine/syntax';
+import { toMath, toMathVars } from '../../src/engine/syntax';
 const isUnitName = (n: string) => { try { return math.Unit.isValuelessUnit(n); } catch { return false; } };
 import { blockKey, prepare } from '../../src/engine/prepare';
 import { importSm, type SmImport } from '../../src/format/smath';
@@ -91,7 +91,7 @@ export function compareCorpus(file: string, xml: string): CorpusFile {
     try {
       // o próprio SMath deixou em aberto (nome sem valor): igual se o Prisma também deixa a mesma expressão em aberto
       let e: unknown;
-      try { e = math.evaluate(toMath(r.expected)); } catch (err) {
+      try { e = math.evaluate(toMathVars(r.expected)); } catch (err) {
         if (!/Undefined symbol/.test((err as Error).message)) throw err;
         const same = line?.symbolic !== undefined && line.symbolic.replace(/\s/g, '') === r.expected.replace(/\s/g, '');
         return { id: r.id, expr, smath: `em aberto: ${r.expected}`, prisma: line?.symbolic !== undefined ? `em aberto: ${line.symbolic}` : line?.error ?? 'com valor', ok: same, plugin: plugin.has(r.id), why: plugin.get(r.id) };

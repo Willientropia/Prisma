@@ -7,14 +7,14 @@
 
 - id: B10-01
   contexto: folha
-  teclas: "S:4mm^2{Enter}"
+  teclas: "S:4'mm^2{Enter}"
   linear: "S := 4 mm^2"
   latex_contem: ['\coloneq', '\class{u}{\mathrm{mm}']
   tela_contem: ["≔", "mm"]
   tela_nao_contem: [":=", "^"]
 - id: B10-02
   contexto: folha
-  teclas: "V_mp:400V{Enter}"
+  teclas: "V_mp:400'V{Enter}"
   linear: "V_mp := 400 V"
   latex_contem: ['V_{\mathrm{mp}}']
   tela_nao_contem: ["_"]
@@ -30,7 +30,7 @@
   latex_contem: ['\rho']
 - id: B10-05
   contexto: folha
-  teclas: "I:11,5A{Enter}"
+  teclas: "I:11,5'A{Enter}"
   linear: "I := 11.5 A"
   tela_contem: ["11,5"]
 - id: B4-01
@@ -68,7 +68,7 @@
 - id: B4-07
   descricao: "número seguido de unidade conhecida vira unidade (azul)"
   contexto: caderno
-  teclas: "L:25m{Enter}"
+  teclas: "L:25'm{Enter}"
   linear: "L := 25 m"
   latex_contem: ['\class{u}{\mathrm{m}}']
 # BUG-009 (T02): dígito de nome (R1) não é número decimal
@@ -82,3 +82,20 @@
   contexto: folha
   teclas: "R1,tensao:5{Enter}"
   linear: "R1_tensao := 5"
+# F04: nome colado ao número é produto (nome é variável); unidade só com apóstrofo
+- id: F04-01
+  descricao: "9j grava 9*j: j é variável, não unidade"
+  contexto: folha
+  teclas: "z:9j{Enter}"
+  linear: "z := 9*j"
+- id: F04-01
+  descricao: "número e letras sem apóstrofo é produto, mesmo que as letras sejam uma unidade"
+  contexto: folha
+  teclas: "S:4mm^2{Enter}"
+  linear: "S := 4*mm^2"
+- id: F04-02
+  descricao: "unidade solta com apóstrofo, depois de um nome"
+  contexto: folha
+  teclas: "k:x*'m{Enter}"
+  linear: "k := x*'m"
+  latex_contem: ['\class{u}{\mathrm{m}}']

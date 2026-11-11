@@ -60,7 +60,7 @@ describe('tests/golden/teclado.yaml', () => {
 
   it('[B10-01] unidade desenhada em --math-unit', async () => {
     const { field } = await mountLine('folha');
-    await userEvent.keyboard(toUserEvent('S:4mm^2{Enter}'));
+    await userEvent.keyboard(toUserEvent("S:4'mm^2{Enter}"));
     await expect.poll(() => field.shadowRoot?.querySelector('.u') !== null).toBe(true);
     const unit = field.shadowRoot!.querySelector('.u') as HTMLElement;
     const want = getComputedStyle(document.documentElement).getPropertyValue('--math-unit').trim();

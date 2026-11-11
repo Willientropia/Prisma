@@ -20,7 +20,7 @@ test('[BUG-002] teclas digitadas logo depois de criar uma região na folha não 
   await start(page);
   await dev(page).newDoc('folha');
   await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
-  await page.keyboard.type('comprimento:1234m'); // sem intervalo entre as teclas
+  await page.keyboard.type("comprimento:1234'm"); // sem intervalo entre as teclas
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('comprimento := 1234 m');
 });
@@ -139,4 +139,21 @@ test('[BUG-013] [F03-02] caderno cuja linha nova não monta solta o teclado do a
   await page.waitForTimeout(1300);
   await page.keyboard.press('8');
   await expect.poll(async () => (await fieldValues(page))[0]).toContain('8'); // prazo vencido: a tecla volta ao campo
+});
+
+test('[BUG-014] [F04-01] na folha, nome que coincide com unidade (L) fica em aberto e 9j é produto', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('s:10*L=', { delay: 30 });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toContain('s := 10*L = ?');
+  // L não é litro: o resultado fica em aberto, com a dica, e sem número nem unidade
+  await expect(page.locator('.mresult-symbolic')).toHaveCount(1);
+  await expect(page.locator('[title="L ainda não foi definido"]')).toHaveCount(1);
+  await expect(page.locator('.mresult-value .u')).toHaveCount(0);
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 300 } });
+  await page.keyboard.type('z:9j', { delay: 30 });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toContain('z := 9*j');
 });

@@ -8,6 +8,7 @@ export type Node =
   | { t: 'num'; v: string } // sempre com ponto decimal
   | { t: 'id'; name: string } // V_mp, ρ_cu, ΔV
   | { t: 'qty'; n: Node; u: Unit } // 4 mm^2
+  | { t: 'unit'; u: Unit } // unidade solta, com apóstrofo: x*'m, 'A/100 (F04); nome sem apóstrofo é sempre variável
   | { t: 'bin'; op: string; a: Node; b: Node }
   | { t: 'neg'; a: Node }
   | { t: 'paren'; a: Node }
@@ -33,7 +34,7 @@ export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos'
 // ---------- linear: leitura ----------
 type Tok = { k: 'num' | 'id' | 'op' | 'ws' | 'str'; v: string };
 // nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05)
-const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?]/uy;
+const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?']/uy;
 
 function lex(src: string): Tok[] {
   const s = src.replace(/[·×]/g, '*').replace(/−/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=').replace(/≔/g, ':=');
@@ -126,6 +127,13 @@ class LinearParser {
     const t = this.peek();
     if (!t) return fail('Expressão incompleta');
     if (t.k === 'str') { this.i++; return { t: 'str', v: t.v }; }
+    if (t.k === 'op' && t.v === "'") { // unidade explícita (um só termo; o expoente fica com o ^ do operador)
+      this.i++;
+      const id = this.toks[this.i];
+      if (id?.k !== 'id') return fail('Unidade esperada');
+      this.i++;
+      return { t: 'unit', u: { one: false, terms: [{ name: id.v, div: false }] } };
+    }
     if (t.k === 'num') {
       this.i++;
       const n: Node = { t: 'num', v: t.v };
@@ -208,6 +216,15 @@ export function unitToLinear(u: Unit): string {
   return u.terms.map((t, i) => `${i === 0 ? (t.div ? '1/' : '') : t.div ? '/' : '*'}${t.name}${t.exp ? `^${t.exp}` : ''}`).join('');
 }
 
+/** 5 kV * 'A: grandeza vezes ou dividida por unidade solta continua grandeza (5 kV*A). Qualquer outro caso é operação comum. */
+export function mulUnit(a: Node, op: string, b: Node): Node {
+  if (a.t !== 'qty' || b.t !== 'unit' || (op !== '*' && op !== '/')) return { t: 'bin', op, a, b };
+  return { t: 'qty', n: a.n, u: { one: a.u.one, terms: [...a.u.terms, ...b.u.terms.map((x) => ({ ...x, div: x.div !== (op === '/') }))] } };
+}
+
+/** Unidade solta na forma linear: cada termo leva o seu apóstrofo ('Ω*'mm^2/'m), porque o apóstrofo vale para um nome só. */
+const unitMarked = (u: Unit) => u.terms.map((t, i) => `${i === 0 ? (t.div ? '1/' : '') : t.div ? '/' : '*'}'${t.name}${t.exp ? `^${t.exp}` : ''}`).join('');
+
 export function nodeToLinear(n: Node): string {
   const wrap = (c: Node, op: string, right: boolean) => (needParens(c, op, right) ? `(${nodeToLinear(c)})` : nodeToLinear(c));
   switch (n.t) {
@@ -215,6 +232,7 @@ export function nodeToLinear(n: Node): string {
     case 'str': return `"${n.v}"`;
     case 'id': return n.name;
     case 'qty': return `${nodeToLinear(n.n)} ${unitToLinear(n.u)}`;
+    case 'unit': return unitMarked(n.u);
     case 'neg': return `-${prec(n.a) < 4 ? `(${nodeToLinear(n.a)})` : nodeToLinear(n.a)}`;
     case 'paren': return `(${nodeToLinear(n.a)})`;
     case 'call': return `${n.f}(${n.args.map(nodeToLinear).join(', ')})`;
@@ -286,13 +304,14 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
       return known ? idLatex(n.name) : `\\class{undef}{${idLatex(n.name)}}`;
     }
     case 'qty': {
-      // "2 x" com x variável definida: mostra como variável; senão é unidade
-      // 1) variável definida -> variável; 2) unidade conhecida -> unidade; 3) senão, variável não definida
+      // "2 x" com x variável definida (ou parâmetro): variável, como o motor lê (F04: variável definida vence a unidade);
+      // senão, nome que não é unidade conhecida é variável (não definida, se for o caso); o resto é unidade
       const single = n.u.terms.length === 1 && !n.u.one && !n.u.terms[0].exp ? n.u.terms[0].name : null;
       const asVar = single && (ctx.defined?.has(single) || ctx.params?.has(single));
       const unknown = single && !asVar && ctx.isUnit && !ctx.isUnit(single);
       return `${L(n.n)}\\,${asVar ? idLatex(single!) : unknown ? L({ t: 'id', name: single! }) : unitLatex(n.u)}`;
     }
+    case 'unit': return unitLatex(n.u);
     case 'neg': return `-${prec(n.a) < 4 ? `\\left(${L(n.a)}\\right)` : L(n.a)}`;
     case 'paren': return `\\left(${L(n.a)}\\right)`;
     case 'mat': return `\\begin{bmatrix}${n.rows.map((r) => r.map(L).join('&')).join('\\\\')}\\end{bmatrix}`;
@@ -427,6 +446,11 @@ class LatexParser {
     for (let op = opOf(this.peek()); op === '+' || op === '-'; op = opOf(this.peek())) { this.i++; a = { t: 'bin', op, a, b: this.mul() }; }
     return a;
   }
+  /** O class{...} que começa aqui tem esta classe (u, undef, imag)? Não consome nada. */
+  private classIs(name: string): boolean {
+    const save = this.i;
+    try { this.i++; return this.sub(this.group()).plain() === name; } catch { return false; } finally { this.i = save; }
+  }
   private startsAtom(t?: LTok) {
     if (!t) return false;
     if (t.k === 'close' || t.k === 'amp' || t.k === 'sup' || t.k === 'sub') return false;
@@ -441,7 +465,7 @@ class LatexParser {
       if (this.i === last) return fail('Expressão inválida'); // guarda de progresso (T01)
       last = this.i;
       const op = opOf(this.peek());
-      if (op === '*' || op === '/') { this.i++; a = { t: 'bin', op, a, b: this.unary() }; continue; }
+      if (op === '*' || op === '/') { this.i++; a = mulUnit(a, op, this.unary()); continue; }
       if (this.startsAtom(this.peek())) { a = { t: 'bin', op: '*', a, b: this.unary() }; continue; } // justaposição: 2(x+1)
       return a;
     }
@@ -545,7 +569,8 @@ class LatexParser {
       if (!/\d/.test(v)) return fail('Número incompleto'); // "." solto não consome nada: sem isto o mul() girava para sempre (T01)
       const n: Node = { t: 'num', v };
       const nx = this.peek();
-      const unitNext = (nx?.k === 'cmd' && (nx.v === 'class' || nx.v === 'unit' || nx.v === '%' || nx.v === 'degree' || nx.v === 'mathrm' || FROM_CMD.has(nx.v))) || (nx?.k === 'ch' && /^[\p{L}°]$/u.test(nx.v));
+      // F04: só unidade marcada (\class{u}, \unit), % e grau depois do número; letras soltas são um nome (9j = 9·j)
+      const unitNext = (nx?.k === 'cmd' && ((nx.v === 'class' && this.classIs('u')) || nx.v === 'unit' || nx.v === '%' || nx.v === 'degree')) || (nx?.k === 'ch' && nx.v === '°');
       if (unitNext) {
         const save = this.i;
         const nameAhead = isLetter(nx) ? this.sub(this.t.slice(this.i)).nameLen() : 0;
@@ -566,7 +591,7 @@ class LatexParser {
           const cls = this.sub(this.group()).plain();
           const body = this.group();
           if (cls === 'imag') return { t: 'id', name: body.some((x) => x.k === 'ch' && x.v === 'e') ? '𝐞' : '𝐢' };
-          if (cls === 'u') { const u = this.unitPow(this.sub(body).unitBody()); return u.terms.length === 1 && !u.terms[0].exp ? { t: 'id', name: u.terms[0].name } : fail('Unidade sem número'); }
+          if (cls === 'u') return { t: 'unit', u: this.unitPow(this.sub(body).unitBody()) }; // unidade solta: 'm (F04)
           return this.sub(body).exprAll();
         }
         case 'left': return this.fence();

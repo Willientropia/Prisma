@@ -167,3 +167,57 @@ describe('ADENDO 02: gráfico e partes do resultado', () => {
     for (const bad of ['150 %', '-5 %', 'muito', undefined, null]) expect(parseMargin(bad)).toBeUndefined();
   });
 });
+
+// F04 / BUG-014: dentro da expressão, nome é sempre variável (como no SMath); unidade só explícita
+describe('[BUG-014] nome é variável, unidade só explícita (F04)', () => {
+  const sym = (src: string[], libs: LibInput[] = []) => evaluate({ libs, blocks: [{ key: 'b', type: 'calc', lines: src }], symbolic: true }).blocks.b;
+
+  it('[BUG-014] folha: nome que coincide com unidade fica em aberto, sem virar litro, metro nem bit', () => {
+    for (const [def, name] of [['s := 10*L', 'L'], ['t := 3*m', 'm'], ['a := b', 'b'], ['c := S + 1', 'S']] as const) {
+      const r = sym([def, `${def.split(' ')[0]} = ?`]);
+      expect(r[1].error, def).toBeUndefined();
+      expect(r[1].missing, def).toEqual([name]);
+      expect(r[1].symbolic, def).toContain(name);
+      expect(r[1].unit, def).toBeUndefined();
+    }
+  });
+
+  it('[BUG-014] folha: definido depois, o valor entra (variável L, não litro)', () => {
+    const r = sym(['x := 2*L', 'L := 3', 'x = ?']);
+    expect(r[2].value).toBe(6);
+    expect(r[2].unit).toBeUndefined();
+  });
+
+  it('[BUG-014] caderno: nome indefinido que coincide com unidade dá "Variável não definida"', () => {
+    expect(run(['x := 2*L'], [])[0].error).toBe('Variável não definida: L');
+    expect(run(['m + 1 = ?'], [])[0].error).toBe('Variável não definida: m');
+  });
+
+  it('[BUG-014] função com parâmetro de nome de unidade e constante de biblioteca com nome de unidade', () => {
+    expect(sym(['f(s) := s*2', 'f(3) = ?'])[1].value).toBe(6);
+    const lib: LibInput = { id: 't', constants: [['g', '9.81 m/s^2']], functions: [] };
+    const r = sym(['2*g = ?'], [lib])[0];
+    near(r.value, 19.62);
+    expect(r.unit).toBe('m/s²');
+  });
+
+  it('[F04-04] unidade explícita continua valendo: número e espaço, apóstrofo, conversão', () => {
+    const q = (src: string[]) => { const r = sym(src)[src.length - 1]; return [r.value, r.unit]; };
+    expect(q(["k := 2*'m", 'k = ?'])).toEqual([2, 'm']);
+    expect(q(['L := 25 m', 'L*2 = ?'])).toEqual([50, 'm']);
+    expect(sym(['x := 3', '2 x = ?'])[1].value).toBe(6); // 2 x legado: x é variável
+    // variável (ou parâmetro) já definida vence a unidade de mesmo nome, como antes do F04
+    expect(sym(['h := 3', '2 h = ?'])[1].value).toBe(6);
+    expect(q(['L := 2', 'y := 2 m*L', 'y = ?'])).toEqual([4, 'm']);
+    expect(sym(['f(s) := 2 s', 'f(3) = ?'])[1].value).toBe(6);
+    expect(q(['v := 3.29 V', "v = ? 'mV"])).toEqual([3290, 'mV']); // apóstrofo no alvo da conversão é ignorado
+    expect(q(['v := 3.29 V', 'v = ? mV'])).toEqual([3290, 'mV']);
+    expect(sym(['0.0179 Ω*mm^2/m = ?'])[0].unit).toBe('Ω·mm²/m');
+    expect(q(["a := 'A/100", 'a = ?'])).toEqual([0.01, 'A']);
+  });
+
+  it('[BUG-014] a marca interna da variável nunca aparece no resultado', () => {
+    const r = sym(['s := 10*L', 's = ?', 'b = ?', 'x := 1', 'y := x*L + b', 'y = ?']);
+    expect(JSON.stringify(r)).not.toContain('ǃ');
+  });
+});

@@ -2,7 +2,7 @@
 import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
 import { math, smath } from './math';
-import { classify, fromMath, toMath, type LineKind } from './syntax';
+import { classify, fromMath, markVars, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtComplex, fmtNum, prettyUnit, type FormatOpts } from './format';
 
 export type LibInput = { id: string; constants: [string, string][]; functions: string[] };
@@ -116,8 +116,8 @@ function diagnose(node: MathNode, scope: Map<string, unknown>): string | undefin
 function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   const msg = e instanceof Error ? e.message : String(e);
   let m: RegExpExecArray | null;
-  if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${m[1]}`;
-  if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${m[1]}`;
+  if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${fromMath(m[1])}`;
+  if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${fromMath(m[1])}`;
   if (msg.startsWith('Não é possível converter')) return msg;
   if (/Units do not match|Unidades incompatíveis/.test(msg)) {
     if (msg.startsWith('Unidades')) return msg;
@@ -152,9 +152,12 @@ function lhsShown(src: string, limit: string | undefined, scope: Map<string, unk
   if (!math.isOperatorNode(node) || node.args.length !== 2) return undefined;
   const lhs = node.args[0].compile().evaluate(scope);
   const lim = limit?.trim() ?? '';
-  const target = lim.endsWith('%') ? '%' : isUnit(lhs) ? (math.evaluate(toMath(lim), scope) as Unit).formatUnits?.() || undefined : undefined;
+  const target = lim.endsWith('%') ? '%' : isUnit(lhs) ? (math.evaluate(toMathVars(lim), scope) as Unit).formatUnits?.() || undefined : undefined;
   return show(lhs, target, fmt);
 }
+
+/** Parâmetros de f(a, b) = ... (o texto de classify): dentro da função, "2 s" com parâmetro s é produto. */
+const paramsOf = (c: Line) => new Set(c.kind === 'func' ? (/^[^(]*\(([^)]*)\)/.exec(c.src)?.[1] ?? '').split(',').map((x) => x.trim()) : []);
 
 export function evaluate(input: EvalInput, onLine?: (key: string, line: number) => void): EvalResult {
   const t0 = performance.now();
@@ -165,11 +168,13 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
 
   for (const lib of input.libs) {
     for (const [name, expr] of lib.constants) {
-      try { scope.set(name, math.evaluate(toMath(expr), scope)); defined.add(name); } catch (e) { libErrors.push(`${lib.id}: constante ${name}: ${message(e, toMath(expr), scope)}`); }
+      try { scope.set(toMathVars(name), math.evaluate(toMathVars(expr), scope)); defined.add(name); } catch (e) { libErrors.push(`${lib.id}: constante ${name}: ${message(e, toMathVars(expr), scope)}`); }
     }
     for (const l of lib.functions) {
-      const c = classify(l);
-      if (c.kind === 'empty') continue;
+      const c0 = classify(l);
+      if (c0.kind === 'empty') continue;
+      const ps = paramsOf(c0);
+      const c = { ...c0, src: markVars(c0.src, (n) => scope.has(n + VAR_MARK) || ps.has(n)) };
       try { math.evaluate(c.src, scope); if (c.name) defined.add(c.name); } catch (e) { libErrors.push(`${lib.id}: ${l.trim()}: ${message(e, c.src, scope)}`); }
     }
   }
@@ -179,6 +184,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
   const withRaw = (v: unknown) => (input.keepRaw ? { raw: v } : {});
   const open = new Map<string, MathNode>();
   type Sym = MathNode & { name: string };
+  // F04: o nome que sobra sem marca (VAR_MARK) e é unidade está em posição de unidade ("25 m", "'m"): conhecido
   const known = (n: string) => scope.has(n) || open.has(n) || n in math || isUnitName(n);
   // v[i] na leitura passa pela função el (E2.3); math.parse local já faz isso
   const P = (src: string) => smath.readIndexAsEl(math.parse(src));
@@ -197,8 +203,10 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
     // casas= sozinho num arquivo com formato do SMath é casas decimais (o decimalPlaces do SMath)
     const bfmt: FormatOpts = b.fmt ? { ...fmt, ...(b.fmt.decimals !== undefined && fmt.mode && !b.fmt.mode ? { mode: 'decimais' as const } : {}), ...b.fmt } : fmt;
     blocks[b.key] = b.lines.map((raw, i) => {
-      const c = classify(raw, b.type === 'verificar');
-      if (c.kind === 'empty') return { kind: 'empty' };
+      const c0 = classify(raw, b.type === 'verificar');
+      if (c0.kind === 'empty') return { kind: 'empty' };
+      const ps = paramsOf(c0);
+      const c = { ...c0, src: markVars(c0.src, (n) => scope.has(n + VAR_MARK) || open.has(n + VAR_MARK) || ps.has(n)) }; // F04: nome em posição de variável não vira unidade; variável ou parâmetro já definido vence a unidade
       onLine?.(b.key, i);
       try {
         // v[j] := x e for(j, faixa, v[j] := ...): executam direto; o vetor de destino nasce se não existir
@@ -221,7 +229,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           const value = expand(node.value);
           const name = node.object.name;
           if (c.name) defined.add(c.name);
-          const miss = missingOf(value);
+          const miss = missingOf(value).map(fromMath);
           if (miss.length) {
             open.set(name, math.resolve(value, scope)); // guarda a expressão com os valores conhecidos até aqui
             scope.delete(name);
@@ -239,7 +247,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
         }
         if (input.symbolic && c.kind === 'eval') {
           const node = expand(P(c.src));
-          const miss = missingOf(node);
+          const miss = missingOf(node).map(fromMath);
           if (miss.length) return { kind: 'eval', symbolic: symbolicText(node), missing: miss, text: '' };
           const v = node.compile().evaluate(scope);
           return { kind: 'eval', ...show(v, c.target, bfmt), ...withRaw(v) };
@@ -284,13 +292,13 @@ export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts)
   const limite = spec.limite && Number.isFinite(Number(spec.limite.valor)) ? { valor: Number(spec.limite.valor), rotulo: String(spec.limite.rotulo ?? '') } : undefined;
   const base = { titulo, xs: valores, xUnit, yUnit, limite };
   if (!xVar || !spec.y?.expr) return { ...base, ys: [], error: 'Gráfico precisa de x.var, x.valores e y.expr' };
-  const expr = toMath(String(spec.y.expr));
+  const expr = toMathVars(String(spec.y.expr));
   const ys: (number | null)[] = [];
   let error: string | undefined;
   for (const v of valores) {
     const local = new Map(scope);
     try {
-      local.set(xVar, math.evaluate(xUnit ? `${v} ${toMath(xUnit)}` : String(v)));
+      local.set(toMathVars(xVar), math.evaluate(xUnit ? `${v} ${toMath(xUnit)}` : String(v)));
       const r = show(math.evaluate(expr, local), yUnit ? (yUnit === '%' ? '%' : toMath(yUnit)) : undefined, fmt);
       ys.push(r.value ?? null);
     } catch (e) {

@@ -48,11 +48,16 @@ export function fromRpn(es: E[]): Rpn {
   const funcs: string[] = [];
   const ids: string[] = [];
   const pop = () => { const n = st.pop(); if (!n) throw new Error('expressão incompleta'); return n; };
-  const asUnit = (n: Node & { unit?: boolean }): Unit | null => (n.unit && n.t === 'id' ? parseUnit(n.name) : null);
+  const asUnit = (n: Node & { unit?: boolean }): Unit | null => (n.t === 'unit' ? n.u : n.unit && n.t === 'id' ? parseUnit(n.name) : null);
   for (const e of es) {
     if (e.type === 'operand') {
       if (e.style === 'string') st.push({ t: 'str', v: e.v } as Node);
-      else if (e.style === 'unit') st.push({ t: 'id', name: unitName(e.v), unit: true });
+      else if (e.style === 'unit') {
+        // F04: unidade solta é explícita ('A/100); nome que o conversor não lê como unidade fica como estava
+        let u: Unit | null = null;
+        try { u = parseUnit(unitName(e.v)); } catch { /* sem apóstrofo possível */ }
+        st.push(u ? { t: 'unit', u } : { t: 'id', name: unitName(e.v), unit: true });
+      }
       else if (/^[\d.]/.test(e.v)) st.push({ t: 'num', v: e.v });
       else { const name = smName(e.v); ids.push(name); st.push({ t: 'id', name }); }
     } else if (e.type === 'operator') {
@@ -205,7 +210,7 @@ export function importSm(xml: string, nome: string): SmImport {
       const result = kid(math, 'result');
       const contract = kid(math, 'contract');
       let conv = '';
-      if (contract) { try { conv = nodeToLinear(fromRpn(toks(contract)).node); } catch { /* sem conversão */ } }
+      if (contract) { try { conv = nodeToLinear(fromRpn(toks(contract)).node).replace(/'/g, ''); } catch { /* sem conversão */ } }
       const node = input.node;
       const isDef = node.t === 'bin' && node.op === ':=';
       const lhs = isDef ? nodeToLinear(node.a) : '';

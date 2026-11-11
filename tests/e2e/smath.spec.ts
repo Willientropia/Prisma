@@ -61,8 +61,8 @@ test('[E8-09] x:3 redefine x mesmo já definido', async ({ page }) => {
   await expect.poll(() => resultTexts(page)).toEqual(['3,00']);
 });
 
-test('[E8-10] S.trafo:5kV*A vira S com índice trafo e grava S_trafo := 5 kV*A', async ({ page }) => {
-  await sheet(page, 'S.trafo:5kV*A');
+test(`[E8-10] S.trafo:5'kV*'A vira S com índice trafo e grava S_trafo := 5 kV*A`, async ({ page }) => {
+  await sheet(page, "S.trafo:5'kV*'A");
   await expect.poll(() => body(page)).toContain('S_trafo := 5 kV*A\n');
   expect((await fieldValues(page))[0]).toContain('S_{\\mathrm{trafo}}');
 });
