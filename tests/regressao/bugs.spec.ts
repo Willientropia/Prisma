@@ -1,7 +1,7 @@
 // Regressão: cada bug corrigido ganha um teste que falhava antes da correção (CLAUDE.md, ADENDO 03 C7).
 import type { Page } from '@playwright/test';
 import { expect, test } from '../e2e/fixtures';
-import { CALC, DOCS, dev, focusField, resultTexts, start, tabs } from '../e2e/helpers';
+import { CALC, DOCS, dev, fieldValues, focusField, resultTexts, start, tabs } from '../e2e/helpers';
 
 test('[BUG-001] Backspace numa linha vazia do caderno apaga só ela, não a linha de baixo', async ({ page }) => {
   await start(page);
@@ -133,10 +133,10 @@ test('[BUG-013] [F03-02] caderno cuja linha nova não monta solta o teclado do a
   await focusField(page, page.locator('article math-field').first());
   await page.keyboard.press('End');
   await page.keyboard.press('Enter'); // holdKeys(), mas a edição é recusada e nenhum campo monta
-  await listenKeys(page);
-  await page.keyboard.press('Control+b');
-  expect(await lastPrevented(page)).toBe(true);
+  // observa se a tecla chega ao campo (que ainda tem o foco): o MathLive trata Ctrl+B por conta própria, então defaultPrevented não serve
+  await page.keyboard.press('7');
+  expect((await fieldValues(page))[0]).not.toContain('7'); // dentro do prazo, holdKeys guarda a tecla
   await page.waitForTimeout(1300);
-  await page.keyboard.press('Control+b');
-  expect(await lastPrevented(page)).toBe(false);
+  await page.keyboard.press('8');
+  await expect.poll(async () => (await fieldValues(page))[0]).toContain('8'); // prazo vencido: a tecla volta ao campo
 });
