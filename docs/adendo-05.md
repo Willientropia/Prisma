@@ -69,3 +69,11 @@
 - **Corpus:** das 713 linhas de cálculo importadas, as que não fazem ida e volta caem de 153 para 91 (62 corrigidas). As 91 restantes são `for`, `%`, texto entre aspas e `#` (T03 e T04).
 - **Pendente, fora do T02:** a ida e volta remove parênteses que mudam o sentido, como em `e^(80.5 deg*i)`, que volta `e^80.5 deg*i` (linhas `a1` e `a6` do corpus). Não está na auditoria.
 - **Pendências achadas na revisão do T02, já existentes antes dele:** `3\sin x1` vira `3*sin(1)` (o `x` some); `\log10(x)` vira `log(0*(x))`, mas o MathLive grava `log10(x)` sem `\log` ao digitar, então o usuário não cai nele; o `case '.'` do `MathField.tsx` não tem a guarda `!state.script` do `case ','`; `GREEK_CMD` do campo repete a lista de gregas de `mathlinear.ts` e deveria sair de lá.
+
+## F01 (TICKETS-FOLHA, lote F1)
+
+- **Problema:** na folha livre a região só andava para a direita e para baixo; depois de movida não voltava. `snap()` fazia `Math.max(0, …)` e era usado no deslocamento do arrasto, então todo dx/dy negativo virava 0.
+- **Correção (`src/editors/folha/Folha.tsx`):** `snap()` só arredonda para a grade de 20 px. O novo `pos()` (`Math.max(0, snap(v))`) limita só a posição final e é usado em `moveRegions`, na prévia do arrasto e na cruz de criação. Os demais usos de `snap()` ficam como estavam (valores já positivos).
+- **Teste:** `BUG-010` em `tests/regressao/bugs.spec.ts` (e2e). Arrasta a região `s` de `string-3.prsf` para a esquerda e para cima (`x=180 y=40`) e depois além da borda (trava em `x=0 y=0`). Falhava antes da correção.
+- **Verificação:** tipos, lint, Vitest, Rust, cobertura e `check-matriz` ok. No `npm run verify` rodado com três sessões em paralelo, o Playwright teve duas falhas só de tempo: C7-02 com 518 ms (limite 500) e B10-07 com 157 ms (limite 150). Rodados sozinhos, `edicao-visual`, `desempenho` e `bugs` passaram. A instabilidade é a do ticket F00; nenhum teste foi alterado.
+- **Pendente:** nada do F01. O `verify` completo não foi repetido depois do ajuste final da matriz (só `check-matriz` e o `bugs.spec.ts`).
