@@ -1,6 +1,8 @@
 // Avaliação pura e síncrona (roda no worker e nos testes). Ordem: bibliotecas, depois blocos na ordem dada.
 import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
+import { mapFree } from './bound';
+import { withWarning } from './calculus';
 import { math, smath } from './math';
 import { classify, fromMath, markVars, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtComplex, fmtNum, prettyUnit, type FormatOpts } from './format';
@@ -22,6 +24,7 @@ export type LineResult = {
   numText?: string; // só o número formatado, ex.: "1,79"
   unitRaw?: string; // unidade do math.js, ex.: "(ohm mm^2) / m" (a tela converte para LaTeX)
   error?: string;
+  warning?: string; // aviso que não impede o valor: integral que pode não ter convergido (--warn-text)
   status?: 'ok' | 'warn' | 'fail';
   limit?: string;
   writes?: string;
@@ -188,10 +191,16 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
   const known = (n: string) => scope.has(n) || open.has(n) || n in math || isUnitName(n);
   // v[i] na leitura passa pela função el (E2.3); math.parse local já faz isso
   const P = (src: string) => smath.readIndexAsEl(math.parse(src));
-  const expand = (node: MathNode): MathNode => node.transform((n) => (math.isSymbolNode(n) && !scope.has((n as Sym).name) && open.has((n as Sym).name) ? new math.ParenthesisNode(expand(open.get((n as Sym).name)!)) : n));
-  const missingOf = (node: MathNode) => [...new Set(node.filter((n) => math.isSymbolNode(n) && !known((n as Sym).name)).map((n) => (n as Sym).name))];
+  const expand = (node: MathNode): MathNode => mapFree(node, (s) => (!scope.has(s.name) && open.has(s.name) ? new math.ParenthesisNode(expand(open.get(s.name)!)) : s));
+  // a variável de integral(expr, x, a, b) e de diff(expr, x, ponto) é do cálculo (bound.ts): nunca falta nem é trocada
+  const missingOf = (node: MathNode) => {
+    const miss = new Set<string>();
+    mapFree(node, (s) => { if (!known(s.name)) miss.add(s.name); return s; }, true);
+    return [...miss];
+  };
+  const resolveFree = (node: MathNode) => mapFree(node, (s) => (scope.has(s.name) ? math.resolve(s, scope) : s));
   const symbolicText = (node: MathNode) => {
-    let r = math.resolve(node, scope);
+    let r = resolveFree(node);
     try { r = math.simplify(r); } catch { /* fica como está */ }
     return fromMath(r.toString({ implicit: 'show' }));
   };
@@ -202,7 +211,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
     if (!EVALUATED.has(b.type)) continue;
     // casas= sozinho num arquivo com formato do SMath é casas decimais (o decimalPlaces do SMath)
     const bfmt: FormatOpts = b.fmt ? { ...fmt, ...(b.fmt.decimals !== undefined && fmt.mode && !b.fmt.mode ? { mode: 'decimais' as const } : {}), ...b.fmt } : fmt;
-    blocks[b.key] = b.lines.map((raw, i) => {
+    blocks[b.key] = b.lines.map((raw, i) => withWarning(() => {
       const c0 = classify(raw, b.type === 'verificar');
       if (c0.kind === 'empty') return { kind: 'empty' };
       const ps = paramsOf(c0);
@@ -231,7 +240,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           if (c.name) defined.add(c.name);
           const miss = missingOf(value).map(fromMath);
           if (miss.length) {
-            open.set(name, math.resolve(value, scope)); // guarda a expressão com os valores conhecidos até aqui
+            open.set(name, resolveFree(value)); // guarda a expressão com os valores conhecidos até aqui
             scope.delete(name);
             return { kind: 'assign', writes: c.name, ...(c.show ? { symbolic: symbolicText(value), missing: miss, text: '' } : {}) };
           }
@@ -266,7 +275,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
       } catch (e) {
         return { kind: c.kind, error: message(e, c.src, scope) };
       }
-    });
+    }));
   }
   const plots: Record<string, PlotResult> = {};
   for (const b of input.blocks) if (b.type === 'grafico') plots[b.key] = plot(b.lines.join(''), scope, fmt);

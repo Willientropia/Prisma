@@ -220,3 +220,21 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F04-02 | Unidade explícita: `número espaço unidade` continua unidade; unidade sem número ganha `'` (`x*'m`, `'A/100`) e faz ida e volta; `4'mm^2` grava `4 mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
 | F04-03 | Unidade solta vinda do `.sm` (`style="unit"` sem número antes) grava `'unidade` na folha convertida | src/format/smath.test.ts | unit | ok |
 | F04-04 | Arquivos antigos abrem iguais: o mesmo texto e o mesmo resultado (`L := 25 m`, `0.0179 Ω*mm^2/m`, `= ? mV`); `2 x` legado com x variável continua 2·x | src/engine/engine.test.ts, src/format/mathlinear.test.ts | unit | ok |
+| A6-8-01 | Caso 5.1 (06-35): ∫₀² F(x) dx = 2 + (1 − e⁻¹⁰)/5 com erro < 1e-9 (número, com tolerância); F(0), F(1), F(2), F(2,2) da tabela | src/engine/calculus.test.ts | unit | ok |
+| A6-8-02 | G7-K15 exato em polinômio de grau 14; limites invertidos mudam o sinal; limites iguais dão 0 | src/engine/calculus.test.ts | unit | ok |
+| A6-8-03 | Limites infinitos por troca de variável (06-36): ∫₀^∞ e^(−x) dx = 1, ∫₋∞^0 e^x dx = 1, ∫₋∞^∞ e^(−x²) dx = √π; `∞` vale `Infinity` | src/engine/calculus.test.ts | unit | ok |
+| A6-8-04 | Unidade do resultado = unidade do integrando × unidade da variável: ∫₀^(2 s) 3 m/s dt = 6 m (06-36) | src/engine/calculus.test.ts | unit | ok |
+| A6-8-05 | Integrando complexo: parte real e imaginária integradas em separado | src/engine/calculus.test.ts | unit | ok |
+| A6-8-06 | Sem convergência (1/x em [0, 1]): devolve o valor e o aviso "A integral pode não ter convergido (estimativa de erro: …)", em menos de 3 s (máximo de 2 000 subdivisões); integral que converge não avisa | src/engine/calculus.test.ts | unit | ok |
+| A6-8-07 | Forma antiga `integral(f, a, b)` com função continua valendo | src/engine/calculus.test.ts | unit | ok |
+| A6-8-08 | `diff(expr, x, ponto)` numérico por diferenças centrais com extrapolação de Richardson (Ridders), inclusive perto do limite do domínio | src/engine/calculus.test.ts | unit | ok |
+| A6-8-09 | `diff(expr, x)` usa o valor atual de x e não o altera; unidade do resultado = unidade de f / unidade de x | src/engine/calculus.test.ts | unit | ok |
+| A6-8-10 | `diff` com variável indefinida (fora da folha) dá "Variável não definida" | src/engine/calculus.test.ts | unit | ok |
+| A6-8-11 | 06-35, texto: ∫₀² F(x) dx = 2,2 no formato padrão e 2,19999092 com `casas=8` | - | unit | pendente |
+| A6-8-12 | 06-24: `Ctrl+.` em `diff(x^2;x)` mostra → 2·x (Parte 2.4, interface; aqui só o cálculo) | - | e2e | pendente |
+| A6-8-13 | Folha: x definido não é trocado dentro de `integral(…, x, …)`; só o nome que falta (y) é listado | src/engine/calculus.test.ts | unit | ok |
+| A6-8-14 | Definição em aberto com integral é reavaliada quando o nome que faltava é definido | src/engine/calculus.test.ts | unit | ok |
+| A6-8-15 | `integral(f, a, b)` com limite indefinido fica em aberto; `Infinity` volta como `∞` no texto | src/engine/calculus.test.ts | unit | ok |
+| A6-8-16 | `diff(vetor)` do math.js continua valendo | src/engine/calculus.test.ts | unit | ok |
+| A6-8-17 | Limite com unidade e outro número puro diferente de 0 dá "Unidades incompatíveis"; unidade com deslocamento (°C) é recusada | src/engine/calculus.test.ts | unit | ok |
+| A6-8-18 | Prazo do worker para integral divergente ou aninhada (1/x faz cerca de 60 mil avaliações; aninhada multiplica): ticket F06 | - | unit | pendente |

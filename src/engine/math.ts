@@ -1,5 +1,6 @@
 // Instância do math.js com as unidades e as funções nativas da v1 (SPEC 8.6).
 import { all, create, type Complex, type Unit } from 'mathjs';
+import { calculusFunctions } from './calculus';
 import { smathFunctions } from './smathfns';
 
 export const math = create(all);
@@ -63,21 +64,6 @@ export function root(f: Fn, a: V, b?: V): V {
   throw new Error('root: Newton não convergiu; tente root(f, a, b) com um intervalo');
 }
 
-/** Integral numérica por Simpson adaptativo. */
-export function integral(f: Fn, a: V, b: V): V {
-  const simpson = (l: V, r: V, fl: V, fm: V, fr: V) => mul(div(sub(r, l), 6), add(add(fl, mul(fm, 4)), fr));
-  const rec = (l: V, r: V, fl: V, fm: V, fr: V, whole: V, depth: number): V => {
-    const m = div(add(l, r), 2), lm = div(add(l, m), 2), rm = div(add(m, r), 2);
-    const flm = f(lm), frm = f(rm);
-    const left = simpson(l, m, fl, flm, fm), right = simpson(m, r, fm, frm, fr);
-    const both = add(left, right);
-    if (depth > 40 || Math.abs(si(both) - si(whole)) <= 1e-10 * Math.max(Math.abs(si(both)), 1e-300)) return both;
-    return add(rec(l, m, fl, flm, fm, left, depth + 1), rec(m, r, fm, frm, fr, right, depth + 1));
-  };
-  const fa = f(a), fb = f(b), fm = f(div(add(a, b), 2));
-  return rec(a, b, fa, fm, fb, simpson(a, b, fa, fm, fb), 0);
-}
-
 const toArray = (v: unknown): V[] => (math.isMatrix(v) ? (v.toArray() as V[]) : (v as V[]));
 
 /** Interpolação linear em tabela (xs crescente). Fora da tabela, extrapola pelo trecho da ponta. */
@@ -122,7 +108,8 @@ math.import(
     ln: (x: V) => naturalLog(x as never),
     log: (x: V, base?: V) => (base === undefined ? log10(x as never) : naturalLog(x as never, base as never)),
     solve: (A: unknown, b: unknown) => math.lusolve(A as never, b as never),
-    root, integral, deriv, interp, polyroots,
+    root, deriv, interp, polyroots,
+    ...calculusFunctions(math), // integral (Gauss-Kronrod) e diff (Ridders): ADENDO 06, 5.3
   },
   { override: true },
 );
