@@ -14,6 +14,7 @@ export type Line = {
 const REPLACE: [RegExp, string][] = [
   [/[·×]/g, '*'],
   [/−/g, '-'],
+  [/∞/g, 'Infinity'],
   [/≤/g, '<='],
   [/≥/g, '>='],
   [/≠/g, '!='],
@@ -115,7 +116,7 @@ export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.repla
 export const toMathVars = (s: string) => markVars(toMath(s));
 
 /** De volta do math.js para a sintaxe linear (resultado simbólico, E3.3): "10 * x" -> "10*x". */
-export const fromMath = (s: string) => s.replace(/ǃ/g, '').replace(/ⅈ/g, '𝐢').replace(/ℯ/g, '𝐞').replace(/ǀ/g, '.').replace(/ǂ/g, '%').replace(/\bpi\b/g, 'π').replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°');
+export const fromMath = (s: string) => s.replace(/ǃ/g, '').replace(/ⅈ/g, '𝐢').replace(/ℯ/g, '𝐞').replace(/ǀ/g, '.').replace(/ǂ/g, '%').replace(/\bpi\b/g, 'π').replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°').replace(/\bInfinity\b/g, '∞');
 
 const GREEK: Record<string, string> = {
   alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ', iota: 'ι', kappa: 'κ',
