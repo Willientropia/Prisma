@@ -85,6 +85,19 @@
   expr: "3.2936 V"
   esperado: {texto: "3,2936 V"}
 
+# A6-8-11 (ADENDO 06, 06-35): texto da integral do caso 5.1 (exato 2,199 990 920 014)
+- id: A6-8-11
+  descricao: ∫₀² F(x) dx mostra 2,2 no formato padrão
+  definicoes: ["F(x) := abs(1 + e^(5*(x - 2)))"]
+  expr: "integral(F(x), x, 0, 2)"
+  esperado: {texto: "2,2"}
+- id: A6-8-11
+  descricao: ∫₀² F(x) dx mostra 2,19999092 com casas=8
+  definicoes: ["F(x) := abs(1 + e^(5*(x - 2)))"]
+  expr: "integral(F(x), x, 0, 2)"
+  exibicao: {casas: 8, modo: decimais, zeros_a_direita: false, limite_exponencial: 5}
+  esperado: {texto: "2,19999092"}
+
 # --- SPEC 8.6: funções nativas ---
 - id: F2-10
   expr: "sqrt(16)"

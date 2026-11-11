@@ -236,7 +236,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-8-08 | `diff(expr, x, ponto)` numérico por diferenças centrais com extrapolação de Richardson (Ridders), inclusive perto do limite do domínio | src/engine/calculus.test.ts | unit | ok |
 | A6-8-09 | `diff(expr, x)` usa o valor atual de x e não o altera; unidade do resultado = unidade de f / unidade de x | src/engine/calculus.test.ts | unit | ok |
 | A6-8-10 | `diff` com variável indefinida (fora da folha) dá "Variável não definida" | src/engine/calculus.test.ts | unit | ok |
-| A6-8-11 | 06-35, texto: ∫₀² F(x) dx = 2,2 no formato padrão e 2,19999092 com `casas=8` | - | unit | pendente |
+| A6-8-11 | 06-35, texto: ∫₀² F(x) dx = 2,2 no formato padrão e 2,19999092 com `casas=8` | tests/golden/calculos.yaml | unit | ok |
 | A6-8-12 | 06-24: `Ctrl+.` em `diff(x^2;x)` mostra → 2·x (Parte 2.4, interface; aqui só o cálculo) | - | e2e | pendente |
 | A6-8-13 | Folha: x definido não é trocado dentro de `integral(…, x, …)`; só o nome que falta (y) é listado | src/engine/calculus.test.ts | unit | ok |
 | A6-8-14 | Definição em aberto com integral é reavaliada quando o nome que faltava é definido | src/engine/calculus.test.ts | unit | ok |

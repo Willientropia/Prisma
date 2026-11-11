@@ -17,6 +17,12 @@ Legenda: **[R]** = `revisor` no diff antes do commit. Arquivo principal: `src/ed
 
 ## Lote F-A6 — ADENDO 06 na folha (prioridade do usuário)
 
+Anotações do lote em `docs/adendo-06.md`.
+
+| # | Problema | Modelo | Pronto quando |
+|---|----------|--------|---------------|
+| F-INST | Um teste do Playwright falhou no hook de push da v0.2.0 (11/11) e passou na repetição; não se sabe qual | Sonnet | `tests/e2e/folha.spec.ts` e `tests/regressao` rodados 5 vezes seguidas; teste instável e causa identificados. **Não marcar como instável nem aumentar prazo sem perguntar ao usuário.** Feito antes do A6-2 |
+
 Documento: `ADENDO-06-teclado-assistente-ribbon-e-graficos.md` (raiz). Cada ticket lê só a parte indicada.
 Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 
