@@ -17,7 +17,7 @@ Quando dois documentos conflitarem, vale o de número maior. Adendos novos segue
 1. Ler os trechos dos documentos que tratam da tarefa.
 2. Antes de codar, registrar em `tests/MATRIZ.md` os critérios de aceite da tarefa (com ID).
 3. Implementar **junto com os testes**. Bug corrigido sempre ganha um teste `BUG-<nº>` que falhava antes da correção.
-4. Rodar `npm run verify`. Ao fechar uma fase ou adendo inteiro, rodar `npm run verify:full`.
+4. Rodar `npm run verify:rapido` por ticket; `npm run verify` no fim do lote; `npm run verify:full` antes de push (inclui o app real e os testes de desempenho C7-01 e C7-02). Resumo: verify:rapido por ticket; verify no fim do lote; verify:full antes de push.
 5. Só dizer que terminou se o comando passou **inteiro**, com todos os testes antigos. Mostrar o resumo de `test-results/RELATORIO.md` no fim da resposta.
 6. Atualizar `docs/fase-N.md` (ou `docs/adendo-N.md`) com o que foi feito e o que ficou pendente.
 

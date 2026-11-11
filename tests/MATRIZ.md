@@ -21,6 +21,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Fase 3: folha livre | F3 | concluída |
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
+| Folha livre: verificação rápida (TICKETS-FOLHA) | F00 | concluída |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -204,3 +205,6 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-009 | Nome com dígito no campo matemático virava produto ao confirmar (`R1` gravava `R*1`) | tests/golden/conversao.yaml | unit | ok |
 | T03-01 | Texto entre aspas mantém os espaços (inclusive repetidos) na ida e volta do campo | src/format/mathlinear.test.ts, tests/golden/conversao.yaml | unit | ok |
 | BUG-010 | Texto entre aspas perdia os espaços ao confirmar a linha (`"3º Harmônica"` gravava `"3ºHarmônica"`) | tests/golden/conversao.yaml | unit | ok |
+| F00-01 | Existe `npm run verify:rapido` (tipos, matriz, Vitest dos arquivos mudados, Playwright da folha e da regressão) | tests/meta/meta.test.ts | meta | ok |
+| F00-02 | Os testes de desempenho C7-01 e C7-02 só rodam no `verify:full` e não foram apagados | tests/meta/meta.test.ts | meta | ok |
+| F00-03 | O passo 4 do CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push | tests/meta/meta.test.ts | meta | ok |

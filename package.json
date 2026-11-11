@@ -16,6 +16,7 @@
     "test": "npm run test:unit && npm run test:browser && npm run test:rust",
     "lint": "eslint .",
     "check:matriz": "tsx scripts/check-matriz.ts",
+    "verify:rapido": "tsx scripts/verify-rapido.ts",
     "verify": "tsx scripts/verify.ts",
     "verify:full": "tsx scripts/verify.ts --full",
     "prepare": "simple-git-hooks"

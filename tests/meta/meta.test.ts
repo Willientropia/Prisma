@@ -110,4 +110,24 @@ describe('sistema de testes', () => {
       expect(git('rev-parse --verify HEAD').status).not.toBe(0); // nenhum commit criado
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
+
+  it('[F00-01] existe npm run verify:rapido: tipos, matriz, Vitest dos arquivos mudados e Playwright da folha e da regressão', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+    expect(pkg.scripts['verify:rapido']).toBe('tsx scripts/verify-rapido.ts');
+    const src = readFileSync(join(ROOT, 'scripts/verify-rapido.ts'), 'utf8');
+    for (const parte of ['tsc --noEmit', 'checkMatriz', 'vitest related', 'tests/e2e/folha.spec.ts tests/regressao']) expect(src).toContain(parte);
+  });
+
+  it('[F00-02] os testes de desempenho C7-01 e C7-02 só rodam no verify:full e continuam existindo', () => {
+    const verify = readFileSync(join(ROOT, 'scripts/verify.ts'), 'utf8');
+    expect(verify).toContain(`full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"'`);
+    expect(verify).toContain('if (full && (perf.recalc == null');
+    const spec = readFileSync(join(ROOT, 'tests/e2e/desempenho.spec.ts'), 'utf8');
+    expect(spec).toContain('[C7-01]');
+    expect(spec).toContain('[C7-02]');
+  });
+
+  it('[F00-03] o CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push', () => {
+    expect(readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8')).toContain('verify:rapido por ticket; verify no fim do lote; verify:full antes de push');
+  });
 });
