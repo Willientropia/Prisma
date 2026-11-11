@@ -59,3 +59,21 @@ test('[BUG-005] na folha, "ir <nome>" acha o arquivo da mesma pasta sem projeto 
   await cmd.press('Enter');
   await expect(tabs(page).last()).toContainText('cabos-cc.prsm');
 });
+
+test('[BUG-010] arrastar a região da folha para a esquerda e para cima a move; a posição final nunca fica negativa', async ({ page }) => {
+  await start(page);
+  await dev(page).open(`${CALC}/string-3.prsf`);
+  await expect.poll(() => resultTexts(page)).toEqual(['3,29V', '0,82%']);
+  const drag = async (dx: number, dy: number) => {
+    const box = (await page.locator('[data-region="s"]').boundingBox())!;
+    await page.mouse.move(box.x + 1, box.y + 1); // a moldura, fora do campo
+    await page.mouse.down();
+    await page.mouse.move(box.x + 1 + dx / 2, box.y + 1 + dy / 2, { steps: 4 });
+    await page.mouse.move(box.x + 1 + dx, box.y + 1 + dy, { steps: 4 });
+    await page.mouse.up();
+  };
+  await drag(-60, -40); // de x=240 y=80
+  await expect.poll(() => dev(page).text()).toContain('```calc {#s x=180 y=40}');
+  await drag(-400, -400); // passa da borda: trava em 0
+  await expect.poll(() => dev(page).text()).toContain('```calc {#s x=0 y=0}');
+});

@@ -202,3 +202,4 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-008 | Digitar `.` sem dígito depois (`2.`) travava o editor em laço infinito (átomo numérico sem progresso) | src/format/mathlinear.test.ts | unit | ok |
 | T02-01 | Nome com dígito (`R1`, `I1`, `xy2pol`, `sys2mat`, `log10`) volta do campo sem virar produto: ida e volta idêntica | tests/golden/conversao.yaml | unit | ok |
 | BUG-009 | Nome com dígito no campo matemático virava produto ao confirmar (`R1` gravava `R*1`) | tests/golden/conversao.yaml | unit | ok |
+| BUG-010 | Região da folha só andava para a direita/baixo: `snap()` limitava o deslocamento do arrasto a >= 0; agora deslocamento negativo vale e só a posição final é limitada a >= 0 | tests/regressao/bugs.spec.ts | e2e | ok |
