@@ -9,7 +9,7 @@ type Call = MathNode & { fn: MathNode; args: MathNode[] };
 /** Nome da variável que a chamada liga, ou undefined (integral antiga integral(f, a, b) não liga nada). */
 function boundBy(c: Call): string | undefined {
   const name = math.isSymbolNode(c.fn) ? (c.fn as Sym).name : '';
-  const ok = (name === 'integral' && c.args.length === 4) || (name === 'diff' && c.args.length === 3);
+  const ok = (name === 'integral' && c.args.length === 4) || (name === 'diff' && c.args.length === 3) || (name === 'sum' && c.args.length === 4);
   return ok && math.isSymbolNode(c.args[1]) ? (c.args[1] as Sym).name : undefined;
 }
 

@@ -89,3 +89,15 @@
 - {id: F04-01, linear: "2*x", digitado: '2x'}
 - {id: F04-02, linear: "x*'m", digitado: 'x\cdot\class{u}{\mathrm{m}}'}
 - {id: F04-02, linear: "'A/100", tela_contem: ['\class{u}{\mathrm{A}}']}
+
+# --- A6-2 (ADENDO 06, 2.2): integral, soma e raiz n-ésima são estrutura visual; o arquivo guarda a chamada ---
+- {id: A6-2-20, linear: "integral(F(x), x, 0, 2)", tela_contem: ['\int_{0}^{2}', 'F(x)', '\mathrm{d}x'], digitado: '\int_{0}^{2}F\left(x\right)\,\mathrm{d}x'}
+- {id: A6-2-20, linear: "integral(x^2, x, 0, ∞)", tela_contem: ['\infty'], digitado: '\int_{0}^{\infty}x^{2}\,\mathrm{d}x'}
+- {id: A6-2-20, linear: "integral(integral(x*y, y, 0, x), x, 0, 1)", tela_contem: ['\int_{0}^{1}\int_{0}^{x}']}
+- {id: A6-2-21, linear: "sum(i^2, i, 1, 10)", tela_contem: ['\sum_{i=1}^{10}', 'i^{2}'], digitado: '\sum_{i=1}^{10}i^{2}'}
+- {id: A6-2-21, linear: "sum(i + 1, i, 1, 3)", tela_contem: ['\sum_{i=1}^{3}\left(i+1\right)'], digitado: '\sum_{i=1}^{3}\left(i+1\right)'}
+- {id: A6-2-22, linear: "nthroot(x, 3)", tela_contem: ['\sqrt[3]{x}'], digitado: '\sqrt[3]{x}'}
+- {id: A6-2-23, linear: "diff(x^2, x, 3)", tela_contem: ['\operatorname{diff}']}
+- {id: A6-2-24, linear: "v[2]", digitado: 'v_{\lbrack 2\rbrack}'}
+- {id: A6-2-24, linear: "batata[2]", digitado: 'batata_{\lbrack 2\rbrack}'}
+- {id: A6-2-24, linear: "M[2, 3]", digitado: 'M_{\lbrack 2;3\rbrack}'}

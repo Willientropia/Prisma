@@ -68,9 +68,20 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-type FieldState = { script: 'sub' | 'sup' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
+type FieldState = { script: 'sub' | 'sup' | 'idx' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean; struct?: number }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
 
-const GREEK_CMD = /^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
+/** 2.2: a ordem dos quadradinhos é a do preenchimento (limite inferior, superior, integrando, variável). */
+const STRUCTURE: Record<string, string> = {
+  sqrt: '\\sqrt{#0}',
+  nthroot: '\\sqrt[#0]{#?}',
+  abs: '\\left\\lvert #0\\right\\rvert',
+  int: '\\int_{#0}^{#?}#?\\mathrm{d}#?', // sem "\,": o espaço fino seria uma parada a mais para as setas
+  sum: '\\sum_{#0=#?}^{#?}#?',
+};
+/** Ctrl+tecla que insere um símbolo (tabela 2.1). */
+const CTRL_SYMBOL: Record<string, string> = { '3': '\\ne ', '9': '\\le ', '0': '\\ge ', '=': '=', '\\': '\\sqrt[#0]{#?}' };
+
+const GREEK_CMD =/^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
 
 function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current: FieldProps }): boolean {
   const before = () => beforeCaret(mf);
@@ -81,6 +92,13 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     if (!/^\d$/.test(at(k))) return false;
     while (k > 0 && /^\d$/.test(at(k))) k--;
     return k > 0 && (/^\p{L}$/u.test(at(k)) || GREEK_CMD.test(at(k)));
+  };
+  // depois de um nome (A6-2): letras e dígitos (batata, R1, ΔV) ou letra grega (\rho); "." e "," abrem o índice
+  const afterName = () => {
+    if (nameDigit()) return true;
+    const b = before();
+    const cmd = /\\[A-Za-z]+\s*$/.exec(b);
+    return cmd ? GREEK_CMD.test(cmd[0].trim()) : /(^|[^\\\p{L}])\p{L}[\p{L}\d]*\s*$/u.test(b);
   };
   const afterDigit = () => /\d$/.test(before()) && !nameDigit();
   const atEnd = () => mf.position === mf.lastOffset;
@@ -97,7 +115,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
 
   // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
   // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
-  const commit = (how: Commit) => { state.script = null; state.unit = false; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
+  const commit = (how: Commit) => { state.script = null; state.unit = false; state.struct = 0; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
     const l = lastLetter(before());
@@ -107,6 +125,11 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   }
   // Ctrl+K: busca de função (F4-06); o MathLive não deixa o atalho chegar à janela
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { run('funcao.inserir'); return true; }
+  if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+    const key = e.key.toLowerCase();
+    const sym = e.shiftKey ? ({ p: '\\pi ', z: '\\infty ' } as Record<string, string>)[key] : CTRL_SYMBOL[key]; // Ctrl+Shift+P = π, Ctrl+Shift+Z = ∞
+    if (sym) { leaveSub(); insert(sym); return true; }
+  }
   if (e.ctrlKey || e.metaKey || e.altKey) return false;
 
   // F04: a unidade do apóstrofo vale para um nome só; operador, expoente ou espaço fecham a unidade antes de seguir
@@ -141,14 +164,47 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
       // depois de letra abre o índice do nome, como no SMath: s,tensao (ADENDO 05, E2.2)
-      if (!state.script && (nameDigit() || /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$|[\u00C0-\u024F\u0370-\u03FF]\s*$/.test(before()))) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      if (!state.script && afterName()) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
       insert(';'); return true; // senão separa argumentos
     }
     case ';': insert(';'); return true;
     case '.': {
       if (afterDigit()) { insert('{,}'); return true; }
-      if (nameDigit() || /(^|[^\\A-Za-z])[A-Za-z]\s*$|\\[A-Za-z]+\s*$/.test(before())) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      if (afterName()) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
       return false;
+    }
+    // v[2]: índice de elemento (M[2;3] com ";"); "]" ou espaço saem dele (A6-2, tabela 2.1)
+    case '[': {
+      if (state.script || !(afterName() || /\\right\)$/.test(before()))) return false;
+      mf.executeCommand('moveToSubscript');
+      state.script = 'idx';
+      insert('\\lbrack #0\\rbrack ');
+      return true;
+    }
+    case ']': if (state.script === 'idx') { mf.executeCommand('moveAfterParent'); state.script = null; return true; } return false;
+    // digitar o nome de certas funções e "(" cria a estrutura visual com quadradinhos (ADENDO 06, 2.2)
+    case '(': {
+      const name = state.script ? undefined : /(?:^|[^\\\p{L}])(sqrt|nthroot|abs|int|sum)$/u.exec(before())?.[1];
+      if (!name) {
+        // com algo à direita (o dx da integral), o parêntese automático do MathLive engoliria tudo: fecha-se já aqui
+        if (state.struct && !state.script && !atEnd()) { insert('\\left(#0\\right)'); return true; }
+        return false;
+      }
+      for (let i = 0; i < name.length; i++) mf.executeCommand('deleteBackward');
+      insert(STRUCTURE[name]);
+      state.struct = (state.struct ?? 0) + 1;
+      return true;
+    }
+    // sqrt(4): o ")" digitado por hábito fecha a estrutura em vez de entrar nela (só sem parêntese aberto)
+    case ')': {
+      if (!state.struct) return false;
+      const b = before();
+      if ((b.match(/\\left\(/g)?.length ?? 0) > (b.match(/\\right\)/g)?.length ?? 0)) return false;
+      const at = mf.position;
+      mf.executeCommand('moveAfterParent');
+      if (mf.position === at) return false;
+      state.struct--;
+      return true;
     }
     case '_': state.script = 'sub'; return false;
     case '^': state.script = 'sup'; return false;

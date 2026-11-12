@@ -218,6 +218,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | F03-02 | Caderno: se a linha nova não monta (caderno somente leitura), `holdKeys` solta o teclado do app em até 1 s | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-013 | Teclado preso: `creating` da folha e `holdKeys` sem prazo engoliam as teclas para sempre quando o campo novo não montava | tests/regressao/bugs.spec.ts | e2e | ok |
 | BUG-014 | Nome solto que coincide com unidade do math.js (`L`, `m`, `b`, `S`) é variável: `s := 10*L` com L indefinido fica em aberto (`10*L`) na folha e dá "Variável não definida: L" no caderno; não vira litro, metro nem bit | src/engine/engine.test.ts, tests/regressao/bugs.spec.ts | unit, e2e | ok |
+| BUG-015 | Teste manual da v0.2.0: `.` (e `,`) depois de qualquer nome abre o índice, não só nome de uma letra: `batata.1` vira batata com índice 1, `R1.a` vira R1 com índice a, também com letra grega; `.` solto e `2.` não viram índice nem travam (B1) | tests/golden/teclado.yaml | browser | ok |
 | F04-01 | Digitar `9j` ou `2x` (número e letras sem `'`) grava multiplicação: `9*j`, `2*x`; `S:4mm^2` grava `S := 4*mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
 | F04-02 | Unidade explícita: `número espaço unidade` continua unidade; unidade sem número ganha `'` (`x*'m`, `'A/100`) e faz ida e volta; `4'mm^2` grava `4 mm^2` | src/format/mathlinear.test.ts, tests/golden/teclado.yaml | unit, browser | ok |
 | F04-03 | Unidade solta vinda do `.sm` (`style="unit"` sem número antes) grava `'unidade` na folha convertida | src/format/smath.test.ts | unit | ok |
@@ -245,5 +246,50 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-8-16 | `diff(vetor)` do math.js continua valendo | src/engine/calculus.test.ts | unit | ok |
 | A6-8-17 | Limite com unidade e outro número puro diferente de 0 dá "Unidades incompatíveis"; unidade com deslocamento (°C) é recusada | src/engine/calculus.test.ts | unit | ok |
 | A6-8-18 | Prazo do worker para integral divergente ou aninhada (1/x faz cerca de 60 mil avaliações; aninhada multiplica): ticket F06 | - | unit | pendente |
+| A6-2-01 | 06-20, 2.1 (barra invertida): raiz quadrada | tests/golden/teclado.yaml | browser | ok |
+| A6-2-02 | 06-20, 2.1 (Ctrl+barra invertida): raiz n-ésima, índice e radicando; grava `nthroot(x, n)` | tests/golden/teclado.yaml | browser | ok |
+| A6-2-03 | 06-20, 2.1 (`[` depois de nome): índice de elemento v[2], batata[2], M[2;3] | tests/golden/teclado.yaml | browser | ok |
+| A6-2-04 | 06-20, 2.1 (`.` depois de letra): índice de nome S.trafo | tests/golden/teclado.yaml | browser | ok |
+| A6-2-05 | 06-20, 2.1 (`^`): potência | tests/golden/teclado.yaml | browser | ok |
+| A6-2-06 | 06-20, 2.1 (`'`): unidade explícita, em azul | tests/golden/teclado.yaml | browser | ok |
+| A6-2-07 | 06-20 e 06-23, 2.1 (`%`): `2,6%` vira 2,6 % com a unidade porcento | tests/golden/teclado.yaml | browser | ok |
+| A6-2-10 | 06-20, 2.1 (`:`): definição ≔ | tests/golden/teclado.yaml | browser | ok |
+| A6-2-11 | 06-20, 2.1 (`=`): igual inteligente pede o resultado | tests/golden/teclado.yaml | browser | ok |
+| A6-2-12 | 06-20, 2.1 (Ctrl+=): igual lógico, grava `a == b` | tests/golden/teclado.yaml | browser | ok |
+| A6-2-13 | 06-20, 2.1 (Ctrl+3): ≠ | tests/golden/teclado.yaml | browser | ok |
+| A6-2-14 | 06-20, 2.1 (Ctrl+9): ≤ | tests/golden/teclado.yaml | browser | ok |
+| A6-2-15 | 06-20, 2.1 (Ctrl+0): ≥ | tests/golden/teclado.yaml | browser | ok |
+| A6-2-18 | 06-20, 2.1 (Ctrl+G): letra anterior vira grega | tests/golden/teclado.yaml | browser | ok |
+| A6-2-19 | 06-20, 2.1 (Ctrl+Shift+P e Ctrl+Shift+Z): π e ∞ | tests/golden/teclado.yaml | browser | ok |
+| A6-2-20 | 2.2: integral(f, x, a, b) vai e volta como ∫ de a até b de f dx (também ∞ e integral dentro de integral) | tests/golden/conversao.yaml | unit | ok |
+| A6-2-21 | 2.2: sum(f, i, a, b) vai e volta como Σ com índice, início e fim (corpo com + ou - entra entre parênteses) | tests/golden/conversao.yaml | unit | ok |
+| A6-2-22 | 2.2: nthroot(x, n) vai e volta como raiz n-ésima | tests/golden/conversao.yaml | unit | ok |
+| A6-2-23 | 2.2: diff entra nos nomes nativos (nome reto na tela); a estrutura d/d□ fica para o A6-5 | tests/golden/conversao.yaml | unit | ok |
+| A6-2-24 | Índice de elemento vai e volta (v[2], batata[2], M[2, 3]) a partir do que o campo produz ao digitar | tests/golden/conversao.yaml | unit | ok |
+| A6-2-25 | 06-20, 2.1 (Home e End): início e fim da fórmula | tests/golden/teclado.yaml | browser | ok |
+| A6-2-26 | 06-20, 2.1 (Ctrl+Z e Ctrl+Y): desfazer e refazer | tests/golden/teclado.yaml | browser | ok |
+| A6-2-27 | 06-20, 2.1 (Ctrl+A): seleciona o conteúdo; digitar substitui (a região inteira no segundo Ctrl+A: pendente, A6-3) | tests/golden/teclado.yaml | browser | ok |
+| A6-2-28 | 06-20, 2.1 (Enter): sai da região e grava | tests/golden/teclado.yaml | browser | ok |
+| A6-2-30 | Motor: `sum(expr, i, a, b)` soma com i de a a b; o i não vaza; início/fim não inteiros e mais de 1 milhão de termos dão erro; `sum(vetor)` continua valendo | src/engine/calculus.test.ts | unit | ok |
+| A6-2-31 | Motor: `nthroot(x, n)` | src/engine/calculus.test.ts | unit | ok |
+| A6-2-40 | 06-22: `sqrt(` cria √ com quadradinho; o `)` digitado fecha a raiz | tests/golden/teclado.yaml | browser | ok |
+| A6-2-41 | 06-22: `abs(` cria o valor absoluto com quadradinho | tests/golden/teclado.yaml | browser | ok |
+| A6-2-42 | 06-22: `int(` cria ∫ de □ a □ de □ d□, preenchida com setas; `=` pede o resultado | tests/golden/teclado.yaml | browser | ok |
+| A6-2-43 | 06-22: `sum(` cria Σ com índice, início, fim e corpo | tests/golden/teclado.yaml | browser | ok |
+| A6-2-44 | 2.2: `nthroot(` cria a raiz n-ésima | tests/golden/teclado.yaml | browser | ok |
+| A6-2-45 | 2.2: nome que só termina em `sqrt` (xsqrt) não vira estrutura | tests/golden/teclado.yaml | browser | ok |
+| A6-2-50 | 2.1 (`"`): região de texto numa área vazia da folha | - | e2e | pendente |
+| A6-2-51 | 2.1 (`'`): o assistente só com unidades: A6-4 | - | e2e | pendente |
+| A6-2-52 | 2.1 (`[` em lugar vazio): bloco de linhas para programação: A6-6 (Lógica e programação) | - | browser | pendente |
+| A6-2-53 | 2.1 (`!`): fatorial; precisa de operador novo no formato do arquivo | - | browser | pendente |
+| A6-2-54 | 2.1 (`&`, barra vertical e `~`): E, OU e NÃO lógicos; precisam de operador no formato e no motor, e a barra vertical hoje abre o valor absoluto | - | browser | pendente |
+| A6-2-55 | 2.1 (`@`): gráfico 2D numa área vazia: A6-9 | - | e2e | pendente |
+| A6-2-56 | 2.1 (Ctrl+1 transposta, Ctrl+8 produto vetorial ×): precisam de operador no formato e no motor | - | browser | pendente |
+| A6-2-57 | 2.1 (Ctrl+. simbólico, Espaço amplia a seleção): A6-3 | - | browser | pendente |
+| A6-2-58 | 2.1 (Ctrl+M matriz, Ctrl+E funções, Ctrl+W unidades): A6-6 e A6-7 | - | e2e | pendente |
+| A6-2-59 | 2.1 (Ctrl+Space, Tab, Shift+Tab, Ctrl+Enter, Shift+Enter com assistente): A6-4 | - | e2e | pendente |
+| A6-2-60 | 2.1 (F8 renomeia, F9 recalcula, Ctrl+B/I/U em texto): sessão própria do lote | - | e2e | pendente |
+| A6-2-61 | 2.2: `diff(`, `product(`, `det(`, `transpose(`, `range(`, `if(`, `for(`, `while(` como estrutura visual: A6-5 e A6-6 | - | browser | pendente |
+| A6-2-62 | Avaliar `sum` com índice e `integral` no worker com prazo (1 milhão de termos): ticket F06 | - | unit | pendente |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |
