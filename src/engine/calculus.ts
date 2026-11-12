@@ -11,12 +11,22 @@ type Scope = Map<string, unknown>;
 const REL_TOL = 1e-10;
 const MAX_SUBDIVISIONS = 2000;
 
+/**
+ * Prazo do cálculo de uma linha (A6-ROBUSTEZ-02). Fica abaixo dos 2 s do cliente do worker (client.ts), que
+ * mata o worker e perde as outras linhas: assim só a linha lenta dá erro. Vale para integral, diff e sum, aninhados ou não.
+ */
+export const CALC_LIMIT_MS = 1500;
+let deadline = Infinity;
+const tick = () => { if (performance.now() > deadline) throw new Error('O cálculo passou do tempo limite'); };
+
 // avisos da linha em avaliação (a integral que não convergiu); evaluate.ts recolhe depois de cada linha
 const pending: string[] = [];
 /** Executa a avaliação de uma linha e anexa o primeiro aviso do cálculo, se houver. */
 export function withWarning<T extends object>(run: () => T): T & { warning?: string } {
   pending.length = 0;
-  const r = run();
+  deadline = performance.now() + CALC_LIMIT_MS;
+  let r: T;
+  try { r = run(); } finally { deadline = Infinity; }
   return pending.length ? { ...r, warning: pending[0] } : r;
 }
 
@@ -150,6 +160,7 @@ export function calculusFunctions(math: M) {
     const xc = carrierOf(isU(aV) && Number.isFinite(parts(aV)[0]) ? aV : bV);
     let yc: Unit | undefined;
     const q = integrate((x) => {
+      tick();
       const y = f(xc ? build([x, 0], xc) : x);
       yc ??= carrierOf(y);
       return parts(y);
@@ -185,6 +196,7 @@ export function calculusFunctions(math: M) {
       const at = (xd: number): Q => {
         let r = memo.get(xd);
         if (!r) {
+          tick();
           set(xc ? build([xd * cx, 0], xc) : xd);
           const y = body.evaluate(scope);
           yc ??= carrierOf(y);
@@ -210,7 +222,7 @@ export function calculusFunctions(math: M) {
     if (b - a >= MAX_TERMS) throw new Error('A soma tem termos demais (máximo de 1 000 000)');
     return withVar(scope, name, (set) => {
       let acc: unknown = 0;
-      for (let k = a; k <= b; k++) { set(k); acc = math.add(acc as never, body.evaluate(scope) as never); }
+      for (let k = a; k <= b; k++) { tick(); set(k); acc = math.add(acc as never, body.evaluate(scope) as never); }
       return acc;
     });
   }, { rawArgs: true });
