@@ -9,6 +9,7 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import { MathLine, isKnownUnit } from './MathLine';
+import { useWorkspace } from '../store/workspace';
 import golden from '../../tests/golden/teclado.yaml?raw';
 
 type Case = {
@@ -16,6 +17,8 @@ type Case = {
   inicial?: string; definidos?: string[]; // A6-1: linha já gravada (raw) e nomes já definidos; a gravação volta para a linha, como na folha
   raw_final?: string; raw_sem?: string[]; sem_resultado?: boolean; sair?: boolean; // linha gravada no fim; nenhum "= resultado" na tela; tirar o foco no fim
   linear?: string; latex_contem?: string[]; latex_nao_contem?: string[]; tela_contem?: string[]; tela_nao_contem?: string[];
+  virou_texto?: string; nao_virou_texto?: boolean; // A6-3: Espaço numa região de um nome só pede para virar texto (a palavra), ou não pede
+  simbolico?: string; sem_simbolico?: boolean; status_contem?: string; // A6-3: Ctrl+. mostra "-> resultado" ao lado do campo (texto dele), ou avisa na barra de status
 };
 
 /** "{Ctrl+G}" e companhia para a sintaxe do user-event. */
@@ -34,39 +37,45 @@ let host: HTMLDivElement | null = null;
 afterEach(() => { act(() => root?.unmount()); host?.remove(); root = null; host = null; });
 
 /** Como a folha: o que o campo grava volta como `raw`; linha de avaliação mostra um resultado de mentira. */
-function Harness(p: { inicial: string; definidos: string[]; contexto: Case['contexto']; log: (r: string) => void }) {
+function Harness(p: { inicial: string; definidos: string[]; contexto: Case['contexto']; log: (r: string) => void; text: (w: string) => void }) {
   const [raw, setRaw] = useState(p.inicial);
   const result = / = \?/.test(raw) ? { kind: 'eval' as const, numText: '4', text: '4' } : undefined;
   return <MathLine raw={raw} result={result} ctx={{ defined: new Set(p.definidos), isUnit: isKnownUnit }} theme={p.contexto === 'folha' ? 'dark' : 'paper'} size={20} focused
-    onWrite={(r) => { p.log(r); setRaw(r); }} />;
+    onWrite={(r) => { p.log(r); setRaw(r); }} onToText={p.text} />;
 }
 
 async function mountLine(contexto: Case['contexto'], inicial = '', definidos: string[] = []) {
   const writes: string[] = [];
+  const texts: string[] = [];
   const cur = { raw: inicial };
   host = document.createElement('div');
   host.style.cssText = `padding:20px;background:var(${contexto === 'folha' ? '--bg-grid' : '--paper'})`;
   document.body.appendChild(host);
   root = createRoot(host);
   await act(async () => {
-    root!.render(<Harness inicial={inicial} definidos={definidos} contexto={contexto} log={(r) => { writes.push(r); cur.raw = r; }} />);
+    root!.render(<Harness inicial={inicial} definidos={definidos} contexto={contexto} log={(r) => { writes.push(r); cur.raw = r; }} text={(w) => texts.push(w)} />);
   });
   await expect.poll(() => document.activeElement?.tagName, { timeout: 3000 }).toBe('MATH-FIELD');
   const field = host.querySelector('math-field') as HTMLElement & { value: string };
   if (inicial) await new Promise((r) => setTimeout(r, 300)); // o campo põe o cursor no fim alguns quadros depois do foco
-  return { writes, cur, host, field, shown: () => field.shadowRoot?.querySelector('.ML__latex')?.textContent ?? '' };
+  return { writes, texts, cur, host, field, shown: () => field.shadowRoot?.querySelector('.ML__latex')?.textContent ?? '' };
 }
 
 describe('tests/golden/teclado.yaml', () => {
   for (const c of parseYaml(golden) as Case[]) {
     it(`[${c.id}] ${c.descricao ?? c.teclas}`, async () => {
-      const { writes, cur, host, field, shown } = await mountLine(c.contexto, c.inicial, c.definidos);
+      const { writes, texts, cur, host, field, shown } = await mountLine(c.contexto, c.inicial, c.definidos);
       if (c.inicial) { // edição de linha existente: uma tecla por vez, como a pessoa digita (em rajada o MathLive perde Backspace)
         for (const k of toUserEvent(c.teclas).match(/\{[^}]+\}|./g) ?? []) { await userEvent.keyboard(k); await new Promise((r) => setTimeout(r, 40)); }
       } else await userEvent.keyboard(toUserEvent(c.teclas));
       if (c.linear !== undefined) await expect.poll(() => writes.at(-1), { timeout: 2000 }).toBe(c.linear);
       const fieldValue = field.value; const fieldShown = shown();
       if (c.sem_resultado) { await new Promise((r) => setTimeout(r, 400)); expect(host.querySelector('.mresult')).toBeNull(); }
+      if (c.virou_texto !== undefined) await expect.poll(() => texts, { timeout: 2000 }).toEqual([c.virou_texto]);
+      if (c.nao_virou_texto) { await new Promise((r) => setTimeout(r, 300)); expect(texts).toEqual([]); }
+      if (c.simbolico !== undefined) await expect.poll(() => host.querySelector('.msymbolic')?.textContent, { timeout: 2000 }).toBe(c.simbolico);
+      if (c.sem_simbolico) { await new Promise((r) => setTimeout(r, 300)); expect(host.querySelector('.msymbolic')).toBeNull(); }
+      if (c.status_contem !== undefined) await expect.poll(() => useWorkspace.getState().status ?? '', { timeout: 2000 }).toContain(c.status_contem);
       if (c.sair) { field.blur(); await expect.poll(() => document.activeElement === field, { timeout: 2000 }).toBe(false); }
       for (const p of c.raw_sem ?? []) expect(cur.raw).not.toContain(p);
       if (c.raw_final !== undefined) { await new Promise((r) => setTimeout(r, 400)); expect(cur.raw).toBe(c.raw_final); }
@@ -76,6 +85,15 @@ describe('tests/golden/teclado.yaml', () => {
       for (const p of c.tela_nao_contem ?? []) expect(fieldShown).not.toContain(p);
     });
   }
+
+  it('[A6-3-09] Espaço numa expressão de 281 átomos (perto do limite de 300) responde em menos de 300 ms', async () => {
+    await mountLine('folha', '', ['a', 'b']);
+    await userEvent.keyboard('a+b+'.repeat(70) + 'a');
+    const t0 = performance.now();
+    await userEvent.keyboard(' ');
+    const ms = performance.now() - t0;
+    expect(ms, 'tempo do Espaço').toBeLessThan(300);
+  });
 
   it('[B10-01] unidade desenhada em --math-unit', async () => {
     const { field } = await mountLine('folha');

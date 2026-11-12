@@ -285,11 +285,44 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-2-54 | 2.1 (`&`, barra vertical e `~`): E, OU e NÃO lógicos; precisam de operador no formato e no motor, e a barra vertical hoje abre o valor absoluto | - | browser | pendente |
 | A6-2-55 | 2.1 (`@`): gráfico 2D numa área vazia: A6-9 | - | e2e | pendente |
 | A6-2-56 | 2.1 (Ctrl+1 transposta, Ctrl+8 produto vetorial ×): precisam de operador no formato e no motor | - | browser | pendente |
-| A6-2-57 | 2.1 (Ctrl+. simbólico, Espaço amplia a seleção): A6-3 | - | browser | pendente |
 | A6-2-58 | 2.1 (Ctrl+M matriz, Ctrl+E funções, Ctrl+W unidades): A6-6 e A6-7 | - | e2e | pendente |
 | A6-2-59 | 2.1 (Ctrl+Space, Tab, Shift+Tab, Ctrl+Enter, Shift+Enter com assistente): A6-4 | - | e2e | pendente |
 | A6-2-60 | 2.1 (F8 renomeia, F9 recalcula, Ctrl+B/I/U em texto): sessão própria do lote | - | e2e | pendente |
 | A6-2-61 | 2.2: `diff(`, `product(`, `det(`, `transpose(`, `range(`, `if(`, `for(`, `while(` como estrutura visual: A6-5 e A6-6 | - | browser | pendente |
 | A6-2-62 | Avaliar `sum` com índice e `integral` no worker com prazo (1 milhão de termos): ticket F06 | - | unit | pendente |
+| A6-3-01 | 06-21, 2.3: `a+b`, Espaço, `/2` gera (a + b)/2 com a + b inteiro no numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-02 | 2.5: `c+d/2` sem Espaço fica c + d/2 | tests/golden/teclado.yaml | browser | ok |
+| A6-3-03 | 2.3: cada Espaço amplia mais: c+d·e, dois Espaços e `/2` põem tudo no numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-04 | 2.3: com um só Espaço, só d·e vai para o numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-05 | 2.3: a seleção ampliada recebe o operador: `a+b`, Espaço, `*c` gera (a + b)*c | tests/golden/teclado.yaml | browser | ok |
+| A6-3-06 | 2.3: depois de ampliar, `+c` não muda nada: a + b + c | tests/golden/teclado.yaml | browser | ok |
+| A6-3-07 | 2.3: em x:a+b o último nível do Espaço é o lado direito do ≔ (o x não entra no numerador) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-09 | Espaço numa expressão de 281 átomos (limite de ampliação: 300) responde em menos de 300 ms | src/math/teclado.browser.test.tsx | browser | ok |
+| A6-3-10 | Correção do teste manual da v0.2.0 (conferida no SMath): Espaço numa região com só um nome pede para virar texto, com a palavra | tests/golden/teclado.yaml | browser | ok |
+| A6-3-11 | O mesmo com letra grega (ρ) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-12 | Com expressão (`a+b`) o Espaço amplia e não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-13 | Com ≔ (`x:2`) o Espaço não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-14 | Número sozinho não é nome: não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-15 | Nome com índice aberto: o Espaço sai do índice e não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-16 | Região vazia: Espaço não faz nada | tests/golden/teclado.yaml | browser | ok |
+| A6-3-20 | 06-24, 2.4: `Ctrl+.` em `diff(x^2;x)` mostra → 2·x ao lado do campo | tests/golden/teclado.yaml | browser | ok |
+| A6-3-21 | 2.4: `Ctrl+.` simplifica (x+x → 2·x) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-22 | 2.4: sem resultado simbólico, a barra de status diz "Cálculo simbólico não disponível para esta expressão" | tests/golden/teclado.yaml | browser | ok |
+| A6-3-30 | Motor simbólico: `diff(x^2, x)` dá `2 * x` | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-31 | Motor simbólico: derivada de produto e de função composta | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-32 | Motor simbólico: simplifica (x + x, (a + b) - b) | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-33 | Motor simbólico: integral, vazio e texto inválido dão null | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-34 | Motor simbólico: `diff` sem variável dá null | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-35 | Motor simbólico: expressão com mais de 500 caracteres não vai ao simplify (sem prazo) e devolve null na hora | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-40 | Folha: digitar `batata casa` cria uma região de texto "batata casa" (sem região de cálculo), com o cursor seguindo no texto | tests/e2e/folha.spec.ts | e2e | ok |
+| A6-3-41 | Folha: `a+b /2` continua região de cálculo e grava (a + b)/2 | tests/e2e/folha.spec.ts | e2e | ok |
+| A6-3-50 | 2.5 e correção do E8-08: `x=` com x definido mostra x = 2 na hora e o cursor continua no fim do lado esquerdo; digitar 5 edita o nome (x5); `→` leva ao marcador; Tab sai da região. Aguarda autorização do usuário para trocar o esperado do E8-08 | - | e2e | pendente |
+| A6-3-51 | 2.5 e decisão do usuário (conferida no SMath): `|` é o operador "ou" entre operandos (`a|a`) e não abre mais o valor absoluto, que fica em `abs(`. Aguarda a proposta de como o `|` é gravado no `.prsf` (formato do arquivo) e a autorização do usuário | - | browser | pendente |
+| A6-3-70 | Decisão do usuário (conferida no SMath): dentro do índice a vírgula fica como texto (`batata,alo,oi` = batata com índice alo,oi, sem `;`) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-71 | Decisão do usuário: a vírgula depois de nome continua abrindo o índice, inclusive em `f(batata,x)`; o separador de argumentos é `;` (comportamento do A6-2 mantido) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-72 | O índice com vírgula (`batata_alo,oi`) volta a ser lido do `.prsf`: hoje o campo grava `batata_alo,oi` e a leitura para em "Sobrou: ,oi"; precisa de mudança no formato do arquivo (aguarda proposta e autorização do usuário) | - | unit | pendente |
+| A6-3-52 | 2.5: assistente com `s` e `x` (lista, detalhe, assinatura): A6-4 | - | e2e | pendente |
+| A6-3-60 | 06-45: as demais linhas da tabela 2.5 (s=10*x, k:5/t:10*k, y:2,6%, c+d/2) já passam em E8-07, E3-xx, A6-2-07 e A6-3-02 | - | e2e | pendente |
+| BUG-016 | `a<=b` digitado vira a ≤ b (e `a>=b` vira a ≥ b), sem o `=` disparar avaliação | tests/golden/teclado.yaml | browser | ok |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |

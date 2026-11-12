@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '../components/ui';
 import {
-  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, parseLinear, parseUnit, splitComment, unitFromMathjs, unitLatex, unitToLinear,
+  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, nodeToLinear, parseLinear, parseUnit, splitComment, unitFromMathjs, unitLatex, unitToLinear,
   type LatexCtx, type Line, type Node, type Unit,
 } from '../format/mathlinear';
 import { math } from '../engine/math';
 import { toMath } from '../engine/syntax';
+import { symbolic as symbolicOf } from '../engine/symbolic';
 import type { LineResult } from '../engine/evaluate';
 import { useWorkspace } from '../store/workspace';
 import { MathField, MathMarkup, holdKeys, type Commit, type Key } from './MathField';
@@ -78,6 +79,7 @@ type Props = {
   onBackspaceEmpty?: () => void;
   onFocus?: () => void;
   onExit?: () => void;
+  onToText?: (word: string) => void; // Espaço numa região de um nome só (A6-3): a folha troca a região por texto
 };
 
 export function MathLine(props: Props) {
@@ -93,6 +95,8 @@ export function MathLine(props: Props) {
   const cleared = useRef(false);
   const [pending, setPending] = useState(false);
   const set = useWorkspace((s) => s.set);
+  const [sym, setSym] = useState<string | null>(null); // Ctrl+. (A6-3, 2.4): latex de "-> resultado", some ao editar
+  const symFor = useRef(''); // o que havia no campo quando o Ctrl+. foi apertado
 
   // o campo mostra a expressão; o resultado fica fora dele
   const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : `\\text{${code.trim().replace(/[\\{}]/g, '')}}`;
@@ -125,13 +129,29 @@ export function MathLine(props: Props) {
 
   const onInput = (latex: string) => {
     clearTimeout(live.current);
+    if (latex !== symFor.current) setSym(null); // o resultado vale enquanto a expressão não mudar (o MathLive repete o "input" do ')' depois da tecla)
     const n = toRaw(latex, false);
     if (n === '') cleared.current = true;
     setPending(n === null || n === '');
     live.current = window.setTimeout(() => { if (n !== null && n !== '') { write(n); cleared.current = false; } }, LIVE_MS);
   };
 
+  /** Ctrl+.: derivada e simplificação do math.js; sem resultado, avisa na barra de status. */
+  const onSymbolic = (latex: string) => {
+    let out: string | null = null;
+    try {
+      const l = latexToLine(latex);
+      const src = nodeToLinear(l.kind === 'def' ? l.rhs : l.expr);
+      const r = symbolicOf(src);
+      if (r) { const o = parseLinear(r); out = `\\to ${nodeLatex(o.kind === 'def' ? o.rhs : o.expr, { defined: { has: () => true } as unknown as Set<string>, isUnit: () => false })}`; }
+    } catch { out = null; }
+    symFor.current = latex;
+    setSym(out);
+    if (!out) set({ status: 'Cálculo simbólico não disponível para esta expressão' });
+  };
+
   const onCommit = (latex: string, how: Commit) => {
+    setSym(null);
     clearTimeout(live.current);
     // depois do "=", o que se digita vai para o marcador de conversão (ADENDO 05, E2.1 e E8-08)
     if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { cleared.current = false; setPending(false); holdKeys(); setUnitEdit(true); } return; }
@@ -152,7 +172,8 @@ export function MathLine(props: Props) {
   return (
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
       <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
-        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} />
+        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} />
+      {sym && <span className="mresult msymbolic"><MathMarkup latex={sym} theme={theme} size={size} className="msymbolic-value" /></span>}
       {showResult && (
         <span className={`mresult${props.stale ? ' mresult-stale' : ''}`}>
           <MathMarkup latex="=" theme={theme} size={size} />
