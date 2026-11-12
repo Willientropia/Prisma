@@ -187,9 +187,10 @@ for (const delay of [0, 30]) {
 }
 
 // BUG-019: %, ‰ e ppm no campo de unidade do resultado convertem (não são unidades do math.js; ‰ e ppm autorizados pelo usuário em 12/11)
-// Tab com a lista aberta aceita o item (A6-4) e um segundo Tab, Enter ou o clique fora confirma
-for (const [unit, shown] of [['%', '20%'], ['‰', '200‰'], ['ppm', '2⋅105ppm']]) for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
-  test(`[BUG-019] V_o/T_total = 0,2 com ${unit} no campo de unidade (${confirm.join(' + ')}) mostra ${shown}`, async ({ page }) => {
+// Tab com a lista aberta aceita o item (A6-4) e um segundo Tab, Enter ou o clique fora confirma.
+// Sem intervalo entre as teclas (0 ms) o Tab chegava antes do "input" do % ou do ‰ e aceitava o item da lista do campo vazio por cima dele
+for (const delay of [40, 0]) for (const [unit, shown] of [['%', '20%'], ['‰', '200‰'], ['ppm', '2⋅105ppm']]) for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
+  test(`[BUG-019] V_o/T_total = 0,2 com ${unit} no campo de unidade (${confirm.join(' + ')}, ${delay} ms entre teclas) mostra ${shown}`, async ({ page }) => {
     await sheetWith(page, ['V.o:1', 'T.total:5']);
     await page.keyboard.type('V.o/T.total=', { delay: 30 });
     await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('0,2');
@@ -197,11 +198,12 @@ for (const [unit, shown] of [['%', '20%'], ['‰', '200‰'], ['ppm', '2⋅105pp
     await line.hover();
     await line.locator('.unit-marker').click();
     await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
-    await page.keyboard.type(unit, { delay: 40 });
+    await page.keyboard.type(unit, { delay });
+    // o ‰ não é tecla do teclado de teste: entra como texto inserido, e o Tab chegava antes de o campo aplicá-lo; a pessoa vê o ‰ antes do Tab
+    if (unit === '‰') await expect.poll(() => page.evaluate(() => (document.activeElement as unknown as { value?: string })?.value)).toContain('‰');
     for (const k of confirm) {
       if (k === 'clique fora') await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } });
       else await page.keyboard.press(k);
-      await page.waitForTimeout(150); // sob carga o primeiro Tab (aceita o item da lista) ainda não tinha sido tratado quando o segundo chegava
     }
     await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe(shown);
     await expect.poll(() => dev(page).text()).toContain(`V_o/T_total = ? ${unit}`);
