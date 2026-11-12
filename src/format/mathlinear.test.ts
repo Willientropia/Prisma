@@ -5,6 +5,7 @@ import { latexToLine, latexToUnit, lineToLinear, parseLinear, toLatex, toLinear,
 import { blocks, lines, parse } from './doc';
 import { loadGolden, ROOT, walk } from '../../tests/helpers/files';
 import { readFileSync } from 'node:fs';
+import { math } from '../engine/math';
 
 type ConvCase = { id: string; linear: string; digitado?: string; tela_contem?: string[] };
 
@@ -141,5 +142,92 @@ describe('[BUG-020] número colado em nome é produto', () => {
     expect(lineToLinear(parseLinear('y := 1/2x'))).toBe('y := 1/2*x');
     expect(lineToLinear(parseLinear('y := 2x/3'))).toBe('y := 2*x/3');
     expect(toLatex('y := 1/2x')).toContain('\\frac{1}{2}\\cdot');
+  });
+});
+
+// A6-FIX2: a tela segue o motor (math.js). O que o math.js lê de um jeito, o leitor lê do mesmo jeito.
+const mathStr = (s: string) => math.parse(s).toString({ parenthesis: 'all', implicit: 'show' });
+const rhsOf = (s: string) => s.replace(/^.*:=\s*/, '');
+const viaFile = (s: string) => lineToLinear(parseLinear(s));
+const viaTela = (s: string) => toLinear(toLatex(s));
+
+describe('[A6-FIX2-01] produto colado: a tela segue o motor', () => {
+  const casos = ['y := a/2x', 'y := 2x/3y', 'y := 1/2x', 'y := 2x/3', 'y := a/2x/3', 'y := 2/3x', 'y := x/2y', 'y := a/2x*b', 'y := -1/2x', 'y := 1/2 sin(x)', 'y := 1/2 (x)', 'y := 2/3 sin(x)'];
+  for (const c of casos) {
+    it(`[A6-FIX2-01] ${c}: mesma árvore do math.js no arquivo e depois de passar pela tela`, () => {
+      expect(mathStr(rhsOf(viaFile(c))), 'arquivo regravado').toBe(mathStr(rhsOf(c)));
+      expect(mathStr(rhsOf(viaTela(c))), 'tela e volta').toBe(mathStr(rhsOf(c)));
+    });
+  }
+  it('[A6-FIX2-01] a/2x mostra a/(2·x), com 2x embaixo da barra', () => {
+    expect(toLatex('y := a/2x')).toContain('\\frac{a}{2\\cdot x}');
+    expect(toLatex('y := 2x/3y')).toContain('\\frac{2\\cdot x}{3\\cdot y}');
+    expect(toLatex('y := 1/2x')).toContain('\\frac{1}{2}\\cdot');
+  });
+});
+
+describe('[A6-FIX2-02] notação científica sobrevive à edição', () => {
+  it('[A6-FIX2-02] 2e3, 2e3 m, 1e-3x e 1.5e-3 fazem ida e volta pela tela', () => {
+    expect(viaTela('x := 2e3')).toBe('x := 2e3');
+    expect(viaTela('x := 2e3 m')).toBe('x := 2e3 m');
+    expect(viaTela('y := 1e-3x')).toBe('y := 1e-3*x');
+    expect(viaTela('y := 1.5e-3')).toBe('y := 1.5e-3');
+    expect(viaTela('y := 2E+3 + 1')).toBe('y := 2E+3 + 1');
+    expect(toLatex('x := 2e3')).not.toContain('2e3'); // e3 solto na tela seria lido de volta como o nome e3 (2*e3)
+  });
+  it('[A6-FIX2-02] 2e e 2e_3 digitados na tela continuam produto', () => {
+    expect(toLinear('2e')).toBe('2*e');
+    expect(toLinear('2e_{3}')).toBe('2*e_3');
+  });
+});
+
+describe('[A6-FIX2-03] % e ° colados no número são unidade', () => {
+  it('[A6-FIX2-03] 5% lê como 5 %, sem produto', () => {
+    expect(viaFile('x := 5%')).toBe('x := 5 %');
+    expect(viaTela('x := 5%')).toBe('x := 5 %');
+    expect(toLatex('x := 5%')).not.toContain('\\cdot');
+    expect(toLatex('x := 5%')).toContain('\\class{u}{\\mathrm{\\%}}');
+  });
+  it('[A6-FIX2-03] 25°C e 90° colados são unidade, 25 °C com espaço continua igual', () => {
+    expect(viaFile('t := 25°C')).toBe('t := 25 °C');
+    expect(viaTela('t := 25°C')).toBe('t := 25 °C');
+    expect(viaFile('a := 90°')).toBe('a := 90 °');
+    expect(viaTela('t := 25 °C')).toBe('t := 25 °C');
+  });
+});
+
+describe('[A6-FIX2-05] o leitor linear lê tudo o que o motor lê (A6-LEITOR)', () => {
+  const casos: [string, string][] = [
+    ['y := 3(x)', 'y := 3*(x)'],
+    ['y := 2 sin(x)', 'y := 2*sin(x)'],
+    ['y := 2(a+b)', 'y := 2*(a + b)'],
+    ['y := (a+b)(c+d)', 'y := (a + b)*(c + d)'],
+    ['y := 2 (a+b)', 'y := 2*(a + b)'],
+    ['y := 2(a+b)(c)', 'y := 2*(a + b)*(c)'],
+    ['y := (a+b)c', 'y := (a + b)*c'],
+  ];
+  for (const [src, canon] of casos) {
+    it(`[A6-FIX2-05] ${src} abre como produto (${canon}) e faz ida e volta`, () => {
+      expect(viaFile(src)).toBe(canon);
+      expect(viaFile(canon)).toBe(canon); // forma canônica estável: linear -> linear
+      expect(viaTela(src)).toBe(canon);
+      expect(viaTela(canon)).toBe(canon); // linear -> LaTeX -> linear
+      expect(mathStr(rhsOf(canon)), 'mesma árvore do math.js').toBe(mathStr(rhsOf(src)));
+    });
+  }
+  it('[A6-FIX2-05] as linhas de fórmula dos arquivos de exemplo e de resources não mudam', () => {
+    const files = [...walk(join(ROOT, 'tests/fixtures')), ...walk(join(ROOT, 'resources'))].filter((f) => /\.prs[mfl]$/.test(f)); // o modelo (.prst) tem {{campos}}, não fórmulas
+    let n = 0;
+    for (const f of files) {
+      for (const b of blocks(parse(readFileSync(f, 'utf8')))) {
+        if (!['calc', 'funcao', 'verificar'].includes(b.type)) continue;
+        for (const l of lines(b.body).map((x) => x.trim()).filter(Boolean)) {
+          n++;
+          expect(viaFile(l), `${f}: linear -> linear`).toBe(l);
+          expect(viaTela(l), `${f}: linear -> LaTeX -> linear`).toBe(l);
+        }
+      }
+    }
+    expect(n).toBeGreaterThan(10);
   });
 });

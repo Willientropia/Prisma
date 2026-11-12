@@ -107,19 +107,48 @@ class LinearParser {
     return a;
   }
   private mul(): Node {
-    // BUG-020: número colado em nome (5A, 9j, 2sin(x)) é produto, como o que se digita (F04); "5 A", com espaço, segue sendo quantidade.
-    // O produto entra no laço, como o math.js: 1/2x é (1/2)*x e 2x/3 é (2*x)/3
-    const glued = () => this.toks[this.i]?.k === 'id';
-    let a = this.unary();
-    if (a.t === 'num' && glued()) a = { t: 'bin', op: '*', a, b: this.unary() };
-    else if (a.t === 'neg' && a.a.t === 'num' && glued()) a = { t: 'neg', a: { t: 'bin', op: '*', a: a.a, b: this.unary() } }; // -2x
-    for (let t = this.peek(); t?.k === 'op' && (t.v === '*' || t.v === '/'); t = this.peek()) {
-      this.i++;
-      const b = this.unary();
-      a = { t: 'bin', op: t.v, a, b };
-      if (b.t === 'num' && glued()) a = { t: 'bin', op: '*', a, b: this.unary() };
-    }
+    let a = this.implicit();
+    for (let t = this.peek(); t?.k === 'op' && (t.v === '*' || t.v === '/'); t = this.peek()) { this.i++; a = { t: 'bin', op: t.v, a, b: this.implicit() }; }
     return a;
+  }
+  /**
+   * Produto implícito, na ordem do math.js (A6-FIX2): "2x/3y" é (2x)/(3y) e "a/2x" é a/(2x); só número/número
+   * seguido de nome ou "(" fica de fora do produto: 1/2x é (1/2)*x. BUG-020: número colado em nome (5A, 9j) é produto,
+   * como o que se digita (F04); "5 A", com espaço, segue sendo quantidade. A6-LEITOR: 3(x), 2 sin(x), 2(a+b) e (a+b)(c+d) também.
+   */
+  private implicit(): Node {
+    let a = this.unary();
+    const neg = a.t === 'neg' && a.a.t === 'num'; // -2x é -(2*x)
+    if (neg) a = (a as { a: Node }).a;
+    let last: 'num' | 'paren' | 'other' = a.t === 'num' ? 'num' : a.t === 'paren' ? 'paren' : 'other';
+    const tk = (o: number) => this.toks[this.i + o];
+    const sep = () => (tk(0)?.k === 'ws' ? 1 : 0); // espaço entre os dois fatores
+    let r2 = false;
+    const w = tk(2)?.k === 'ws' ? 1 : 0; // "1/2 sin(x)": com espaço, só "(" ou função (nome seguido de "(") fica fora do produto; "1/2 x" é quantidade
+    const open = (o: number) => tk(o)?.k === 'op' && tk(o).v === '(';
+    if (last === 'num' && this.isOp('/') && tk(1)?.k === 'num' && (w ? open(3) || (tk(3)?.k === 'id' && open(4)) : tk(2)?.k === 'id' || open(2))) { // regra 2 do math.js
+      this.i++;
+      a = { t: 'bin', op: '/', a: neg ? { t: 'neg', a } : a, b: this.atom() };
+      r2 = true;
+    }
+    // % e ° colados no número são unidade (5% é 5 %, 25°C é 25 °C), não o produto 5*%
+    const t0 = tk(0);
+    if (!r2 && last === 'num' && t0?.k === 'id' && (t0.v === '%' || t0.v.startsWith('°'))) {
+      a = { t: 'qty', n: a, u: this.unit() };
+      last = 'other';
+    }
+    for (;;) {
+      const t = tk(sep());
+      const call = tk(sep() + 1)?.k === 'op' && tk(sep() + 1).v === '(';
+      const open = t?.k === 'op' && t.v === '(';
+      // depois de número: nome colado, "(" ou função com espaço (2 sin(x)); depois de ")": "(", nome colado ou função
+      if (last === 'other' || !(open || (t?.k === 'id' && (sep() === 0 || call)))) break;
+      this.i += sep();
+      const b = this.unary();
+      a = { t: 'bin', op: '*', a, b };
+      last = b.t === 'paren' ? 'paren' : 'other';
+    }
+    return neg && !r2 ? { t: 'neg', a } : a;
   }
   private unary(): Node {
     if (this.isOp('-')) { this.i++; return { t: 'neg', a: this.unary() }; }
@@ -303,7 +332,11 @@ export function unitLatex(u: Unit): string {
   return `\\class{u}{${den ? `\\frac{${num || '1'}}{${den}}` : num}}`;
 }
 
-function numLatex(v: string) { return v.replace('.', '{,}'); }
+/** 2e3 vira 2\text{e}3: o e reto marca o expoente; "e3" solto na tela seria o nome e3 (A6-FIX2). Com \mathrm{e} o MathLive troca por \times10^ ao digitar o operador seguinte. */
+function numLatex(v: string) {
+  const m = /^(.*?)([eE])([+-]?\d+)$/.exec(v);
+  return (m ? m[1] : v).replace('.', '{,}') + (m ? `\\text{${m[2]}}${m[3]}` : '');
+}
 
 export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
   const L = (c: Node) => nodeLatex(c, ctx);
@@ -582,6 +615,19 @@ class LatexParser {
     }
   }
 
+  /** Expoente da notação científica logo depois do número: \text{e}3, \text{e}-3 (A6-FIX2). Sem dígitos, não consome nada. */
+  private sciExp(): string {
+    const t = this.t, i = this.i;
+    if (!(t[i]?.k === 'cmd' && ['text', 'mathrm', 'operatorname'].includes(t[i].v) && t[i + 1]?.k === 'open' && /^[eE]$/.test(t[i + 2]?.v ?? '') && t[i + 3]?.k === 'close')) return '';
+    let j = i + 4, sign = '';
+    if (t[j]?.v === '+' || t[j]?.v === '-' || t[j]?.v === '−') sign = t[j++].v === '+' ? '+' : '-';
+    if (!isDigit(t[j])) return '';
+    let d = '';
+    while (isDigit(t[j])) d += t[j++].v;
+    this.i = j;
+    return t[i + 2].v + sign + d;
+  }
+
   private atom(): Node {
     const t = this.peek();
     if (!t) return fail('Expressão incompleta');
@@ -597,6 +643,7 @@ class LatexParser {
         break;
       }
       if (!/\d/.test(v)) return fail('Número incompleto'); // "." solto não consome nada: sem isto o mul() girava para sempre (T01)
+      v += this.sciExp();
       const n: Node = { t: 'num', v };
       const nx = this.peek();
       // F04: só unidade marcada (\class{u}, \unit), % e grau depois do número; letras soltas são um nome (9j = 9·j)
