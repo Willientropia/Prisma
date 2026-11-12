@@ -43,6 +43,8 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .mline { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; border-radius: 2px; }
 .mline:focus-within { outline: 1px solid var(--math-focus-frame); outline-offset: 3px; }
 .mline-error { text-decoration: underline wavy var(--math-error); }
+.mline-unreadable { font: 13px Inter, sans-serif; color: var(--paper-error); }
+.mline-unreadable-dark { color: var(--error-text); }
 .mline-comment { font: italic 13px Inter, sans-serif; color: var(--paper-text-2); }
 .mresult { display: inline-flex; align-items: baseline; gap: 6px; }
 .mresult-value .ML__cmr, .mresult-value .ML__mathit { font-weight: 600; }

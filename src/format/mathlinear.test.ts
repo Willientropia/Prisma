@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { latexToLine, lineToLinear, parseLinear, toLatex, toLinear, unitFromMathjs } from './mathlinear';
+import { latexToLine, latexToUnit, lineToLinear, parseLinear, toLatex, toLinear, unitFromMathjs, unitToLinear } from './mathlinear';
 import { blocks, lines, parse } from './doc';
 import { loadGolden, ROOT, walk } from '../../tests/helpers/files';
 import { readFileSync } from 'node:fs';
@@ -116,5 +116,30 @@ describe('[F04-04] arquivos antigos abrem iguais', () => {
     expect(toLatex('2 x', ctx)).toBe('2\\,x');
     expect(toLatex('2 h', ctx)).toBe('2\\,h');
     expect(toLatex('2 m', ctx)).toContain('\\class{u}{\\mathrm{m}}');
+  });
+});
+
+describe('[BUG-019] ‰ e ppm no arquivo e no campo', () => {
+  it('[BUG-019] "= ? ‰" e "= ? ppm" fazem ida e volta e aparecem como unidade', () => {
+    for (const l of ['x = ? ‰', 'x = ? ppm', 'x = ? %', 'f(a) = ? ‰']) expect(toLinear(toLatex(l)), l).toBe(l);
+    expect(latexToUnit('\\mathrm{‰}').terms[0].name).toBe('‰');
+    expect(latexToUnit('‰').terms[0].name).toBe('‰');
+    expect(unitToLinear(latexToUnit('ppm'))).toBe('ppm');
+  });
+});
+
+describe('[BUG-020] número colado em nome é produto', () => {
+  it('[BUG-020] 5A lê como 5*A e 9j como 9*j, como o que é digitado (F04); I_o:=5A mostra 5·A', () => {
+    expect(lineToLinear(parseLinear('I_o:=5A'))).toBe('I_o := 5*A');
+    expect(lineToLinear(parseLinear('z := 9j'))).toBe('z := 9*j');
+    expect(lineToLinear(parseLinear('y := 5A^2'))).toBe('y := 5*A^2');
+    expect(lineToLinear(parseLinear('y := 2sin(x)'))).toBe('y := 2*sin(x)');
+    expect(toLatex('I_o:=5A')).toContain('5\\cdot');
+    expect(toLatex('I_o:=5A')).not.toContain(':');
+  });
+  it('[BUG-020] o produto implícito segue o motor: 1/2x é (1/2)*x e 2x/3 é (2*x)/3', () => {
+    expect(lineToLinear(parseLinear('y := 1/2x'))).toBe('y := 1/2*x');
+    expect(lineToLinear(parseLinear('y := 2x/3'))).toBe('y := 2*x/3');
+    expect(toLatex('y := 1/2x')).toContain('\\frac{1}{2}\\cdot');
   });
 });

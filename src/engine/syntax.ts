@@ -116,6 +116,10 @@ export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.repla
 /** Texto linear -> math.js já com as variáveis marcadas (F04): o que o motor avalia. classify() devolve o texto sem marca. */
 export const toMathVars = (s: string) => markVars(toMath(s));
 
+/** Unidades de escala que o math.js não tem (%, ‰, ppm): o número pedido nelas é o valor vezes o fator (BUG-019). */
+export const SCALES: Record<string, number> = { '%': 100, '‰': 1000, ppm: 1e6 };
+export const isScale = (t: string | undefined): t is string => !!t && Object.hasOwn(SCALES, t);
+
 /** De volta do math.js para a sintaxe linear (resultado simbólico, E3.3): "10 * x" -> "10*x". */
 export const fromMath = (s: string) => s.replace(/ǃ/g, '').replace(/ⅈ/g, '𝐢').replace(/ℯ/g, '𝐞').replace(/ǀ/g, '.').replace(/ǂ/g, '%').replace(/ǁ/g, '"').replace(/ǅ/g, ',').replace(/\bpi\b/g, 'π').replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°').replace(/\bInfinity\b/g, '∞');
 
@@ -154,11 +158,11 @@ export function classify(raw: string, isCheck = false): Line {
   if (ev && defShow) {
     const lhs = defShow[1].trim();
     const t = ev[2].trim();
-    return { kind: FUNC_LHS.test(lhs) && !lhs.includes('[') ? 'func' : 'assign', src: `${toMath(lhs)} = ${inner(defShow[2])}`, name: lhs.replace(/[([].*$/, '').trim(), show: true, target: t ? (t === '%' ? '%' : toMath(t).replace(/'/g, '')) : undefined };
+    return { kind: FUNC_LHS.test(lhs) && !lhs.includes('[') ? 'func' : 'assign', src: `${toMath(lhs)} = ${inner(defShow[2])}`, name: lhs.replace(/[([].*$/, '').trim(), show: true, target: t ? (isScale(t) ? t : toMath(t).replace(/'/g, '')) : undefined };
   }
   if (ev) {
     const t = ev[2].trim();
-    return { kind: 'eval', src: inner(ev[1]), target: t ? (t === '%' ? '%' : toMath(t).replace(/'/g, '')) : undefined };
+    return { kind: 'eval', src: inner(ev[1]), target: t ? (isScale(t) ? t : toMath(t).replace(/'/g, '')) : undefined };
   }
 
   const as = top(line);

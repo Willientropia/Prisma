@@ -39,6 +39,7 @@ describe('A6-4: assistente dinâmico', () => {
     expect(partialName('\\%')).toBe('%'); // BUG-019: o % digitado é o nome parcial
     expect(partialName('0{,}2\\%')).toBe('%');
     expect(partialName('\\%a')).toBe('a');
+    expect(partialName('0{,}2‰')).toBe('‰');
   });
 
   it('[A6-4-04] ordem: grupos do 3.3, e dentro deles usuário, biblioteca, nome igual ao digitado, nativas, unidades, constantes', () => {

@@ -35,7 +35,7 @@ export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos'
 type Tok = { k: 'num' | 'id' | 'op' | 'ws' | 'str'; v: string };
 // nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05);
 // índice com qualquer outro caractere vai entre aspas: batata_"alo,oi" (A6-3). "||" é o ou (A6-3)
-const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|\|\||[\p{L}°∞][\p{L}\p{N}%]*(?:_(?:"[^"]*"|[\p{L}\p{N}_.%]*))?|%|[+\-*/^()[\],;<>=?']/uy;
+const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|\|\||[\p{L}°∞‰][\p{L}\p{N}%]*(?:_(?:"[^"]*"|[\p{L}\p{N}_.%]*))?|%|[+\-*/^()[\],;<>=?']/uy;
 
 function lex(src: string): Tok[] {
   const s = src.replace(/[·×]/g, '*').replace(/−/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=').replace(/≔/g, ':=');
@@ -46,7 +46,7 @@ function lex(src: string): Tok[] {
     const m = TOKEN.exec(s);
     if (!m) fail(`Caractere inesperado: ${s[at]}`);
     const v = m![0];
-    out.push(v.startsWith('"') ? { k: 'str', v: v.slice(1, -1) } : { k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%∞]/u.test(v) ? 'id' : 'op', v });
+    out.push(v.startsWith('"') ? { k: 'str', v: v.slice(1, -1) } : { k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%∞‰]/u.test(v) ? 'id' : 'op', v });
   }
   return out;
 }
@@ -107,8 +107,18 @@ class LinearParser {
     return a;
   }
   private mul(): Node {
+    // BUG-020: número colado em nome (5A, 9j, 2sin(x)) é produto, como o que se digita (F04); "5 A", com espaço, segue sendo quantidade.
+    // O produto entra no laço, como o math.js: 1/2x é (1/2)*x e 2x/3 é (2*x)/3
+    const glued = () => this.toks[this.i]?.k === 'id';
     let a = this.unary();
-    for (let t = this.peek(); t?.k === 'op' && (t.v === '*' || t.v === '/'); t = this.peek()) { this.i++; a = { t: 'bin', op: t.v, a, b: this.unary() }; }
+    if (a.t === 'num' && glued()) a = { t: 'bin', op: '*', a, b: this.unary() };
+    else if (a.t === 'neg' && a.a.t === 'num' && glued()) a = { t: 'neg', a: { t: 'bin', op: '*', a: a.a, b: this.unary() } }; // -2x
+    for (let t = this.peek(); t?.k === 'op' && (t.v === '*' || t.v === '/'); t = this.peek()) {
+      this.i++;
+      const b = this.unary();
+      a = { t: 'bin', op: t.v, a, b };
+      if (b.t === 'num' && glued()) a = { t: 'bin', op: '*', a, b: this.unary() };
+    }
     return a;
   }
   private unary(): Node {
@@ -393,7 +403,7 @@ function llex(src: string): LTok[] {
   return out;
 }
 
-const isLetter = (t?: LTok) => !!t && ((t.k === 'ch' && /^[\p{L}°]$/u.test(t.v)) || (t.k === 'cmd' && (FROM_CMD.has(t.v) || t.v === 'degree' || t.v === 'mu')));
+const isLetter = (t?: LTok) => !!t && ((t.k === 'ch' && /^[\p{L}°‰]$/u.test(t.v)) || (t.k === 'cmd' && (FROM_CMD.has(t.v) || t.v === 'degree' || t.v === 'mu')));
 const letterOf = (t: LTok) => (t.k === 'ch' ? t.v : t.v === 'degree' ? '°' : FROM_CMD.get(t.v) ?? (t.v === 'mu' ? 'μ' : ''));
 const isDigit = (t?: LTok) => t?.k === 'ch' && /^\d$/.test(t.v);
 const OPS: Record<string, string> = { '+': '+', '-': '-', '−': '-', '*': '*', cdot: '*', times: '*', '/': '/', '<': '<', '>': '>', le: '<=', leq: '<=', ge: '>=', geq: '>=', ne: '!=', neq: '!=', lt: '<', gt: '>', '≤': '<=', '≥': '>=', '≠': '!=', '=': '==', lor: '||', vee: '||', '∨': '||' };

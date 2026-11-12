@@ -4,7 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { mapFree } from './bound';
 import { withWarning } from './calculus';
 import { math, smath } from './math';
-import { classify, fromMath, markVars, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
+import { classify, fromMath, isScale, markVars, SCALES, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtComplex, fmtNum, prettyUnit, type FormatOpts } from './format';
 
 export type LibInput = { id: string; constants: [string, string][]; functions: string[] };
@@ -64,7 +64,7 @@ export function show(v: unknown, target: string | undefined, fmt: FormatOpts): S
   if (typeof v === 'boolean') return { text: v ? 'verdadeiro' : 'falso' };
   if (typeof v === 'function') return { text: 'função' };
   // conversão (E4.3): unidade sem valor ("mV", "deg") segue abaixo; número ou expressão ("10^-6") divide
-  if (target && target !== '%') {
+  if (target && !isScale(target)) {
     let want: unknown;
     try { want = math.evaluate(target); } catch { want = undefined; }
     const valueless = isUnit(want) && (want as Unit & { value: unknown }).value === null;
@@ -77,10 +77,10 @@ export function show(v: unknown, target: string | undefined, fmt: FormatOpts): S
       return { ...s, factor: target, text: `${grouped}·${target}` };
     }
   }
-  if (target === '%') {
-    if (isUnit(v)) throw cannot(prettyUnit(v.formatUnits()), '%');
-    const n = Number(v) * 100;
-    return { text: `${fmtNum(n, fmt)} %`, value: n, unit: '%', numText: fmtNum(n, fmt), unitRaw: '%' };
+  if (isScale(target)) {
+    if (isUnit(v)) throw cannot(prettyUnit(v.formatUnits()), target);
+    const n = Number(v) * SCALES[target];
+    return { text: `${fmtNum(n, fmt)} ${target}`, value: n, unit: target, numText: fmtNum(n, fmt), unitRaw: target };
   }
   if (typeof v === 'number' || math.isComplex(v)) {
     if (target) throw cannot('número sem unidade', prettyUnit(target));
@@ -316,7 +316,7 @@ export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts)
     const local = new Map(scope);
     try {
       local.set(toMathVars(xVar), math.evaluate(xUnit ? `${v} ${toMath(xUnit)}` : String(v)));
-      const r = show(math.evaluate(expr, local), yUnit ? (yUnit === '%' ? '%' : toMath(yUnit)) : undefined, fmt);
+      const r = show(math.evaluate(expr, local), yUnit ? (isScale(yUnit) ? yUnit : toMath(yUnit)) : undefined, fmt);
       ys.push(r.value ?? null);
     } catch (e) {
       ys.push(null);

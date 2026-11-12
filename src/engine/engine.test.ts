@@ -5,6 +5,7 @@ import { evaluate, type BlockInput, type EvalInput, type LibInput } from './eval
 import { classify, greek } from './syntax';
 import { DEFAULT_FORMAT, fmtNum, parseMargin, prettyUnit } from './format';
 import { math } from './math';
+import { isKnownUnit, unitFactor } from './unidades';
 import { blocks, lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
 
@@ -256,5 +257,33 @@ describe('A6-4: valor das definições para o assistente', () => {
       expect(e.assigned).toBeUndefined();
     }
     expect(ev(true, 'L := 25 m')[0].assigned).toMatchObject({ numText: '25', unitRaw: 'm' });
+  });
+});
+
+describe('[BUG-019] ‰ e ppm pedidos como o %', () => {
+  it('[BUG-019] 0,2 = ? % dá 20 %, = ? ‰ dá 200 ‰, = ? ppm dá 2e5 ppm (a regra de formato manda: 200000 passa do limite exponencial 5)', () => {
+    expect(last(['x := 0.2', 'x = ? %']).text).toBe('20 %');
+    expect(last(['x := 0.2', 'x = ? ‰']).text).toBe('200 ‰');
+    expect(last(['x := 0.2', 'x = ? ppm']).text).toBe('2e5 ppm');
+    expect(last(['x := 0.0002', 'x = ? ppm']).text).toBe('200 ppm');
+    expect(last(['x := 0.2', 'x = ? ppm']).unitRaw).toBe('ppm');
+  });
+  it('[BUG-019] unidade com dimensão não vira ‰ nem ppm', () => {
+    expect(last(['L := 5 m', 'L = ? ‰']).error).toContain('Não é possível converter');
+    expect(last(['L := 5 m', 'L = ? ppm']).error).toContain('Não é possível converter');
+  });
+  it('[BUG-019] ‰ e ppm são unidades conhecidas e têm fator', () => {
+    expect(isKnownUnit('‰')).toBe(true);
+    expect(isKnownUnit('ppm')).toBe(true);
+    expect(unitFactor('‰')?.value).toBe(0.001);
+    expect(unitFactor('ppm')?.value).toBe(1e-6);
+  });
+});
+
+describe('[BUG-020] número colado em nome', () => {
+  it('[BUG-020] I_o:=5A calcula como 5*A (A é a variável, não a unidade)', () => {
+    const r = last(['A := 2', 'I_o:=5A', 'I_o = ?']);
+    expect(r.text).toBe('10');
+    expect(last(['x := 2', 'y := 1/2x', 'y = ?']).text).toBe('1'); // (1/2)*x, como o leitor linear mostra
   });
 });

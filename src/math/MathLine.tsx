@@ -7,7 +7,7 @@ import {
   type LatexCtx, type Line, type Node, type Unit,
 } from '../format/mathlinear';
 import { math } from '../engine/math';
-import { toMath } from '../engine/syntax';
+import { isScale, toMath } from '../engine/syntax';
 import { symbolic as symbolicOf } from '../engine/symbolic';
 import type { LineResult } from '../engine/evaluate';
 import { useWorkspace } from '../store/workspace';
@@ -51,10 +51,14 @@ type Props = {
   assist?: AssistSource; // A6-4: assistente dinâmico (só a folha passa)
 };
 
+const UNREADABLE = 'Não foi possível ler esta linha';
+
 export function MathLine(props: Props) {
   const { raw, result, ctx, theme, size } = props;
   const [code, comment] = splitComment(raw);
   const parsed: Line | null = useMemo(() => { try { return code.trim() ? parseLinear(code.trim()) : null; } catch { return null; } }, [code]);
+  // BUG-020: linha que o formato não lê (nunca com o texto cru, que mostraria ":="); confirmar o campo vazio não a apaga
+  const unreadable = !!code.trim() && !parsed;
   const [invalid, setInvalid] = useState(false);
   const [unitEdit, setUnitEdit] = useState(false);
   const live = useRef(0);
@@ -69,7 +73,7 @@ export function MathLine(props: Props) {
   const symFor = useRef(''); // o que havia no campo quando o Ctrl+. foi apertado
 
   // o campo mostra a expressão; o resultado fica fora dele
-  const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : `\\text{${code.trim().replace(/[\\{}]/g, '')}}`;
+  const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : ''; // BUG-020: linha que o formato não lê não vira texto cru na tela (aparecia ":=" e o resto); vai marcada como erro, abaixo
   // linha que mostra resultado: avaliação ("x = ?") ou definição com "= ?" (ADENDO 05, E2.1)
   const shows = !pending && (parsed?.kind === 'eval' || (parsed?.kind === 'def' && !!parsed.show));
   const evalUnit = parsed?.kind === 'eval' || parsed?.kind === 'def' ? parsed.unit : undefined;
@@ -91,6 +95,7 @@ export function MathLine(props: Props) {
   const write = (next: string | null) => {
     if (next === null) { setInvalid(true); return false; }
     setInvalid(false);
+    if (unreadable && next === '') return true;
     if (next !== raw) props.onWrite(next);
     return true;
   };
@@ -137,7 +142,7 @@ export function MathLine(props: Props) {
 
   if (!code.trim() && comment) return <span className="mline-comment">{comment.replace(/^#\s*/, '')}</span>;
 
-  const err = result?.error;
+  const err = result?.error ?? (unreadable ? UNREADABLE : undefined);
   const symbolic = result?.symbolic !== undefined && !err;
   const showResult = (shows && result && !err && (result.numText !== undefined || symbolic || !!result.matrix)) || unitEdit;
   // nome sozinho e ainda indefinido (x5 depois do "="): resultado vazio e sem erro, só o "=" e o marcador (2.5)
@@ -148,6 +153,7 @@ export function MathLine(props: Props) {
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
       <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
         invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} assist={props.assist} />
+      {unreadable && <span className={`mline-unreadable${theme === 'dark' ? ' mline-unreadable-dark' : ''}`}>{UNREADABLE}</span>}
       {sym && <span className="mresult msymbolic"><MathMarkup latex={sym} theme={theme} size={size} className="msymbolic-value" /></span>}
       {showResult && (
         <span className={`mresult${props.stale ? ' mresult-stale' : ''}`}>
@@ -198,12 +204,12 @@ function UnitInput({ theme, size, result, current, onDone, assist }: { theme: 'p
     const from = result.unitRaw ? unitFromMathjs(result.unitRaw) : '';
     let ok: boolean;
     try {
-      // BUG-019: "%" não é unidade do math.js (math.unit('%') lança); o motor converte por conta própria
+      // BUG-019: %, ‰ e ppm não são unidades do math.js (math.unit('%') lança); o motor converte por conta própria
       // número puro pedido em ângulo (arg(z) = ? deg): o número está em radianos (E4.3)
-      if (target === '%') ok = !from || from === '%';
+      if (isScale(target)) ok = !from || isScale(from);
       else {
         const want = math.unit(toMath(target));
-        ok = !from ? want.equalBase(math.unit('rad')) : from !== '%' && math.unit(1, toMath(from)).equalBase(want);
+        ok = !from ? want.equalBase(math.unit('rad')) : !isScale(from) && math.unit(1, toMath(from)).equalBase(want);
       }
     } catch { ok = false; }
     if (!ok) { setBad(true); set({ status: `Não é possível converter ${from || 'número sem unidade'} em ${target}` }); return; }

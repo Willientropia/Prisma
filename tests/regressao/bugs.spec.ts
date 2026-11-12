@@ -186,10 +186,10 @@ for (const delay of [0, 30]) {
   });
 }
 
-// BUG-019: % no campo de unidade do resultado converte (o math.js não conhece %); ‰ e ppm: pendentes de autorização (ver adendo-06)
+// BUG-019: %, ‰ e ppm no campo de unidade do resultado convertem (não são unidades do math.js; ‰ e ppm autorizados pelo usuário em 12/11)
 // Tab com a lista aberta aceita o item (A6-4) e um segundo Tab, Enter ou o clique fora confirma
-for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
-  test(`[BUG-019] V_o/T_total = 0,2 com % no campo de unidade (${confirm.join(' + ')}) mostra 20 %`, async ({ page }) => {
+for (const [unit, shown] of [['%', '20%'], ['‰', '200‰'], ['ppm', '2⋅105ppm']]) for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
+  test(`[BUG-019] V_o/T_total = 0,2 com ${unit} no campo de unidade (${confirm.join(' + ')}) mostra ${shown}`, async ({ page }) => {
     await sheetWith(page, ['V.o:1', 'T.total:5']);
     await page.keyboard.type('V.o/T.total=', { delay: 30 });
     await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('0,2');
@@ -197,12 +197,45 @@ for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
     await line.hover();
     await line.locator('.unit-marker').click();
     await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
-    await page.keyboard.type('%', { delay: 40 });
+    await page.keyboard.type(unit, { delay: 40 });
     for (const k of confirm) {
       if (k === 'clique fora') await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } });
       else await page.keyboard.press(k);
     }
-    await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('20%');
-    await expect.poll(() => dev(page).text()).toContain('V_o/T_total = ? %');
+    await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe(shown);
+    await expect.poll(() => dev(page).text()).toContain(`V_o/T_total = ? ${unit}`);
   });
 }
+
+// BUG-020: linha que o formato linear não lia (I_o:=5A) aparecia crua, com ":=" na tela
+const folhaCom = (...lines: string[]) => `---\ntipo: folha\ntitulo: Folha1\nbibliotecas: []\npagina: {largura: 1200, altura: 1600, grade: 20}\ncriado: 2026-11-07\nversao_formato: 1\n---\n\n${lines.map((l, i) => `\`\`\`calc {#calc-${i + 1} x=100 y=${60 + i * 80}}\n${l}\n\`\`\`\n`).join('\n')}`;
+const telaDosCampos = (page: Page) => page.evaluate(() => [...document.querySelectorAll('math-field')].map((m) => (m.shadowRoot?.querySelector('.ML__latex') as HTMLElement | null)?.innerText ?? '').join('\n'));
+
+test('[BUG-020] arquivo com I_o:=5A abre como I_o ≔ 5·A, sem texto cru', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${CALC}/bug20.prsf`, folhaCom('I_o:=5A'));
+  await dev(page).open(`${CALC}/bug20.prsf`);
+  await expect.poll(async () => (await fieldValues(page))[0]).toContain('\\coloneq');
+  expect((await fieldValues(page))[0]).toContain('5\\cdot');
+  const tela = await telaDosCampos(page);
+  expect(tela).not.toContain(':=');
+  expect(tela).toContain('≔');
+});
+
+test('[BUG-020] linha ilegível aparece marcada como erro, nunca com ":=" ou texto cru', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${CALC}/bug20b.prsf`, folhaCom('I_o := 5 $ A'));
+  await dev(page).open(`${CALC}/bug20b.prsf`);
+  await expect(page.locator('.mline-unreadable')).toHaveText('Não foi possível ler esta linha');
+  await expect(page.locator('.mline-error')).toHaveCount(1);
+  expect(await telaDosCampos(page)).not.toContain(':=');
+  await expect(page.getByLabel('Folha')).not.toContainText(':=');
+  expect(await dev(page).text()).toContain('I_o := 5 $ A'); // o arquivo não é tocado
+  // confirmar o campo vazio (Enter, Esc, Tab) não apaga a linha que não deu para ler
+  for (const key of ['Enter', 'Escape', 'Tab']) {
+    await page.locator('math-field').first().click();
+    await page.keyboard.press(key);
+    await page.waitForTimeout(300);
+    expect(await dev(page).text(), `depois de ${key}`).toContain('I_o := 5 $ A');
+  }
+});

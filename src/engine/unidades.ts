@@ -2,10 +2,12 @@
 // Uma linha por unidade que o motor aceita: [símbolo como aparece no Prisma, nome, grandeza, fator escrito à mão].
 // Os símbolos seguem a lista de unidades do SMath, só os que o math.js conhece; o fator vem do math.js (só % é escrito).
 import { math } from './math';
-import { toMath } from './syntax';
+import { isScale, SCALES, toMath } from './syntax';
 
 export const UNIDADES: [string, string, string, string?][] = [
   ['%', 'Porcentagem', 'Adimensional', '0,01'],
+  ['‰', 'Por mil', 'Adimensional', '0,001'],
+  ['ppm', 'Parte por milhão', 'Adimensional', '0,000001'],
   ['rad', 'Radiano', 'Ângulo'],
   ['°', 'Grau', 'Ângulo'],
   ['arcmin', 'Minuto de arco', 'Ângulo'],
@@ -83,7 +85,7 @@ const PREFIXOS: Record<string, string> = {
 
 /** Unidade conhecida pelo math.js (para classificar identificadores, B4). */
 export function isKnownUnit(name: string): boolean {
-  if (name === '%') return true;
+  if (isScale(name)) return true;
   try { return math.Unit.isValuelessUnit(toMath(name)); } catch { return false; }
 }
 
@@ -110,7 +112,7 @@ export function unitInfo(sym: string): UnitInfo | null {
 
 /** 1 unidade em unidades SI: { número, unidade do math.js }. Sem fator para unidade de base, com deslocamento (°C) ou inválida. */
 export function unitFactor(sym: string): { value: number; unitRaw: string } | null {
-  if (sym === '%') return { value: 0.01, unitRaw: '' };
+  if (isScale(sym)) return { value: 1 / SCALES[sym], unitRaw: '' };
   try {
     const one = math.unit(1, toMath(sym));
     if (one.units.some((x) => (x.unit as unknown as { offset: number }).offset)) return null;
