@@ -137,3 +137,218 @@
   sem_resultado: true
   sair: true
   raw_final: ""
+
+# A6-2 (ADENDO 06, 2.1 e 2.2; critérios 06-20 e 06-22): um caso por linha da tabela de atalhos que o campo trata.
+# As linhas que dependem de outra tela (assistente, catálogos, região de texto, gráfico) estão em tests/MATRIZ.md como pendentes.
+- id: A6-2-01
+  descricao: "barra invertida: raiz quadrada"
+  contexto: folha
+  teclas: "\\x{Enter}"
+  linear: "sqrt(x)"
+  latex_contem: ['\sqrt{']
+- id: A6-2-02
+  descricao: "Ctrl+barra invertida: raiz n-ésima (índice primeiro, depois o radicando)"
+  contexto: folha
+  teclas: "{Ctrl+\\}3{ArrowRight}8{Enter}"
+  linear: "nthroot(8, 3)"
+  latex_contem: ['\sqrt[3]{8}']
+- id: A6-2-03
+  descricao: "[ depois de um nome: índice de elemento v[2]"
+  contexto: folha
+  teclas: "v[2]{Enter}"
+  linear: "v[2]"
+  latex_contem: ['\lbrack']
+- id: A6-2-03
+  descricao: "; no índice de elemento adiciona o segundo índice: M[2;3]"
+  contexto: folha
+  teclas: "M[2;3]{Enter}"
+  linear: "M[2, 3]"
+- id: A6-2-03
+  descricao: "[ depois de nome de várias letras"
+  contexto: folha
+  teclas: "batata[2]{Enter}"
+  linear: "batata[2]"
+- id: A6-2-04
+  descricao: ". depois de letra abre o índice: S.trafo"
+  contexto: folha
+  teclas: "S.trafo :5{Enter}"
+  linear: "S_trafo := 5"
+- id: A6-2-05
+  descricao: "^ : potência"
+  contexto: folha
+  teclas: "x^2{Enter}"
+  linear: "x^2"
+  latex_contem: ['^{2}']
+- id: A6-2-07
+  descricao: "% : unidade porcento (2,6 % sem o ponto)"
+  contexto: folha
+  teclas: "2,6%{Enter}"
+  linear: "2.6 %"
+  tela_nao_contem: ["·"]
+- id: A6-2-10
+  descricao: ": : definição ≔"
+  contexto: folha
+  teclas: "x:2{Enter}"
+  linear: "x := 2"
+  tela_contem: ["≔"]
+- id: A6-2-11
+  descricao: "= : igual inteligente, nome já definido pede o resultado"
+  contexto: folha
+  teclas: "2*3="
+  linear: "2*3 = ?"
+- id: A6-2-12
+  descricao: "Ctrl+= : igual lógico (comparação, não avaliação)"
+  contexto: folha
+  teclas: "a{Ctrl+=}b{Enter}"
+  linear: "a == b"
+- id: A6-2-13
+  descricao: "Ctrl+3 : ≠"
+  contexto: folha
+  teclas: "a{Ctrl+3}b{Enter}"
+  linear: "a != b"
+  latex_contem: ['\ne']
+- id: A6-2-14
+  descricao: "Ctrl+9 : ≤"
+  contexto: folha
+  teclas: "a{Ctrl+9}b{Enter}"
+  linear: "a <= b"
+  tela_contem: ["≤"]
+- id: A6-2-15
+  descricao: "Ctrl+0 : ≥"
+  contexto: folha
+  teclas: "a{Ctrl+0}b{Enter}"
+  linear: "a >= b"
+  tela_contem: ["≥"]
+- id: A6-2-18
+  descricao: "Ctrl+G : converte a letra anterior em grega"
+  contexto: folha
+  teclas: "r{Ctrl+G}.a{Enter}"
+  linear: "ρ_a"
+  latex_contem: ['\rho']
+- id: A6-2-19
+  descricao: "Ctrl+Shift+P : π"
+  contexto: folha
+  teclas: "2{Ctrl+Shift+P}{Enter}"
+  linear: "2*π"
+- id: A6-2-19
+  descricao: "Ctrl+Shift+Z : ∞"
+  contexto: folha
+  teclas: "{Ctrl+Shift+Z}{Enter}"
+  linear: "∞"
+  tela_contem: ["∞"]
+- id: A6-2-25
+  descricao: "Home e End: início e fim da fórmula"
+  contexto: folha
+  teclas: "ab{Home}x{End}y{Enter}"
+  linear: "xaby"
+- id: A6-2-26
+  descricao: "Ctrl+Z e Ctrl+Y: desfazer e refazer"
+  contexto: folha
+  teclas: "x{Ctrl+z}{Ctrl+y}{Enter}"
+  linear: "x"
+- id: A6-2-27
+  descricao: "Ctrl+A : seleciona o conteúdo; o que se digita substitui"
+  contexto: folha
+  teclas: "ab{Ctrl+a}c{Enter}"
+  linear: "c"
+- id: A6-2-28
+  descricao: "Enter : sai da região e grava"
+  contexto: folha
+  teclas: "x:2{Enter}"
+  linear: "x := 2"
+# 2.2: digitar o nome e "(" cria a estrutura visual (checado antes de confirmar: o campo já mostra a estrutura)
+- id: A6-2-40
+  descricao: "sqrt( vira √ com o quadradinho; o ) digitado por hábito fecha a raiz"
+  contexto: folha
+  teclas: "2sqrt(4)+1"
+  latex_contem: ['\sqrt{4}']
+  latex_nao_contem: ['sqrt(']
+  tela_contem: ["√"]
+- id: A6-2-40
+  descricao: "sqrt( dentro de sqrt("
+  contexto: folha
+  teclas: "sqrt(sqrt(16)){Enter}"
+  linear: "sqrt(sqrt(16))"
+- id: A6-2-41
+  descricao: "abs( vira |□|"
+  contexto: folha
+  teclas: "abs(x)+1{Enter}"
+  linear: "abs(x) + 1"
+  latex_contem: ['\lvert']
+  latex_nao_contem: ['abs(']
+- id: A6-2-42
+  descricao: "int( : limite inferior, superior, integrando e variável, na ordem do preenchimento"
+  contexto: folha
+  teclas: "int(0{ArrowRight}2{ArrowRight}F(x){ArrowRight}x{Enter}"
+  linear: "integral(F(x), x, 0, 2)"
+  latex_contem: ['\int_{0}^{2}']
+  latex_nao_contem: ['int(']
+- id: A6-2-42
+  descricao: "int( com = no fim pede o resultado (ADENDO 06, 5.2)"
+  contexto: folha
+  teclas: "int(0{ArrowRight}2{ArrowRight}x^2{ArrowRight}x="
+  linear: "integral(x^2, x, 0, 2) = ?"
+- id: A6-2-43
+  descricao: "sum( : índice, início, fim e corpo"
+  contexto: folha
+  teclas: "sum(k{ArrowRight}1{ArrowRight}3{ArrowRight}k^2{Enter}"
+  linear: "sum(k^2, k, 1, 3)"
+  latex_contem: ['\sum_{k=1}^{3}']
+  latex_nao_contem: ['sum(']
+- id: A6-2-44
+  descricao: "nthroot( : índice e radicando"
+  contexto: folha
+  teclas: "nthroot(3{ArrowRight}x{Enter}"
+  linear: "nthroot(x, 3)"
+- id: A6-2-45
+  descricao: "nome que só termina em sqrt/sum não vira estrutura (xsqrt( segue como nome de função)"
+  contexto: folha
+  teclas: "xsqrt(x"
+  latex_nao_contem: ['\sqrt']
+# BUG-015 (teste manual da v0.2.0, 11/11): "." e "," depois de QUALQUER nome abrem o índice, como no SMath
+- id: BUG-015
+  descricao: "batata.1 : nome de várias letras, índice 1"
+  contexto: folha
+  teclas: "batata.1{Enter}"
+  linear: "batata_1"
+- id: BUG-015
+  descricao: "R1.a : nome com dígito, índice a"
+  contexto: folha
+  teclas: "R1.a{Enter}"
+  linear: "R1_a"
+- id: BUG-015
+  descricao: "vírgula também abre o índice em nome de várias letras"
+  contexto: folha
+  teclas: "batata,1:5{Enter}"
+  linear: "batata_1 := 5"
+- id: BUG-015
+  descricao: "letra grega com ponto: ρ.cu"
+  contexto: folha
+  teclas: "r{Ctrl+G}.cu:2{Enter}"
+  linear: "ρ_cu := 2"
+- id: BUG-015
+  descricao: "x1.y : letra, dígito, ponto"
+  contexto: folha
+  teclas: "x1.y{Enter}"
+  linear: "x1_y"
+- id: BUG-015
+  descricao: "B1 (T01): . solto e número com ponto não viram índice nem travam"
+  contexto: folha
+  teclas: "2.5{Enter}"
+  linear: "2.5"
+- id: BUG-015
+  descricao: "B1 (T01): 2. e . sozinhos ficam como texto digitado, sem índice, sem travar"
+  contexto: folha
+  teclas: "2.{Enter}"
+  latex_nao_contem: ['_']
+- id: BUG-015
+  descricao: "B1 (T01): . no começo não vira índice"
+  contexto: folha
+  teclas: ".{Enter}"
+  latex_nao_contem: ['_']
+- id: A6-2-06
+  descricao: "apóstrofo marca unidade explícita (azul)"
+  contexto: folha
+  teclas: "L:25'm{Enter}"
+  linear: "L := 25 m"
+  latex_contem: ['\class{u}{\mathrm{m}}']

@@ -29,12 +29,12 @@ const PREC: Record<string, number> = { '<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1
 const prec = (n: Node): number => (n.t === 'bin' ? PREC[n.op] : n.t === 'neg' ? 4 : 6);
 
 /** Funções nativas: nome reto na tela (SPEC 8.6). */
-export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'min', 'max', 'round', 'ceil', 'floor', 'sum', 'mean', 'root', 'integral', 'deriv', 'interp', 'polyroots', 'solve', 'det', 'inv', 'transpose']);
+export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'min', 'max', 'round', 'ceil', 'floor', 'sum', 'mean', 'root', 'integral', 'deriv', 'interp', 'polyroots', 'solve', 'det', 'inv', 'transpose', 'diff', 'nthroot']);
 
 // ---------- linear: leitura ----------
 type Tok = { k: 'num' | 'id' | 'op' | 'ws' | 'str'; v: string };
 // nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05)
-const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?']/uy;
+const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°∞][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?']/uy;
 
 function lex(src: string): Tok[] {
   const s = src.replace(/[·×]/g, '*').replace(/−/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=').replace(/≔/g, ':=');
@@ -45,7 +45,7 @@ function lex(src: string): Tok[] {
     const m = TOKEN.exec(s);
     if (!m) fail(`Caractere inesperado: ${s[at]}`);
     const v = m![0];
-    out.push(v.startsWith('"') ? { k: 'str', v: v.slice(1, -1) } : { k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%]/u.test(v) ? 'id' : 'op', v });
+    out.push(v.startsWith('"') ? { k: 'str', v: v.slice(1, -1) } : { k: /^\s/.test(v) ? 'ws' : /^\d/.test(v) ? 'num' : /^[\p{L}°%∞]/u.test(v) ? 'id' : 'op', v });
   }
   return out;
 }
@@ -268,7 +268,7 @@ export const LATIN_TO_GREEK: Record<string, string> = {
 };
 export const greekLatex = (ch: string) => (TO_CMD.has(ch) ? `\\${TO_CMD.get(ch)} ` : ch);
 
-const chars = (s: string) => [...s].map((c) => (TO_CMD.has(c) ? `\\${TO_CMD.get(c)} ` : c === '%' ? '\\%' : c === '°' ? '\\degree ' : c === 'µ' ? '\\mu ' : c)).join('').trim();
+const chars = (s: string) => [...s].map((c) => (TO_CMD.has(c) ? `\\${TO_CMD.get(c)} ` : c === '%' ? '\\%' : c === '°' ? '\\degree ' : c === '∞' ? '\\infty ' : c === 'µ' ? '\\mu ' : c)).join('').trim();
 /** Nome com índice reto: V_mp -> V_{\mathrm{mp}}. */
 export function idLatex(name: string): string {
   const i = name.indexOf('_');
@@ -319,6 +319,15 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
     case 'call': {
       if (n.f === 'sqrt' && n.args.length === 1) return `\\sqrt{${L(strip(n.args[0]))}}`;
       if (n.f === 'abs' && n.args.length === 1) return `\\left\\lvert ${L(n.args[0])}\\right\\rvert`;
+      if (n.f === 'nthroot' && n.args.length === 2) return `\\sqrt[${L(strip(n.args[1]))}]{${L(strip(n.args[0]))}}`;
+      // A6-2 (2.2): integral e soma com variável viram a estrutura visual; a variável é do cálculo, nunca "não definida"
+      const [body, v, lo, hi] = n.args;
+      if ((n.f === 'integral' || n.f === 'sum') && n.args.length === 4 && v.t === 'id') {
+        const inner = { ...ctx, params: new Set([...(ctx.params ?? []), v.name]) };
+        const B = (x: Node) => nodeLatex(x, inner);
+        if (n.f === 'integral') return `\\int_{${L(lo)}}^{${L(hi)}}${B(body)}\\mathrm{d}${idLatex(v.name)}`;
+        return `\\sum_{${idLatex(v.name)}=${L(lo)}}^{${L(hi)}}${prec(body) < 3 ? `\\left(${B(body)}\\right)` : B(body)}`;
+      }
       const name = BUILTINS.has(n.f) ? `\\operatorname{${n.f}}` : idLatex(n.f);
       return `${name}(${n.args.map(L).join(';\\,')})`; // ΔV(L; I; S): ponto e vírgula separa argumentos (B4)
     }
@@ -585,7 +594,20 @@ class LatexParser {
     if (t.k === 'cmd') {
       switch (t.v) {
         case 'frac': { this.i++; const a = this.sub(this.group()).exprAll(); const b = this.sub(this.group()).exprAll(); return { t: 'bin', op: '/', a, b }; }
-        case 'sqrt': { this.i++; return { t: 'call', f: 'sqrt', args: [this.sub(this.group()).exprAll()] }; }
+        case 'sqrt': {
+          this.i++;
+          if (this.peek()?.k === 'ch' && this.peek()!.v === '[') { // raiz n-ésima: \sqrt[n]{x}
+            this.i++;
+            const from = this.i;
+            while (!this.atEnd() && !(this.peek()!.k === 'ch' && this.peek()!.v === ']')) this.i++;
+            const n = this.sub(this.t.slice(from, this.i)).exprAll();
+            this.i++;
+            return { t: 'call', f: 'nthroot', args: [this.sub(this.group()).exprAll(), n] };
+          }
+          return { t: 'call', f: 'sqrt', args: [this.sub(this.group()).exprAll()] };
+        }
+        case 'int': case 'sum': return this.bigOp(t.v);
+        case 'infty': this.i++; return { t: 'id', name: '∞' };
         case 'class': {
           this.i++;
           const cls = this.sub(this.group()).plain();
@@ -626,6 +648,46 @@ class LatexParser {
     if (t.k === 'ch' && t.v === '|') { this.i++; const a = this.until((x) => x.k === 'ch' && x.v === '|'); return { t: 'call', f: 'abs', args: [a] }; }
     if (t.k === 'open') return this.sub(this.group()).exprAll();
     return fail(`Inesperado: ${t.v}`);
+  }
+  /** ∫_a^b f dx -> integral(f, x, a, b); Σ_{i=a}^b f -> sum(f, i, a, b) (o corpo da soma vai até o fim do termo). */
+  private bigOp(kind: 'int' | 'sum'): Node {
+    this.i++;
+    let lo: LTok[] | null = null, hi: LTok[] | null = null;
+    for (let k = 0; k < 2; k++) {
+      const t = this.peek();
+      if (t?.k === 'sub' && !lo) { this.i++; lo = this.group(); } else if (t?.k === 'sup' && !hi) { this.i++; hi = this.group(); }
+    }
+    if (!lo || !hi) return fail('Limites esperados');
+    if (kind === 'sum') {
+      const eq = lo.findIndex((x) => x.k === 'ch' && x.v === '=');
+      if (eq < 0) return fail('Índice da soma esperado: i = início');
+      const v = this.sub(lo.slice(0, eq)).nameAll();
+      const a = this.sub(lo.slice(eq + 1)).exprAll(), b = this.sub(hi).exprAll();
+      const body = this.mul();
+      return { t: 'call', f: 'sum', args: [body.t === 'paren' ? body.a : body, { t: 'id', name: v }, a, b] };
+    }
+    // procura o \mathrm{d} que fecha esta integral (as de dentro têm o seu); só fora de chaves, para não confundir com a unidade "dia".
+    // O MathLive junta a variável digitada ao d: \mathrm{dx}.
+    let depth = 0, braces = 0, j = this.i;
+    for (; j < this.t.length; j++) {
+      const x = this.t[j];
+      braces += x.k === 'open' ? 1 : x.k === 'close' ? -1 : 0;
+      if (x.k === 'cmd' && x.v === 'int') depth++;
+      if (braces === 0 && x.k === 'cmd' && x.v === 'mathrm' && this.t[j + 1]?.k === 'open' && this.t[j + 2]?.v === 'd') { if (depth === 0) break; depth--; }
+    }
+    if (j >= this.t.length) return fail('Integral sem dx');
+    const body = this.sub(this.t.slice(this.i, j)).exprAll();
+    let end = j + 3, v = '';
+    while (end < this.t.length && this.t[end].k !== 'close') end++; // letras coladas ao d, dentro do \mathrm{...}
+    if (end > j + 3) v = this.sub(this.t.slice(j + 3, end)).plain();
+    this.i = end + 1;
+    return { t: 'call', f: 'integral', args: [body, { t: 'id', name: v || this.nameAll(true) }, this.sub(lo).exprAll(), this.sub(hi).exprAll()] };
+  }
+  /** Nome que ocupa todo o resto (variável do cálculo); com `rest`, só o que vem agora. */
+  private nameAll(rest = false): string {
+    const s = this.name();
+    if (!s || (!rest && !this.atEnd())) fail('Nome da variável esperado');
+    return s;
   }
   nameLen(): number { const s = this.i; this.name(); return this.i - s; }
   private named(): Node {
@@ -687,7 +749,8 @@ class LatexParser {
  */
 function indexToEl(latex: string): string {
   const MARK = '}_{\\lbrack ';
-  let s = latex;
+  // digitado: v[2] chega como v_{\lbrack 2\rbrack}, sem as chaves em volta do nome
+  let s = latex.replace(/_\{\\lbrack\s*/g, '_{\\lbrack ').replace(/(\\[A-Za-z]+\s?|(?<![\p{L}\d\\])\p{L}[\p{L}\d]*)_\{\\lbrack /gu, '{$1}_{\\lbrack ');
   for (let k = s.indexOf(MARK); k >= 0; k = s.indexOf(MARK)) {
     let depth = 0, open = -1; // chave que abre o {v}
     for (let j = k; j >= 0; j--) { if (s[j] === '}') depth++; else if (s[j] === '{' && --depth === 0) { open = j; break; } }

@@ -125,3 +125,26 @@ describe('A6-8: variável de integração na folha (modo simbólico)', () => {
     expect(last(['integral(1, t, 0, 3 degC) = ?'], false).error).toMatch(/deslocamento/);
   });
 });
+
+describe('A6-2: sum com índice e nthroot', () => {
+  it('[A6-2-30] sum(expr, i, a, b) soma com i de a a b; o i do laço não vaza para a folha', () => {
+    expect(last(['sum(i^2, i, 1, 10) = ?']).value).toBe(385);
+    expect(last(['i := 7', 'sum(i, i, 1, 4) = ?', 'i = ?']).value).toBe(7);
+  });
+  it('[A6-2-30] sum(vetor) e sum(a, b, c) do math.js continuam valendo; soma sem termos dá 0', () => {
+    expect(last(['sum([1, 2, 3]) = ?']).value).toBe(6);
+    expect(last(['sum(1, 2, 3) = ?']).value).toBe(6);
+    expect(last(['sum(i, i, 5, 1) = ?']).value).toBe(0);
+  });
+  it('[A6-2-30] início ou fim não inteiro e soma gigante dão erro, sem travar', () => {
+    expect(last(['sum(i, i, 1, 2.5) = ?']).error).toMatch(/inteiros/);
+    expect(last(['sum(i, i, 1, 1e12) = ?']).error).toMatch(/termos demais/);
+  });
+  it('[A6-2-30] i do corpo é da soma: não falta definir', () => {
+    const r = last(['sum(i*k, i, 1, 3) = ?']);
+    expect(r.error ?? '').not.toMatch(/\bi\b/);
+  });
+  it('[A6-2-31] nthroot(x, n): raiz n-ésima', () => {
+    expect(last(['nthroot(27, 3) = ?']).value).toBeCloseTo(3, 12);
+  });
+});

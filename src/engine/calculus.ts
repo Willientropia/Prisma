@@ -1,6 +1,7 @@
 // Cálculo numérico (ADENDO 06, 5.3): integral Gauss-Kronrod G7-K15 adaptativa e derivada de Ridders
 // (diferenças centrais com extrapolação de Richardson). Funções de argumentos brutos: integral(expr, x, a, b)
 // e diff(expr, x[, ponto]) avaliam expr com x trocado a cada ponto; integral(f, a, b) com função continua valendo.
+// Também aqui: sum(expr, i, a, b) com índice (A6-2, ADENDO 06 2.2) e nthroot(x, n).
 import type { MathJsInstance, MathNode, Unit } from 'mathjs';
 
 type M = MathJsInstance;
@@ -198,5 +199,21 @@ export function calculusFunctions(math: M) {
     });
   }, { rawArgs: true });
 
-  return { integral, diff };
+  /** sum(expr, i, a, b): soma de expr com i de a até b (passo 1); sum(vetor) e sum(a, b, c) do math.js continuam valendo. */
+  const nativeSum = math.sum;
+  const MAX_TERMS = 1_000_000;
+  const sum = Object.assign((args: MathNode[], _m: unknown, scope: Scope) => {
+    if (args.length !== 4 || !math.isSymbolNode(args[1])) return (nativeSum as (...a: unknown[]) => unknown)(...args.map((a) => a.compile().evaluate(scope)));
+    const name = (args[1] as Sym).name, body = args[0].compile();
+    const [a, b] = [args[2], args[3]].map((x) => x.compile().evaluate(scope));
+    if (typeof a !== 'number' || typeof b !== 'number' || !Number.isInteger(a) || !Number.isInteger(b)) throw new Error('sum(expressão, i, início, fim): início e fim precisam ser inteiros');
+    if (b - a >= MAX_TERMS) throw new Error('A soma tem termos demais (máximo de 1 000 000)');
+    return withVar(scope, name, (set) => {
+      let acc: unknown = 0;
+      for (let k = a; k <= b; k++) { set(k); acc = math.add(acc as never, body.evaluate(scope) as never); }
+      return acc;
+    });
+  }, { rawArgs: true });
+
+  return { integral, diff, sum, nthroot: (x: unknown, n: unknown) => math.nthRoot(x as never, n as never) };
 }
