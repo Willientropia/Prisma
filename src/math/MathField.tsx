@@ -410,10 +410,11 @@ export function MathField(props: FieldProps) {
       if (handleKey(mf, e, state, p)) {
         e.preventDefault(); e.stopPropagation();
         if (e.key.length === 1 && e.key !== "'" && !e.ctrlKey) closeAssist(state); // operador, "=", ";", "(": a lista fecha (3.1)
-      } else state.pending = !!state.letter && !!p.current.assist;
+      } else state.pending = !!p.current.assist && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey; // qualquer caractere (o % e o ‰ do campo de unidade também): o "input" dele pode chegar depois da próxima tecla
     };
     mf.addEventListener('keydown', onKey, { capture: true });
-    mf.addEventListener('input', () => { state.edited = true; state.grow = undefined; state.pending = false; refreshAssist(mf, state, p); p.current.onInput?.(mf.value); });
+    // o "input" da tecla anterior pode chegar depois do Espaço: a ampliação só acaba se a seleção deixou de ser a dela (a6-3-05 falhava 4 em 10)
+    mf.addEventListener('input', () => { state.edited = true; state.grow = grownOf(mf, state.grow); state.pending = false; refreshAssist(mf, state, p); p.current.onInput?.(mf.value); });
     mf.addEventListener('focusin', () => {
       state.edited = false; lastMathField = mf as unknown as typeof lastMathField; p.current.onFocus?.();
       if (p.current.assist?.openOnFocus && p.current.assist.auto) requestAnimationFrame(() => { if (document.activeElement === mf) refreshAssist(mf, state, p, true); }); // campo de unidade: a lista abre na hora
