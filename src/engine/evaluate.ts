@@ -41,6 +41,8 @@ export type LibInfo = { id: string; nome: string; versao: string; origem: 'proje
 export type PlotResult = { titulo: string; xs: number[]; ys: (number | null)[]; xUnit: string; yUnit: string; limite?: { valor: number; rotulo: string }; error?: string };
 export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[]; shadow?: { name: string; value: string } };
 
+/** Maior expressão (em caracteres) que vai ao math.simplify na folha; acima disso aparece sem simplificar. */
+const MAX_SIMPLIFY_LEN = 70;
 const EVALUATED = new Set(['funcao', 'calc', 'verificar']);
 const isUnit = (v: unknown): v is Unit => math.isUnit(v);
 const isUnitName = (n: string) => { try { return math.Unit.isValuelessUnit(n); } catch { return false; } };
@@ -125,6 +127,7 @@ function diagnose(node: MathNode, scope: Map<string, unknown>): string | undefin
 
 function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   const msg = e instanceof Error ? e.message : String(e);
+  if (e instanceof RangeError && /call stack/i.test(msg)) return 'A expressão tem níveis demais para calcular'; // A6-ROBUSTEZ-03: estouro de pilha vem em inglês
   let m: RegExpExecArray | null;
   if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${fromMath(m[1])}`;
   if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${fromMath(m[1])}`;
@@ -208,7 +211,9 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
   const resolveFree = (node: MathNode) => mapFree(node, (s) => (scope.has(s.name) ? math.resolve(s, scope) : s));
   const symbolicText = (node: MathNode) => {
     let r = resolveFree(node);
-    try { r = math.simplify(r); } catch { /* fica como está */ }
+    // A6-ROBUSTEZ-01: o simplify do math.js não tem prazo e o custo cresce ~4x por nível aninhado (82 caracteres: 0,5 s; 100: minutos); expressão grande fica como está
+    // ponytail: corte por tamanho do texto; upgrade: medir a profundidade da árvore em vez do comprimento
+    if (r.toString().length <= MAX_SIMPLIFY_LEN) try { r = math.simplify(r); } catch { /* fica como está */ }
     return fromMath(r.toString({ implicit: 'show' }));
   };
 
@@ -244,8 +249,11 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           const node = P(c.src) as MathNode & { object: Sym; value: MathNode };
           const value = expand(node.value);
           const name = node.object.name;
+          const missRaw = missingOf(value);
+          // A6-ROBUSTEZ-03: o nome que sobra no próprio valor (x := x + 1; a := b + 1 e b := a + 1) nunca vai ser definido por ele mesmo
+          if (missRaw.includes(name)) throw new Error(`Definição circular: ${fromMath(name)} depende de si mesmo`);
           if (c.name) defined.add(c.name);
-          const miss = missingOf(value).map(fromMath);
+          const miss = missRaw.map(fromMath);
           if (miss.length) {
             open.set(name, resolveFree(value)); // guarda a expressão com os valores conhecidos até aqui
             scope.delete(name);

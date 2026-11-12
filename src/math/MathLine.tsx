@@ -56,7 +56,8 @@ const UNREADABLE = 'Não foi possível ler esta linha';
 export function MathLine(props: Props) {
   const { raw, result, ctx, theme, size } = props;
   const [code, comment] = splitComment(raw);
-  const parsed: Line | null = useMemo(() => { try { return code.trim() ? parseLinear(code.trim()) : null; } catch { return null; } }, [code]);
+  // A6-ROBUSTEZ-04: linha que o leitor lê mas o desenho do LaTeX não aguenta (3000 termos estoura a pilha) também é ilegível
+  const parsed: Line | null = useMemo(() => { try { if (!code.trim()) return null; const l = parseLinear(code.trim()); lineToLatex(l); return l; } catch { return null; } }, [code]);
   // BUG-020: linha que o formato não lê (nunca com o texto cru, que mostraria ":="); confirmar o campo vazio não a apaga
   const unreadable = !!code.trim() && !parsed;
   const [invalid, setInvalid] = useState(false);
@@ -75,7 +76,7 @@ export function MathLine(props: Props) {
   const symFor = useRef(''); // o que havia no campo quando o Ctrl+. foi apertado
 
   // o campo mostra a expressão; o resultado fica fora dele
-  const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : ''; // BUG-020: linha que o formato não lê não vira texto cru na tela (aparecia ":=" e o resto); vai marcada como erro, abaixo
+  const fieldLatex = (() => { try { return !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : ''; } catch { return ''; } })(); // BUG-020: linha que o formato não lê não vira texto cru na tela (aparecia ":=" e o resto); vai marcada como erro, abaixo
   // linha que mostra resultado: avaliação ("x = ?") ou definição com "= ?" (ADENDO 05, E2.1)
   const shows = !pending && (parsed?.kind === 'eval' || (parsed?.kind === 'def' && !!parsed.show));
   const evalUnit = parsed?.kind === 'eval' || parsed?.kind === 'def' ? parsed.unit : undefined;
