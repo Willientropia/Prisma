@@ -6,7 +6,7 @@ import { useWorkspace } from '../store/workspace';
 import { platform } from '../platform';
 import { evaluateAsync, LINE_LIMIT_MS, stop } from './client';
 import type { EvalResult, LibInfo, LibInput } from './evaluate';
-import { DEFAULT_FORMAT, parseMargin, shadowNotice } from './format';
+import { parseMargin, shadowNotice } from './format';
 import { blockInputs, exibicao } from './prepare';
 
 export { blockKey } from './prepare';
@@ -55,12 +55,8 @@ export async function recalc(docId: string): Promise<void> {
   const ids = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
   const { libs, info } = await loadLibs(ids, !!st.projectPathOf(doc.path), libErrors);
   const cfg = st.config;
-  const base = {
-    ...DEFAULT_FORMAT, // modo, zeros à direita e limite do padrão novo (A6-1); a config só troca casas e separador
-    decimals: typeof cfg.casas_decimais === 'number' ? cfg.casas_decimais : DEFAULT_FORMAT.decimals,
-    sep: typeof cfg.separador_decimal === 'string' ? cfg.separador_decimal : DEFAULT_FORMAT.sep,
-  };
-  const format = exibicao(parsed.meta.exibicao, base);
+  // F-CONFIG: o formato vem só do documento (sem exibicao: padrão do SMath); o padrão do app é gravado no documento novo
+  const format = exibicao(parsed.meta.exibicao);
 
   useWorkspace.setState({ calculating: true });
   const margem = parseMargin((cfg.verificacao as { margem_atencao?: unknown } | undefined)?.margem_atencao);

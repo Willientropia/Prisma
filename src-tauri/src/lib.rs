@@ -34,6 +34,7 @@ pub fn run() {
       project::project_create,
       appdata::app_paths,
       appdata::config_read,
+      appdata::config_write,
       appdata::library_files,
       appdata::recovery_list,
       appdata::recovery_read,

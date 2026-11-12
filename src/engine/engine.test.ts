@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate, type BlockInput, type EvalInput, type LibInput } from './evaluate';
 import { classify, greek } from './syntax';
-import { fmtNum, parseMargin, prettyUnit } from './format';
+import { DEFAULT_FORMAT, fmtNum, parseMargin, prettyUnit } from './format';
 import { math } from './math';
 import { blocks, lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
@@ -90,6 +90,24 @@ describe('regras do motor', () => {
 
   it('[A6-05] formato padrão do SMath: 4 casas, sem zeros à direita, expoente a partir de 10^5', () => {
     expect([fmtNum(14), fmtNum(1 / 3), fmtNum(3.2936), fmtNum(1.5), fmtNum(123456), fmtNum(0.00001234)]).toEqual(['14', '0,3333', '3,2936', '1,5', '1,2346e5', '1,234e-5']);
+  });
+  it('[FCFG-01] notação científica: sempre mantissa·10^n', () => {
+    const c = { ...DEFAULT_FORMAT, notation: 'cientifica' as const };
+    expect([fmtNum(1234.5678, c), fmtNum(1.5, c), fmtNum(0, c), fmtNum(-0.00123, c)]).toEqual(['1,2346e3', '1,5e0', '0', '-1,23e-3']);
+    expect([fmtNum(9.99996, c), fmtNum(999996, DEFAULT_FORMAT)]).toEqual(['1e1', '1e6']); // a mantissa que arredonda para 10 sobe o expoente
+  });
+  it('[FCFG-02] notação de engenharia: expoente múltiplo de 3', () => {
+    const e = { ...DEFAULT_FORMAT, notation: 'engenharia' as const };
+    expect([fmtNum(12345.678, e), fmtNum(0.00123, e), fmtNum(0.000012, e), fmtNum(123456789, e), fmtNum(999999.99, e)]).toEqual(['12,3457e3', '1,23e-3', '12e-6', '123,4568e6', '1e6']);
+    expect(fmtNum(12345.678, { ...e, mode: 'significativos', decimals: 4 })).toBe('12,35e3');
+  });
+  it('[FCFG-03] notação automática dá o mesmo que antes', () => {
+    const a = { ...DEFAULT_FORMAT, notation: 'automatica' as const };
+    expect([fmtNum(14, a), fmtNum(1 / 3, a), fmtNum(3.2936, a), fmtNum(1.5, a), fmtNum(123456, a), fmtNum(0.00001234, a)]).toEqual(['14', '0,3333', '3,2936', '1,5', '1,2346e5', '1,234e-5']);
+  });
+  it('[FCFG-09] formato do bloco com notação vale só para o bloco', () => {
+    const r = evaluate({ libs: [], blocks: [{ key: 'a', type: 'calc', lines: ['2*7 = ?'], fmt: { notation: 'cientifica' } }, { key: 'b', type: 'calc', lines: ['2*7 = ?'] }] });
+    expect([r.blocks.a[0].text, r.blocks.b[0].text]).toEqual(['1,4e1', '14']);
   });
   it('[F2-16] formata números e unidades', () => {
     expect([fmtNum(1.7899999), fmtNum(712.8), fmtNum(0.02141), fmtNum(0), fmtNum(1e-7), fmtNum(-3.5)]).toEqual(['1,79', '712,8', '0,0214', '0', '1e-7', '-3,5']);

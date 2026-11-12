@@ -28,6 +28,7 @@ export type Platform = {
   removeRecent(path: string): Promise<RecentItem[]>;
   paths(): Promise<AppPaths>;
   config(): Promise<string>;
+  writeConfig(content: string): Promise<void>;
   libraryFiles(): Promise<{ user: string[]; factory: string[] }>;
   createProject(chosenPath: string): Promise<string>;
   recoveryList(): Promise<Recovered[]>;
@@ -58,6 +59,7 @@ const tauriPlatform: Platform = {
   removeRecent: (path) => invoke('recent_remove', { path }),
   paths: () => invoke('app_paths'),
   config: () => invoke('config_read'),
+  writeConfig: (content) => invoke('config_write', { content }),
   libraryFiles: () => invoke('library_files'),
   createProject: (path) => invoke('project_create', { path }),
   recoveryList: () => invoke('recovery_list'),

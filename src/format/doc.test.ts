@@ -152,3 +152,11 @@ describe('ADENDO 05: atributos da região', () => {
     expect(withAttr('```area {#r titulo="Valores RMS" y=711}\n', 'recolhida', true)).toBe('```area {#r titulo="Valores RMS" y=711 recolhida}\n');
   });
 });
+
+describe('FCFG: atributo sem aspas', () => {
+  it('[FCFG-07] withAttr com quote=false grava casas=2 sem aspas; o padrão continua com aspas', () => {
+    expect(withAttr('```calc {#a x=40}\n', 'casas', '2', false)).toBe('```calc {#a x=40 casas=2}\n');
+    expect(withAttr('```calc {#a x=40 casas=4}\n', 'casas', '2', false)).toBe('```calc {#a x=40 casas=2}\n');
+    expect(withAttr('```calc {#a x=40}\n', 'descricao', 'Nova')).toBe('```calc {#a x=40 descricao="Nova"}\n');
+  });
+});

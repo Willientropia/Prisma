@@ -101,15 +101,15 @@ export function parseInfo(info: string): { type: string; id?: string; attrs: Rec
 
 /**
  * Liga, desliga ou troca um atributo na linha de abertura do bloco, sem mexer no resto:
- * value true = atributo sem valor ("desativado"), null = remove, texto = nome="texto".
+ * value true = atributo sem valor ("desativado"), null = remove, texto = nome="texto" (quote=false: nome=texto, para valores simples como casas=2).
  */
-export function withAttr(fenceLine: string, name: string, value: string | true | null): string {
+export function withAttr(fenceLine: string, name: string, value: string | true | null, quote = true): string {
   const nl = /\r?\n$/.exec(fenceLine)?.[0] ?? '';
   const head = fenceLine.slice(0, fenceLine.length - nl.length);
   const m = /\{([^}]*)\}/.exec(head);
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\export const blocks = (doc: PrismaDoc) =>');
   const re = new RegExp(`(^|\\s)${esc}(=(?:"[^"]*"|\\S+))?(?=\\s|$)`);
-  const piece = value === true ? name : value === null ? '' : `${name}="${value.replace(/"/g, "'")}"`;
+  const piece = value === true ? name : value === null ? '' : quote ? `${name}="${value.replace(/"/g, "'")}"` : `${name}=${value}`;
   if (!m) return value === null ? fenceLine : `${head} {${piece}}${nl}`;
   let inner = m[1];
   inner = re.test(inner) ? inner.replace(re, piece ? `$1${piece}` : '') : piece ? `${inner} ${piece}` : inner;

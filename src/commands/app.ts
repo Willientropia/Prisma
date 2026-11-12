@@ -23,7 +23,7 @@ register('app.fechar', {
   label: 'Fechar', shortcut: 'Ctrl+W',
   run: () => { const { active, close } = st(); st().set({ menuOpen: false }); if (active !== 'home') void close(active); },
 });
-register('app.configuracoes', { label: 'Configurações' });
+register('app.configuracoes', { label: 'Configurações', run: () => st().set({ formatDialog: { scope: 'app' }, menuOpen: false }) });
 register('home.modelos', { label: 'Modelos' });
 register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });

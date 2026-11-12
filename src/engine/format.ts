@@ -2,10 +2,11 @@
 /**
  * mode ausente: o formato antigo do Prisma (casas fixas), só para quem monta FormatOpts à mão. O padrão (DEFAULT_FORMAT) e o do arquivo trazem mode, o do SMath (ADENDO 05, E4.2; ADENDO 06, 1.3):
  * decimals = casas (decimais) ou algarismos (significativos); trailingZeros; expThreshold = notação
- * científica a partir de 10^n e abaixo de 10^-n. A notação científica sai como "1,475e-3"; a tela
+ * científica a partir de 10^n e abaixo de 10^-n (notation automatica); cientifica e engenharia valem sempre
+ * (engenharia: expoente múltiplo de 3). A notação científica sai como "1,475e-3"; a tela
  * desenha 1,475·10⁻³ (nunca "e-3" na tela).
  */
-export type FormatOpts = { decimals: number; sep: string; mode?: 'decimais' | 'significativos'; trailingZeros?: boolean; expThreshold?: number };
+export type FormatOpts = { decimals: number; sep: string; mode?: 'decimais' | 'significativos'; trailingZeros?: boolean; expThreshold?: number; notation?: 'automatica' | 'cientifica' | 'engenharia' };
 export const DEFAULT_FORMAT: FormatOpts = { decimals: 4, sep: ',', mode: 'decimais', trailingZeros: false, expThreshold: 5 };
 
 /** Sem mode (formato antigo): |x| >= 0,1 com casas fixas (1,79; 2,20; 712,80); menor, 3 algarismos (0,0214); extremos em notação científica. Com mode (o padrão): fmtSmath. */
@@ -69,10 +70,12 @@ function fmtSmath(x: number, o: FormatOpts): string {
     return s.replace('.', o.sep);
   };
   const exp10 = a === 0 ? 0 : Math.floor(Math.log10(a));
-  if (a !== 0 && (exp10 >= th || exp10 <= -th)) { // pelo expoente, como o SMath: limite 3 -> 1,475·10⁻³ e 1·10³
-    let e = Math.floor(Math.log10(a));
+  const always = o.notation === 'cientifica' || o.notation === 'engenharia';
+  const step = o.notation === 'engenharia' ? 3 : 1;
+  if (a !== 0 && (always || exp10 >= th || exp10 <= -th)) { // pelo expoente, como o SMath: limite 3 -> 1,475·10⁻³ e 1·10³
+    let e = Math.floor(exp10 / step) * step;
     let m = x / 10 ** e;
-    if (Math.abs(Number(plain(m).replace(o.sep, '.'))) >= 10) { e++; m = x / 10 ** e; } // 9,9996 arredonda para 10
+    if (Math.abs(Number(plain(m).replace(o.sep, '.'))) >= 10 ** step) { e += step; m = x / 10 ** e; } // 9,9996 arredonda para 10
     return `${plain(m)}e${e}`;
   }
   return plain(x);

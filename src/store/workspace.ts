@@ -9,6 +9,7 @@ import { platform, type AppPaths, type Recovered, type RecentItem, type Filter }
 import type { RibbonTab } from '../shell/ribbons';
 import type { EvalResult } from '../engine/evaluate';
 import { importSm } from '../format/smath';
+import { appFormat, stampFormat } from '../engine/prepare';
 
 export type OpenDoc = {
   id: string; // caminho do arquivo, ou "novo:Caderno1" enquanto não foi salvo
@@ -26,6 +27,9 @@ export type OpenDoc = {
 
 export type ProjectList = 'arquivos' | 'documentos' | 'bibliotecas';
 export type Project = { path: string; dir: string; nome: string; lists: Record<ProjectList, string[]>; exists: Record<string, boolean> };
+
+/** Diálogo de formato do resultado: padrão do app (Configurações), do documento ou de uma região (F-CONFIG). */
+type FormatDialogTarget = { scope: 'app' } | { scope: 'doc'; docId: string } | { scope: 'region'; docId: string; regionId: string };
 
 export type DialogButton = { id: string; label: string; primary?: boolean };
 /** compare: definição antiga e nova lado a lado (Salvar na biblioteca, Fase 4). */
@@ -45,6 +49,7 @@ type State = {
   menuOpen: boolean;
   exportOpen: boolean;
   fnSearchOpen: boolean; // busca de função (Ctrl+K, Inserir função)
+  formatDialog: FormatDialogTarget | null; // F-CONFIG
   libsVersion: number; // sobe a cada gravação de biblioteca (rótulos de função do caderno se atualizam)
   showSource: boolean; // Exibir > Código-fonte (ADENDO 02, B1)
   status: string | null;
@@ -198,6 +203,7 @@ export const useWorkspace = create<State>((set, get) => {
     calculating: false,
     dialog: null,
     fnSearchOpen: false,
+    formatDialog: null,
     libsVersion: 0,
     set: (patch) => set(patch),
 
@@ -221,7 +227,7 @@ export const useWorkspace = create<State>((set, get) => {
     newDoc: (type, opts) => {
       const name = `${NEW_NAME[type]}${++counters[type]}`;
       const ext = TIPO_EXT[EDITOR_TIPO[type]];
-      const doc: OpenDoc = { id: `novo:${name}`, path: null, name, ext, type, text: TEMPLATES[type](name), dirty: false, readOnly: false, addToProject: opts?.addToProject };
+      const doc: OpenDoc = { id: `novo:${name}`, path: null, name, ext, type, text: type === 'caderno' || type === 'folha' ? stampFormat(TEMPLATES[type](name), appFormat(get().config)) : TEMPLATES[type](name), dirty: false, readOnly: false, addToProject: opts?.addToProject };
       set({ openDocs: [...get().openDocs, doc] });
       get().activate(doc.id);
       return doc;
