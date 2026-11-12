@@ -20,15 +20,17 @@ type Props = {
   markdown: string;
   className?: string;
   autoFocus?: boolean;
+  typedBefore?: () => string; // texto que a pessoa digitou antes do campo ter foco (A6-3): entra no fim, ao ganhar o foco automático
   onChange: (md: string) => void; // só quando o usuário edita
   resolveLink?: (target: string) => string | null;
   onOpenLink?: (target: string) => void;
 };
 
-export function TextEditor({ markdown, className, autoFocus, onChange, resolveLink, onOpenLink }: Props) {
+export function TextEditor({ markdown, className, autoFocus, typedBefore, onChange, resolveLink, onOpenLink }: Props) {
   const cb = useRef({ onChange, resolveLink, onOpenLink });
   cb.current = { onChange, resolveLink, onOpenLink };
   const timer = useRef(0);
+  const typedOnce = useRef(false);
   // último Markdown que editor e arquivo têm em comum: comparar com ele evita serializar o texto todo
   // a cada render (num .prsm de 1 MB isso sozinho passava de 400 ms, C7-02)
   const synced = useRef(markdown);
@@ -76,7 +78,13 @@ export function TextEditor({ markdown, className, autoFocus, onChange, resolveLi
     markLinks(editor);
   }, [markdown, editor]);
 
-  useEffect(() => { if (autoFocus && editor && !editor.isFocused) editor.commands.focus('end'); }, [autoFocus, editor]);
+  useEffect(() => {
+    if (!autoFocus || !editor || editor.isFocused) return;
+    editor.commands.focus('end');
+    const extra = typedOnce.current ? '' : typedBefore?.(); // uma vez só: o efeito pode rodar de novo antes do foco pegar
+    typedOnce.current = true;
+    if (extra) editor.commands.insertContent({ type: 'text', text: extra }); // como nó de texto: em string o HTML tiraria o espaço do começo
+  }, [autoFocus, editor]);
 
   useEffect(() => () => { clearTimeout(timer.current); if (activeTextEditor === editor) activeTextEditor = null; }, [editor]);
 

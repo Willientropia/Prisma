@@ -1,3 +1,4 @@
+// Mais de 300 linhas: a folha reúne as regiões, a seleção e os menus num componente e já passava do limite antes do A6-3.
 // Folha livre (SPEC 7.2 + ADENDO 02, B6): regiões na grade, editadas no lugar, recalculadas sem clique.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { PanelHeader, PropGrid, Row } from '../../components/ui';
@@ -13,7 +14,7 @@ import { platform } from '../../platform';
 import { Icon } from '../../components/Icon';
 import { register } from '../../commands/registry';
 import { MathLine, isKnownUnit } from '../../math/MathLine';
-import { MathMarkup, type Key } from '../../math/MathField';
+import { MathMarkup, takeHeldKeys, type Key } from '../../math/MathField';
 import { TextEditor } from '../TextEditor';
 import { SourceView } from '../SourceView';
 import { blockProps } from '../caderno/Caderno';
@@ -113,6 +114,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [drag, setDrag] = useState<{ ids: string[]; dx: number; dy: number } | null>(null);
   const [band, setBand] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const pendingKeys = useRef<Key[]>([]); // teclas digitadas enquanto a região nova monta
+  const [spaceFor, setSpaceFor] = useState<string | null>(null); // região que acabou de virar texto: o espaço do Espaço entra no texto
   const creating = useRef(false);
   const creatingTimer = useRef(0);
   const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; };
@@ -223,6 +225,16 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       edit(doc.id, r.start - extra, r.end, '');
     }
     setSelected(new Set());
+  };
+
+  /** Espaço numa região de cálculo com só um nome: vira região de texto, com a palavra, o espaço e o cursor no fim (A6-3). */
+  const toText = (id: string, word: string) => {
+    const r = byId(id);
+    if (!r) return;
+    const head = lines(r.seg.raw)[0].replace(/^```calc/, '```texto');
+    edit(doc.id, r.start, r.bodyStart + r.seg.body.length, `${head}${word}\n`);
+    setSpaceFor(id);
+    setFocus({ id, line: -1 });
   };
 
   const writeLine = (id: string, i: number, raw: string) => {
@@ -370,6 +382,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
             <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20}
               focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={doneCreating}
               onWrite={(w) => writeLine(r.id, i, w)}
+              onToText={b.type === 'calc' && ls.length <= 1 ? (word) => toText(r.id, word) : undefined}
               onEnter={(shift) => { (document.activeElement as HTMLElement | null)?.blur?.(); if (shift) regionBelow(r.id); else crossBelow(r.id); }}
               onBackspaceEmpty={() => writeLine(r.id, i, '')}
               onFocus={() => { setSelected(new Set([r.id])); setCross(null); }}
@@ -379,7 +392,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       });
     } else if (b.type === 'texto') {
       content = (
-        <TextEditor markdown={b.body.trim()} autoFocus={focus?.id === r.id} className={s.regionText}
+        <TextEditor markdown={b.body.trim()} autoFocus={focus?.id === r.id} typedBefore={spaceFor === r.id ? () => { setSpaceFor(null); return ` ${takeHeldKeys().filter((k) => k.key.length === 1 && !k.ctrlKey && !k.metaKey).map((k) => k.key).join('')}`; } : undefined} className={s.regionText}
           onChange={(md) => {
             const cur = byId(r.id);
             if (cur) edit(doc.id, cur.bodyStart, cur.bodyStart + cur.seg.body.length, md ? `${md}\n` : '');

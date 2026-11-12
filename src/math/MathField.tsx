@@ -1,9 +1,11 @@
+// Mais de 300 linhas: o teclado do campo (handleKey) é uma peça só e já passava do limite; a lógica nova do Espaço mora em selecao.ts.
 // Campo matemático (ADENDO 02): MathLive configurado como o SMath. Edita e mostra no mesmo formato.
 import { useEffect, useMemo, useRef } from 'react';
 import { MathfieldElement, convertLatexToMarkup } from 'mathlive';
 import 'mathlive/static.css'; // estilos da renderização estática e as fontes (empacotadas, sem internet)
 import { run } from '../commands/registry';
 import { math } from '../engine/math';
+import { grownOf, growSelect, topOperators } from './selecao';
 import { greekLatex, LATIN_TO_GREEK, type Node, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
 
 MathfieldElement.fontsDirectory = null; // as @font-face já vêm de mathlive/static.css
@@ -38,11 +40,14 @@ export type FieldProps = {
   onBackspaceEmpty?: () => void;
   onFocus?: () => void;
   onLeave?: () => void; // perdeu o foco (com ou sem edição)
+  onToText?: (word: string) => void; // Espaço numa região de um nome só (A6-3): quem hospeda troca a região por texto
+  onSymbolic?: (latex: string) => void; // Ctrl+. (A6-3, 2.4)
+  onArrowEnd?: () => boolean; // seta direita no fim do campo (A6-3, 2.5): true se levou o cursor ao marcador de conversão
   ariaLabel?: string;
 };
 
 export type Key = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean };
-const OPERATOR_KEYS = new Set(['+', '-', '<', '>', ';', ')', ':', '=', '*', '/', ',']);
+const OPERATOR_KEYS = new Set(['+', '-', '<', '>', ';', ')', ':', '=', '*', '/', ',', '|']);
 
 /** LaTeX do começo até o cursor. getValue(pos-1, pos) volta vazio logo depois de parênteses, então lemos o prefixo. */
 const beforeCaret = (mf: MathfieldElement) => (mf.position > 0 ? mf.getValue(0, mf.position, 'latex') : '');
@@ -68,7 +73,7 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-type FieldState = { script: 'sub' | 'sup' | 'idx' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean; struct?: number }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
+type FieldState = { script: 'sub' | 'sup' | 'idx' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean; struct?: number; grow?: { start: number; end: number; level: number } }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
 
 /** 2.2: a ordem dos quadradinhos é a do preenchimento (limite inferior, superior, integrando, variável). */
 const STRUCTURE: Record<string, string> = {
@@ -100,6 +105,10 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     const cmd = /\\[A-Za-z]+\s*$/.exec(b);
     return cmd ? GREEK_CMD.test(cmd[0].trim()) : /(^|[^\\\p{L}])\p{L}[\p{L}\d]*\s*$/u.test(b);
   };
+  // o campo tem só um nome (sem índice, operador, ≔ ou =)? devolve a palavra
+  const lone = () => {
+    try { const l = latexToLine(mf.value); return l.kind === 'expr' && l.expr.t === 'id' && !l.expr.name.includes('_') ? l.expr.name : null; } catch { return null; }
+  };
   const afterDigit = () => /\d$/.test(before()) && !nameDigit();
   const atEnd = () => mf.position === mf.lastOffset;
   const insert = (latex: string) => mf.insert(latex, { selectionMode: latex.includes('#0') ? 'placeholder' : 'after', format: 'latex' });
@@ -113,6 +122,9 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     } catch { /* expressão ainda incompleta */ }
   };
 
+  const grown = () => grownOf(mf, state.grow); // A6-3, 2.3: a seleção do Espaço ainda vale?
+  const growSelection = () => growSelect(mf, state); // Espaço: amplia a seleção (selecao.ts)
+
   // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
   // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
   const commit = (how: Commit) => { state.script = null; state.unit = false; state.struct = 0; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
@@ -123,6 +135,8 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     if (g) { mf.executeCommand('deleteBackward'); insert(greekLatex(g)); }
     return true;
   }
+  // Ctrl+.: cálculo simbólico mínimo (A6-3, 2.4)
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === '.') { p.current.onSymbolic?.(mf.value); return true; }
   // Ctrl+K: busca de função (F4-06); o MathLive não deixa o atalho chegar à janela
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { run('funcao.inserir'); return true; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
@@ -137,15 +151,31 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   if (state.unit && !mf.value.includes('\\class{u}')) state.unit = false;
   if (state.unit && (OPERATOR_KEYS.has(e.key) || ['^', ' ', '|'].includes(e.key))) { mf.executeCommand('moveAfterParent'); state.unit = false; }
 
+  // A6-3, 2.3: com a seleção ampliada pelo Espaço, o próximo caractere age sobre ela em vez de substituí-la
+  const g = grown();
+  if (g && e.key.length === 1 && e.key !== ' ') {
+    state.grow = undefined;
+    const sel = mf.getValue(g.start, g.end, 'latex');
+    const ops = topOperators(sel);
+    const wrap = e.key === '^' ? ops.length > 0 : e.key === '*' && ops.some((o) => o.rank <= 2); // (a+b)^ e (a+b)*, mas a*b^ não precisa
+    if (e.key === '/' || wrap) mf.executeCommand('deleteBackward'); // tira a seleção: com ela, o #0 do insert seria preenchido pela seleção
+    if (e.key === '/') { insert(`\\frac{${sel}}{#0}`); return true; }
+    if (wrap) { insert(e.key === '^' ? `\\left(${sel}\\right)^{#0}` : `\\left(${sel}\\right)\\cdot `); if (e.key === '^') state.script = 'sup'; return true; }
+    mf.position = g.end; // outro operador (ou letra): a seleção se desfaz e o texto segue depois dela
+  }
+
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
   // ';' e ')': reclassificar ali tiraria o cursor de dentro dos parênteses (f(a;b)); confirmar reclassifica
-  if (OPERATOR_KEYS.has(e.key)) { leaveSub(); if (!['/', ',', ':', '=', ';', ')'].includes(e.key)) classify(); }
+  if (OPERATOR_KEYS.has(e.key) && !(e.key === ',' && state.script === 'sub')) { leaveSub(); if (!['/', ',', ':', '=', ';', ')'].includes(e.key)) classify(); } // a vírgula dentro do índice é texto: não sai dele
   switch (e.key) {
     case 'Enter': commit(e.shiftKey ? 'shift-enter' : 'enter'); return true;
     case 'Escape': commit('escape'); return true;
     case 'Backspace': if (mf.value === '') { p.current.onBackspaceEmpty?.(); return true; } return false;
     case ':': insert('\\coloneq '); return true;
     case '=': {
+      // BUG-016: "<=" e ">=" digitados viram ≤ e ≥ (o "=" não avalia)
+      const rel = /([<>])\s*$/.exec(before());
+      if (rel) { mf.executeCommand('deleteBackward'); insert(rel[1] === '<' ? '\\le ' : '\\ge '); return true; }
       // "=" inteligente (ADENDO 05, E2.1): nome ainda não definido vira definição; o resto, avaliação
       const v = mf.value;
       if (v.includes('coloneq')) { if (v.split('coloneq')[1].replace(/\\[;,]/g, '').trim()) commit('defeval'); return true; }
@@ -160,11 +190,12 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
     case "'": insert('\\class{u}{\\mathrm{#0}}'); state.unit = true; return true; // força unidade (B4)
-    case '|': insert('\\left\\lvert #0\\right\\rvert'); return true;
+    case '|': insert('\\lor '); return true; // o ou (A6-3, decisão do usuário conferida no SMath); o valor absoluto é abs(
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
       // depois de letra abre o índice do nome, como no SMath: s,tensao (ADENDO 05, E2.2)
       if (!state.script && afterName()) { mf.executeCommand('moveToSubscript'); state.script = 'sub'; return true; }
+      if (state.script === 'sub') { insert(','); return true; } // dentro do índice a vírgula é texto (batata com índice alo,oi), como no SMath
       insert(';'); return true; // senão separa argumentos
     }
     case ';': insert(';'); return true;
@@ -208,8 +239,18 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     }
     case '_': state.script = 'sub'; return false;
     case '^': state.script = 'sup'; return false;
-    case ' ': if (state.script) { mf.executeCommand('moveAfterParent'); state.script = null; } else classify(); return true;
-    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown': state.script = null; state.unit = false; return false;
+    case ' ': {
+      if (state.script) { mf.executeCommand('moveAfterParent'); state.script = null; return true; }
+      // só um nome na região: vira texto (comportamento do SMath); com expressão, o Espaço amplia a seleção (A6-3)
+      const word = p.current.onToText && lone();
+      if (word) { state.edited = false; holdKeys(); p.current.onToText!(word); return true; } // edited: a saída do campo não grava a linha de volta por cima do texto
+      if (!growSelection()) classify();
+      return true;
+    }
+    case 'Tab': if (e.shiftKey) return false; commit('blur'); mf.blur(); return true; // sai da região (tabela 2.1): grava e solta o foco
+    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown':
+      if (e.key === 'ArrowRight' && atEnd() && !state.script && p.current.onArrowEnd?.()) return true; // depois do "=", seta direita vai ao marcador (2.5)
+      state.script = null; state.unit = false; return false;
     case '/': {
       // (a+b)/ -> fração com a+b em cima, sem os parênteses (B4)
       // seleção/inserção do MathLive cai dentro dos parênteses; reescreve o valor e põe o cursor no denominador
@@ -244,10 +285,8 @@ export function holdKeys(): void {
   window.addEventListener('keydown', listener, true);
   held = { keys, listener, timer: window.setTimeout(releaseKeys, HOLD_MS) };
 }
-/** Acrescenta teclas à fila guardada (se houver uma esperando o próximo campo). */
-function holdMore(keys: Key[]): void {
-  held?.keys.push(...keys);
-}
+/** Teclas digitadas depois do Espaço que trocou a região por texto: quem recebe o foco as aplica (A6-3). */
+export const takeHeldKeys = (): Key[] => releaseKeys();
 function releaseKeys(): Key[] {
   if (!held) return [];
   window.removeEventListener('keydown', held.listener, true);
@@ -298,7 +337,7 @@ export function MathField(props: FieldProps) {
       if (handleKey(mf, e, state, p)) { e.preventDefault(); e.stopPropagation(); }
     };
     mf.addEventListener('keydown', onKey, { capture: true });
-    mf.addEventListener('input', () => { state.edited = true; p.current.onInput?.(mf.value); });
+    mf.addEventListener('input', () => { state.edited = true; state.grow = undefined; p.current.onInput?.(mf.value); });
     mf.addEventListener('focusin', () => { state.edited = false; lastMathField = mf as unknown as typeof lastMathField; p.current.onFocus?.(); });
     mf.addEventListener('focusout', () => {
       state.script = null;
@@ -333,10 +372,7 @@ export function MathField(props: FieldProps) {
       waiting = false;
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
-        state.lastCommit = null;
         if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
-        // depois do "=" que avalia, o resto do lote é do marcador de conversão, não deste campo (E8-08)
-        if (state.lastCommit === 'eval' || state.lastCommit === 'defeval') { holdMore(keys.slice(i + 1)); break; }
       }
       p.current.onReady?.();
     };

@@ -3,14 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '../components/ui';
 import {
-  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, parseLinear, parseUnit, splitComment, unitFromMathjs, unitLatex, unitToLinear,
+  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, nodeToLinear, parseLinear, parseUnit, splitComment, unitFromMathjs, unitLatex, unitToLinear,
   type LatexCtx, type Line, type Node, type Unit,
 } from '../format/mathlinear';
 import { math } from '../engine/math';
 import { toMath } from '../engine/syntax';
+import { symbolic as symbolicOf } from '../engine/symbolic';
 import type { LineResult } from '../engine/evaluate';
 import { useWorkspace } from '../store/workspace';
-import { MathField, MathMarkup, holdKeys, type Commit, type Key } from './MathField';
+import { MathField, MathMarkup, type Commit, type Key } from './MathField';
 
 export const LIVE_MS = 100; // B5: resultado novo até ~150 ms depois da última tecla (100 de espera + cálculo)
 
@@ -78,6 +79,7 @@ type Props = {
   onBackspaceEmpty?: () => void;
   onFocus?: () => void;
   onExit?: () => void;
+  onToText?: (word: string) => void; // Espaço numa região de um nome só (A6-3): a folha troca a região por texto
 };
 
 export function MathLine(props: Props) {
@@ -92,7 +94,10 @@ export function MathLine(props: Props) {
   // pending: o campo está vazio ou incompleto, então o resultado antigo some na hora.
   const cleared = useRef(false);
   const [pending, setPending] = useState(false);
+  const forceEval = useRef(false); // o "=" foi digitado neste campo e ainda não se apagou tudo
   const set = useWorkspace((s) => s.set);
+  const [sym, setSym] = useState<string | null>(null); // Ctrl+. (A6-3, 2.4): latex de "-> resultado", some ao editar
+  const symFor = useRef(''); // o que havia no campo quando o Ctrl+. foi apertado
 
   // o campo mostra a expressão; o resultado fica fora dele
   const fieldLatex = !code.trim() ? '' : parsed ? (parsed.kind === 'eval' ? nodeLatex(parsed.expr, ctx) : lineToLatex(parsed.kind === 'def' ? { ...parsed, show: false, unit: undefined } : parsed, ctx)) : `\\text{${code.trim().replace(/[\\{}]/g, '')}}`;
@@ -108,8 +113,9 @@ export function MathLine(props: Props) {
     try { l = latexToLine(latex); } catch { return null; }
     const old = cleared.current ? null : parsed; // sem resto da avaliação apagada
     const [unit, conv] = old ? [evalUnit, evalConv] : [undefined, undefined];
-    if ((asEval || old?.kind === 'eval') && l.kind === 'expr') l = { kind: 'eval', expr: l.expr, unit, conv };
-    if (l.kind === 'def' && (asEval || (old?.kind === 'def' && old.show))) l = { ...l, show: true, unit, conv };
+    const keep = asEval || forceEval.current; // forceEval: depois do "=" o campo segue editável e a linha continua sendo avaliação (2.5)
+    if ((keep || old?.kind === 'eval') && l.kind === 'expr') l = { kind: 'eval', expr: l.expr, unit, conv };
+    if (l.kind === 'def' && (keep || (old?.kind === 'def' && old.show))) l = { ...l, show: true, unit, conv };
     return lineToLinear(l) + (comment ? ` ${comment.trim()}` : '');
   };
 
@@ -121,20 +127,36 @@ export function MathLine(props: Props) {
   };
 
   useEffect(() => () => clearTimeout(live.current), []);
-  useEffect(() => { cleared.current = false; setPending(false); }, [raw]); // a linha mudou (gravação, desfazer, outra visão): o estado de edição recomeça
+  useEffect(() => { cleared.current = false; forceEval.current = false; setPending(false); }, [raw]); // a linha mudou (gravação, desfazer, outra visão): o estado de edição recomeça
 
   const onInput = (latex: string) => {
     clearTimeout(live.current);
+    if (latex !== symFor.current) setSym(null); // o resultado vale enquanto a expressão não mudar (o MathLive repete o "input" do ')' depois da tecla)
     const n = toRaw(latex, false);
-    if (n === '') cleared.current = true;
+    if (n === '') { cleared.current = true; forceEval.current = false; }
     setPending(n === null || n === '');
     live.current = window.setTimeout(() => { if (n !== null && n !== '') { write(n); cleared.current = false; } }, LIVE_MS);
   };
 
+  /** Ctrl+.: derivada e simplificação do math.js; sem resultado, avisa na barra de status. */
+  const onSymbolic = (latex: string) => {
+    let out: string | null = null;
+    try {
+      const l = latexToLine(latex);
+      const src = nodeToLinear(l.kind === 'def' ? l.rhs : l.expr);
+      const r = symbolicOf(src);
+      if (r) { const o = parseLinear(r); out = `\\to ${nodeLatex(o.kind === 'def' ? o.rhs : o.expr, { defined: { has: () => true } as unknown as Set<string>, isUnit: () => false })}`; }
+    } catch { out = null; }
+    symFor.current = latex;
+    setSym(out);
+    if (!out) set({ status: 'Cálculo simbólico não disponível para esta expressão' });
+  };
+
   const onCommit = (latex: string, how: Commit) => {
+    setSym(null);
     clearTimeout(live.current);
-    // depois do "=", o que se digita vai para o marcador de conversão (ADENDO 05, E2.1 e E8-08)
-    if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { cleared.current = false; setPending(false); holdKeys(); setUnitEdit(true); } return; }
+    // depois do "=" o resultado aparece na hora e o cursor fica no campo; o marcador de conversão abre com seta direita ou clique (ADENDO 06, 2.5)
+    if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { cleared.current = false; forceEval.current = true; setPending(false); } return; }
     const next = toRaw(latex, false);
     if (next === null && cleared.current && how === 'blur') { cleared.current = false; setPending(false); props.onWrite(''); return; } // saiu com o que sobrou incompleto: a avaliação apagada não volta
     const ok = write(next);
@@ -149,10 +171,15 @@ export function MathLine(props: Props) {
   const err = result?.error;
   const symbolic = result?.symbolic !== undefined && !err;
   const showResult = (shows && result && !err && (result.numText !== undefined || symbolic || !!result.matrix)) || unitEdit;
+  // nome sozinho e ainda indefinido (x5 depois do "="): resultado vazio e sem erro, só o "=" e o marcador (2.5)
+  const emptyResult = !!symbolic && result!.missing?.length === 1 && result!.symbolic === result!.missing[0];
+  /** seta direita no fim do campo: vai ao marcador de conversão, se a região mostra resultado. */
+  const onArrowEnd = () => { if (!showResult || unitEdit) return false; setUnitEdit(true); return true; };
   return (
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
       <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
-        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} />
+        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} />
+      {sym && <span className="mresult msymbolic"><MathMarkup latex={sym} theme={theme} size={size} className="msymbolic-value" /></span>}
       {showResult && (
         <span className={`mresult${props.stale ? ' mresult-stale' : ''}`}>
           <MathMarkup latex="=" theme={theme} size={size} />
@@ -166,7 +193,7 @@ export function MathLine(props: Props) {
               }} />
           ) : (
             <>
-              {symbolic
+              {emptyResult ? null : symbolic
                 ? <span title={`${result!.missing!.join(', ')} ainda não ${result!.missing!.length > 1 ? 'foram definidos' : 'foi definido'}`}><MathMarkup latex={symbolicLatex(result!)} theme={theme} size={size} className="mresult-value mresult-symbolic" /></span>
                 : <MathMarkup latex={resultLatex(result!)} theme={theme} size={size} className="mresult-value" />}
               <button type="button" className="unit-marker" aria-label="Converter unidade do resultado" title="Converter unidade" onClick={() => setUnitEdit(true)} />

@@ -25,7 +25,7 @@ export class MathSyntaxError extends Error {}
 const fail = (msg: string): never => { throw new MathSyntaxError(msg); };
 
 const REL = ['<', '<=', '>', '>=', '==', '!='];
-const PREC: Record<string, number> = { '<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 5 };
+const PREC: Record<string, number> = { '||': 0, '<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 5 };
 const prec = (n: Node): number => (n.t === 'bin' ? PREC[n.op] : n.t === 'neg' ? 4 : 6);
 
 /** Funções nativas: nome reto na tela (SPEC 8.6). */
@@ -33,8 +33,9 @@ export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos'
 
 // ---------- linear: leitura ----------
 type Tok = { k: 'num' | 'id' | 'op' | 'ws' | 'str'; v: string };
-// nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05)
-const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|[\p{L}°∞][\p{L}\p{N}%]*(?:_[\p{L}\p{N}_.%]*)?|%|[+\-*/^()[\],;<>=?']/uy;
+// nome: letras e algarismos; depois do primeiro "_" (índice) aceita também ponto: Relação_invest.Lucro (ADENDO 05);
+// índice com qualquer outro caractere vai entre aspas: batata_"alo,oi" (A6-3). "||" é o ou (A6-3)
+const TOKEN = /"[^"]*"|\s+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|:=|<=|>=|!=|==|\|\||[\p{L}°∞][\p{L}\p{N}%]*(?:_(?:"[^"]*"|[\p{L}\p{N}_.%]*))?|%|[+\-*/^()[\],;<>=?']/uy;
 
 function lex(src: string): Tok[] {
   const s = src.replace(/[·×]/g, '*').replace(/−/g, '-').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/≠/g, '!=').replace(/≔/g, ':=');
@@ -90,6 +91,11 @@ class LinearParser {
   private end() { if (!this.atEnd()) fail(`Sobrou: ${this.toks.slice(this.i).map((t) => t.v).join('')}`); }
 
   expr(): Node {
+    let a = this.rel();
+    for (let t = this.peek(); t?.k === 'op' && t.v === '||'; t = this.peek()) { this.i++; a = { t: 'bin', op: '||', a, b: this.rel() }; }
+    return a;
+  }
+  private rel(): Node {
     const a = this.add();
     const t = this.peek();
     if (t?.k === 'op' && REL.includes(t.v)) { this.i++; return { t: 'bin', op: t.v, a, b: this.add() }; }
@@ -272,7 +278,7 @@ const chars = (s: string) => [...s].map((c) => (TO_CMD.has(c) ? `\\${TO_CMD.get(
 /** Nome com índice reto: V_mp -> V_{\mathrm{mp}}. */
 export function idLatex(name: string): string {
   const i = name.indexOf('_');
-  return i <= 0 ? chars(name) : `${chars(name.slice(0, i))}_{\\mathrm{${chars(name.slice(i + 1))}}}`;
+  return i <= 0 ? chars(name) : `${chars(name.slice(0, i))}_{\\mathrm{${chars(name.slice(i + 1).replace(/^"(.*)"$/, '$1'))}}}`;
 }
 
 /** defined: variáveis e funções já definidas (motor); isUnit: unidade conhecida (math.js). B4, reconhecimento de unidades. */
@@ -297,7 +303,7 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
     case 'num': return numLatex(n.v);
     case 'str': return `\\text{"${n.v.replace(/[\\{}]/g, '')}"}`; // reto, entre aspas
     case 'id': {
-      const user = ctx.defined?.has(n.name) || ctx.params?.has(n.name);
+      const user = ctx.defined?.has(n.name) || ctx.params?.has(n.name) || ctx.before?.(n.name); // before vem do texto da folha: vale mesmo antes do motor responder (2.5: x5 depois de x=)
       if (n.name === 'i' && !user) return '\\mathbf{i}'; // unidade imaginária: negrito reto (ADENDO 05, E2.3)
       if (n.name === '𝐢' || n.name === '𝐞') return `\\class{imag}{\\mathbf{${n.name === '𝐢' ? 'i' : 'e'}}}`; // símbolo próprio
       const known = !ctx.defined || user || n.name === 'pi' || n.name === 'e';
@@ -335,7 +341,7 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
       if (n.op === '/') return `\\frac{${L(strip(n.a))}}{${L(strip(n.b))}}`;
       if (n.op === '^') return `${wrap(n.a, '^', false)}^{${L(strip(n.b))}}`;
       const a = wrap(n.a, n.op, false), b = wrap(n.b, n.op, true);
-      const op = { '*': '\\cdot ', '+': '+', '-': '-', '<': '<', '>': '>', '<=': '\\le ', '>=': '\\ge ', '==': '=', '!=': '\\ne ' }[n.op] ?? n.op;
+      const op = { '*': '\\cdot ', '+': '+', '-': '-', '<': '<', '>': '>', '<=': '\\le ', '>=': '\\ge ', '==': '=', '!=': '\\ne ', '||': '\\lor ' }[n.op] ?? n.op;
       return `${a}${op}${b}`;
     }
   }
@@ -390,7 +396,7 @@ function llex(src: string): LTok[] {
 const isLetter = (t?: LTok) => !!t && ((t.k === 'ch' && /^[\p{L}°]$/u.test(t.v)) || (t.k === 'cmd' && (FROM_CMD.has(t.v) || t.v === 'degree' || t.v === 'mu')));
 const letterOf = (t: LTok) => (t.k === 'ch' ? t.v : t.v === 'degree' ? '°' : FROM_CMD.get(t.v) ?? (t.v === 'mu' ? 'μ' : ''));
 const isDigit = (t?: LTok) => t?.k === 'ch' && /^\d$/.test(t.v);
-const OPS: Record<string, string> = { '+': '+', '-': '-', '−': '-', '*': '*', cdot: '*', times: '*', '/': '/', '<': '<', '>': '>', le: '<=', leq: '<=', ge: '>=', geq: '>=', ne: '!=', neq: '!=', lt: '<', gt: '>', '≤': '<=', '≥': '>=', '≠': '!=', '=': '==' };
+const OPS: Record<string, string> = { '+': '+', '-': '-', '−': '-', '*': '*', cdot: '*', times: '*', '/': '/', '<': '<', '>': '>', le: '<=', leq: '<=', ge: '>=', geq: '>=', ne: '!=', neq: '!=', lt: '<', gt: '>', '≤': '<=', '≥': '>=', '≠': '!=', '=': '==', lor: '||', vee: '||', '∨': '||' };
 const opOf = (t?: LTok) => (t ? OPS[t.v] : undefined);
 const isColoneq = (t?: LTok) => !!t && ((t.k === 'cmd' && (t.v === 'coloneq' || t.v === 'coloneqq')) || (t.k === 'ch' && (t.v === '≔' || t.v === ':')));
 
@@ -445,6 +451,11 @@ class LatexParser {
   }
 
   expr(): Node {
+    let a = this.rel();
+    for (let op = opOf(this.peek()); op === '||'; op = opOf(this.peek())) { this.i++; a = { t: 'bin', op, a, b: this.rel() }; }
+    return a;
+  }
+  private rel(): Node {
     const a = this.add();
     const op = opOf(this.peek());
     if (op && PREC[op] === 1 && !(this.peek()!.v === '=' && this.peek(1)?.v === '?')) { this.i++; return { t: 'bin', op, a, b: this.add() }; }
@@ -497,7 +508,7 @@ class LatexParser {
       if (t?.k === 'cmd' && (t.v === 'mathrm' || t.v === 'operatorname' || t.v === 'text' || t.v === 'mathit' || t.v === 'mathbf')) { this.i++; s += this.sub(this.group()).plain(); continue; }
       break;
     }
-    if (this.peek()?.k === 'sub') { this.i++; s += `_${this.sub(this.group()).plain()}`; }
+    if (this.peek()?.k === 'sub') { this.i++; const idx = this.sub(this.group()).plain(); s += /^[\p{L}\p{N}_.%]*$/u.test(idx) ? `_${idx}` : `_"${idx}"`; }
     return s;
   }
   /** Texto de um grupo (índice, \mathrm{...}): letras, dígitos e gregas. */

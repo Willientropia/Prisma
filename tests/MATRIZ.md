@@ -113,7 +113,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | E8-05 | `s≔10·x` acima, `x≔2` abaixo, `s=` mais abaixo: 20 (simbólico resolvido na avaliação) | tests/golden/calculos.yaml | unit | ok |
 | E8-06 | `x≔2`, `s≔10·x`, `x≔3`, `s=`: 20 (valor guardado na definição) | tests/golden/calculos.yaml | unit | ok |
 | E8-07 | `s=` sem x definido: s = 10·x, sem erro, x sublinhado | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
-| E8-08 | `x=` com x já definido, digitar 5: o 5 vai para o marcador de conversão | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-08 | `x=` com x já definido mostra x = 2 na hora e o cursor continua no campo; digitar 5 edita o nome (x5, sem resultado e sem erro, porque x5 não está definido); `→` leva ao marcador de conversão. Antes (até a v0.2.0): o 5 ia para o marcador. Trocado com autorização do usuário em 11/11 (ADENDO 06, 2.5, conferido no SMath) | tests/e2e/smath.spec.ts | e2e | ok |
 | E8-09 | `x:3` com x já definido redefine x ≔ 3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
 | E8-10 | `S.trafo:5kV*A`: S com índice trafo ≔ 5 kV·A; arquivo `S_trafo := 5 kV*A` | tests/e2e/smath.spec.ts, tests/golden/conversao.yaml | e2e, unit | ok |
 | E8-11 | `Z,0=sqrt(L/C)=` com L e C definidos: Z0 ≔ √(L/C) = 387,3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml, tests/golden/conversao.yaml | e2e, unit | ok |
@@ -285,11 +285,49 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-2-54 | 2.1 (`&`, barra vertical e `~`): E, OU e NÃO lógicos; precisam de operador no formato e no motor, e a barra vertical hoje abre o valor absoluto | - | browser | pendente |
 | A6-2-55 | 2.1 (`@`): gráfico 2D numa área vazia: A6-9 | - | e2e | pendente |
 | A6-2-56 | 2.1 (Ctrl+1 transposta, Ctrl+8 produto vetorial ×): precisam de operador no formato e no motor | - | browser | pendente |
-| A6-2-57 | 2.1 (Ctrl+. simbólico, Espaço amplia a seleção): A6-3 | - | browser | pendente |
 | A6-2-58 | 2.1 (Ctrl+M matriz, Ctrl+E funções, Ctrl+W unidades): A6-6 e A6-7 | - | e2e | pendente |
 | A6-2-59 | 2.1 (Ctrl+Space, Tab, Shift+Tab, Ctrl+Enter, Shift+Enter com assistente): A6-4 | - | e2e | pendente |
 | A6-2-60 | 2.1 (F8 renomeia, F9 recalcula, Ctrl+B/I/U em texto): sessão própria do lote | - | e2e | pendente |
 | A6-2-61 | 2.2: `diff(`, `product(`, `det(`, `transpose(`, `range(`, `if(`, `for(`, `while(` como estrutura visual: A6-5 e A6-6 | - | browser | pendente |
 | A6-2-62 | Avaliar `sum` com índice e `integral` no worker com prazo (1 milhão de termos): ticket F06 | - | unit | pendente |
+| A6-3-01 | 06-21, 2.3: `a+b`, Espaço, `/2` gera (a + b)/2 com a + b inteiro no numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-02 | 2.5: `c+d/2` sem Espaço fica c + d/2 | tests/golden/teclado.yaml | browser | ok |
+| A6-3-03 | 2.3: cada Espaço amplia mais: c+d·e, dois Espaços e `/2` põem tudo no numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-04 | 2.3: com um só Espaço, só d·e vai para o numerador | tests/golden/teclado.yaml | browser | ok |
+| A6-3-05 | 2.3: a seleção ampliada recebe o operador: `a+b`, Espaço, `*c` gera (a + b)*c | tests/golden/teclado.yaml | browser | ok |
+| A6-3-06 | 2.3: depois de ampliar, `+c` não muda nada: a + b + c | tests/golden/teclado.yaml | browser | ok |
+| A6-3-07 | 2.3: em x:a+b o último nível do Espaço é o lado direito do ≔ (o x não entra no numerador) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-09 | Espaço numa expressão de 281 átomos (limite de ampliação: 300) responde em menos de 300 ms | src/math/teclado.browser.test.tsx | browser | ok |
+| A6-3-10 | Correção do teste manual da v0.2.0 (conferida no SMath): Espaço numa região com só um nome pede para virar texto, com a palavra | tests/golden/teclado.yaml | browser | ok |
+| A6-3-11 | O mesmo com letra grega (ρ) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-12 | Com expressão (`a+b`) o Espaço amplia e não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-13 | Com ≔ (`x:2`) o Espaço não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-14 | Número sozinho não é nome: não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-15 | Nome com índice aberto: o Espaço sai do índice e não vira texto | tests/golden/teclado.yaml | browser | ok |
+| A6-3-16 | Região vazia: Espaço não faz nada | tests/golden/teclado.yaml | browser | ok |
+| A6-3-20 | 06-24, 2.4: `Ctrl+.` em `diff(x^2;x)` mostra → 2·x ao lado do campo | tests/golden/teclado.yaml | browser | ok |
+| A6-3-21 | 2.4: `Ctrl+.` simplifica (x+x → 2·x) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-22 | 2.4: sem resultado simbólico, a barra de status diz "Cálculo simbólico não disponível para esta expressão" | tests/golden/teclado.yaml | browser | ok |
+| A6-3-30 | Motor simbólico: `diff(x^2, x)` dá `2 * x` | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-31 | Motor simbólico: derivada de produto e de função composta | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-32 | Motor simbólico: simplifica (x + x, (a + b) - b) | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-33 | Motor simbólico: integral, vazio e texto inválido dão null | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-34 | Motor simbólico: `diff` sem variável dá null | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-35 | Motor simbólico: expressão com mais de 500 caracteres não vai ao simplify (sem prazo) e devolve null na hora | src/engine/symbolic.test.ts | unit | ok |
+| A6-3-40 | Folha: digitar `batata casa` cria uma região de texto "batata casa" (sem região de cálculo), com o cursor seguindo no texto | tests/e2e/folha.spec.ts | e2e | ok |
+| A6-3-41 | Folha: `a+b /2` continua região de cálculo e grava (a + b)/2 | tests/e2e/folha.spec.ts | e2e | ok |
+| A6-3-50 | 2.5: `x=` mostra o resultado na hora, o cursor fica no campo (fora do marcador) e Enter grava `x = ?` e sai | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-53 | 2.5: depois do `=`, `→` leva ao marcador e a unidade digitada converte (`L=`, `→`, `mm` grava `L = ? mm`) | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-54 | 2.5: depois do `=`, `Tab` sai da região e grava `x = ?` | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-55 | 2.5: `x=5` com x definido grava `x5 = ?` (o 5 entra no nome, não vai para o marcador) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-51 | Decisão do usuário (conferida no SMath: `1\|0=` mostra 1 ∨ 0 = 1): `\|` é o ou, gravado `a \|\| b` no `.prsf`, `∨` na tela, `or` no motor (1 ou 0), abaixo das comparações; não abre mais o valor absoluto (`abs(`). Ida e volta no conversor, `1\|0=` no teclado, motor e verificação em `src/engine/ou-indice.test.ts` | tests/golden/conversao.yaml | unit | ok |
+| A6-3-70 | Decisão do usuário (conferida no SMath): dentro do índice a vírgula fica como texto (`batata,alo,oi` = batata com índice alo,oi, sem `;`) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-71 | Decisão do usuário: a vírgula depois de nome continua abrindo o índice, inclusive em `f(batata,x)`; o separador de argumentos é `;` (comportamento do A6-2 mantido) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-72 | Decisão do usuário: índice com vírgula grava entre aspas, `batata_"alo,oi"`: ida e volta no conversor, `batata,alo,oi` e `batata,a1,2` (vírgula depois de dígito no índice) no teclado, `define e usa` no motor | tests/golden/conversao.yaml | unit | ok |
+| A6-3-52 | 2.5: assistente com `s` e `x` (lista, detalhe, assinatura): A6-4 | - | e2e | pendente |
+| A6-3-90 | Arquivos antigos abrem com os mesmos bytes: nomes com índice sem aspas (`S_trafo`, `Relação_invest.Lucro`, `V_mp`, `R1_a`, `x_1`) continuam iguais na ida e volta | tests/golden/conversao.yaml | unit | ok |
+| A6-3-91 | Importador do `.sm`: nome com vírgula no índice (`batata.alo,oi`) sai `batata_"alo,oi"`; `S.trafo` e `Relação.invest.Lucro` como antes | src/format/smath.test.ts | unit | ok |
+| A6-3-60 | 06-45: as linhas da tabela 2.5: `s=10*x`, `k:5`/`t:10*k` (E8-07, E3-xx), `x=` e `5` (E8-08, A6-3-50, A6-3-55), `→` (A6-3-53), `Tab` (A6-3-54), `c+d/2` (A6-3-02), `y:2,6%` (A6-2-07), `p|q` (A6-3-51); falta só o assistente com `s` e `x` (A6-3-52, A6-4) | - | e2e | pendente |
+| BUG-016 | `a<=b` digitado vira a ≤ b (e `a>=b` vira a ≥ b), sem o `=` disparar avaliação | tests/golden/teclado.yaml | browser | ok |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |

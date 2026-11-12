@@ -48,6 +48,7 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .mresult-value .ML__cmr, .mresult-value .ML__mathit { font-weight: 600; }
 .mfield-dark .mresult-value, .mfield-dark.mresult-value { color: var(--math-result); }
 .mresult-stale { opacity: 0.5; }
+.mfield-dark.msymbolic-value { color: var(--math-result); }
 .unit-marker {
   width: 6px; height: 6px; padding: 0; margin-left: 1px; border: none; border-radius: 1px;
   background: var(--text-dim); opacity: 0; cursor: pointer; align-self: center;

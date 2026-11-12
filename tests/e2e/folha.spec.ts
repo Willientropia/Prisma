@@ -65,3 +65,25 @@ test('[F3-02] [F3-12] string-3 mostra ATENÇÃO · limite 1 % na região de veri
   await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
   await expect(page.locator('[data-region="criterio"]')).toContainText('ATENÇÃO · limite 1 %');
 });
+
+// A6-3: Espaço numa região de um nome só vira texto (correção do teste manual da v0.2.0, conferida no SMath)
+test('[A6-3-40] folha: batata, Espaço, casa vira uma região de texto "batata casa", sem região de cálculo', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('batata casa', { delay: 40 });
+  await expect.poll(() => dev(page).text()).toContain('```texto {');
+  await expect.poll(() => dev(page).text()).toContain('batata casa');
+  expect(await dev(page).text()).not.toContain('```calc');
+  expect(await page.locator('[data-region] math-field').count()).toBe(0);
+});
+
+test('[A6-3-41] folha: a+b, Espaço continua ampliando a seleção e a região segue de cálculo', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('a+b /2', { delay: 40 });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toContain('(a + b)/2');
+  expect(await dev(page).text()).not.toContain('```texto');
+});

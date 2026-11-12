@@ -352,3 +352,167 @@
   teclas: "L:25'm{Enter}"
   linear: "L := 25 m"
   latex_contem: ['\class{u}{\mathrm{m}}']
+# A6-3 (ADENDO 06, 2.3 a 2.5)
+- id: A6-3-01
+  descricao: "06-21: a+b, Espaço, /2 gera (a + b)/2 com a + b inteiro no numerador"
+  contexto: folha
+  definidos: [a, b, c, d, e]
+  teclas: "a+b{Space}/2{Enter}"
+  linear: "(a + b)/2"
+  latex_contem: ['\frac{a+b}{2}']
+- id: A6-3-02
+  descricao: "2.5: c+d/2 sem Espaço fica c + d/2 (só o d vai para o numerador)"
+  contexto: folha
+  definidos: [a, b, c, d, e]
+  teclas: "c+d/2{Enter}"
+  linear: "c + d/2"
+  latex_contem: ['\frac{d}{2}']
+- id: A6-3-03
+  descricao: "2.3: cada Espaço amplia mais (c, d·e, c + d·e): dois Espaços e /2 põem tudo no numerador"
+  contexto: folha
+  definidos: [a, b, c, d, e]
+  teclas: "c+d*e{Space}{Space}/2{Enter}"
+  latex_contem: ['\frac{c+d\cdot e}{2}']
+- id: A6-3-04
+  descricao: "2.3: com um só Espaço só d·e vai para o numerador"
+  contexto: folha
+  definidos: [a, b, c, d, e]
+  teclas: "c+d*e{Space}/2{Enter}"
+  latex_contem: ['c+\frac{d\cdot e}{2}']
+- id: A6-3-05
+  descricao: "2.3: a seleção ampliada recebe o operador: a+b, Espaço, *c gera (a + b)*c"
+  contexto: folha
+  teclas: "a+b{Space}*c{Enter}"
+  linear: "(a + b)*c"
+- id: A6-3-06
+  descricao: "2.3: depois de ampliar, o operador desfaz a seleção: a+b, Espaço, +c continua a + b + c"
+  contexto: folha
+  teclas: "a+b{Space}+c{Enter}"
+  linear: "a + b + c"
+- id: A6-3-10
+  descricao: "correção do teste manual da v0.2.0: Espaço numa região com só um nome pede para virar texto"
+  contexto: folha
+  teclas: "batata{Space}"
+  virou_texto: "batata"
+- id: A6-3-11
+  descricao: "só um nome, letra grega: ρ"
+  contexto: folha
+  teclas: "r{Ctrl+G}{Space}"
+  virou_texto: "ρ"
+- id: A6-3-12
+  descricao: "com expressão (a+b) o Espaço amplia a seleção e não vira texto"
+  contexto: folha
+  teclas: "a+b{Space}"
+  nao_virou_texto: true
+- id: A6-3-13
+  descricao: "com ≔ (x:2) o Espaço não vira texto"
+  contexto: folha
+  teclas: "x:2{Space}"
+  nao_virou_texto: true
+- id: A6-3-14
+  descricao: "número sozinho não é nome: não vira texto"
+  contexto: folha
+  teclas: "5{Space}"
+  nao_virou_texto: true
+- id: A6-3-15
+  descricao: "nome com índice aberto: o Espaço sai do índice (como antes), não vira texto"
+  contexto: folha
+  teclas: "S.trafo{Space}"
+  nao_virou_texto: true
+- id: A6-3-16
+  descricao: "região vazia: Espaço não faz nada"
+  contexto: folha
+  teclas: " "
+  nao_virou_texto: true
+- id: A6-3-20
+  descricao: "06-24: Ctrl+. em diff(x^2;x) mostra → 2·x"
+  contexto: folha
+  teclas: "diff(x^2{ArrowRight};x){Ctrl+.}"
+  simbolico: "→2⋅x"
+- id: A6-3-21
+  descricao: "2.4: Ctrl+. simplifica uma expressão (x+x → 2·x)"
+  contexto: folha
+  teclas: "x+x{Ctrl+.}"
+  simbolico: "→2⋅x"
+- id: A6-3-22
+  descricao: "2.4: sem resultado simbólico, a barra de status avisa e nada aparece ao lado"
+  contexto: folha
+  teclas: "integral(sin(x);x;0;1){Ctrl+.}"
+  sem_simbolico: true
+  status_contem: "Cálculo simbólico não disponível para esta expressão"
+- id: BUG-016
+  descricao: "a<=b digitado vira a ≤ b, sem disparar avaliação"
+  contexto: folha
+  teclas: "a<=b{Enter}"
+  linear: "a <= b"
+  tela_contem: ["≤"]
+  sem_resultado: true
+- id: BUG-016
+  descricao: "a>=b digitado vira a ≥ b, sem disparar avaliação"
+  contexto: folha
+  teclas: "a>=b{Enter}"
+  linear: "a >= b"
+  tela_contem: ["≥"]
+  sem_resultado: true
+- id: A6-3-70
+  descricao: "decisão do usuário (conferida no SMath): dentro do índice a vírgula fica como texto, batata com índice alo,oi"
+  contexto: folha
+  teclas: "batata,alo,oi"
+  latex_contem: ['batata_{']
+  tela_contem: ["alo,oi"]
+  latex_nao_contem: [';']
+- id: A6-3-71
+  descricao: "decisão do usuário: o separador de argumentos é ;, e a vírgula depois de nome continua abrindo o índice (f(batata,x): índice x)"
+  contexto: folha
+  teclas: "f(batata,x)"
+  latex_contem: ['batata_']
+- id: A6-3-07
+  descricao: "2.3: em x:a+b, o último nível do Espaço é o lado direito do ≔: o x não entra no numerador"
+  contexto: folha
+  definidos: [a, b]
+  teclas: "x:a+b{Space}{Space}/2{Enter}"
+  latex_contem: ['\frac{a+b}{2}']
+  latex_nao_contem: ['\frac{x']
+- id: A6-3-51
+  descricao: "decisão do usuário (conferida no SMath): 1|0= mostra 1 ∨ 0 e grava 1 || 0 = ?"
+  contexto: folha
+  teclas: "1|0="
+  linear: "1 || 0 = ?"
+  tela_contem: ["∨"]
+  latex_nao_contem: ['lvert']
+- id: A6-3-51
+  descricao: "| entre operandos é o ou: a|b grava a || b e não abre valor absoluto"
+  contexto: folha
+  teclas: "a|b{Enter}"
+  linear: "a || b"
+  latex_contem: ['\lor']
+  latex_nao_contem: ['lvert']
+- id: A6-3-51
+  descricao: "o ou fica abaixo das comparações: a<1|b>2"
+  contexto: folha
+  teclas: "a<1|b>2{Enter}"
+  linear: "a < 1 || b > 2"
+- id: A6-3-72
+  descricao: "índice com vírgula grava entre aspas: batata,alo,oi"
+  contexto: folha
+  teclas: "batata,alo,oi{Enter}"
+  linear: 'batata_"alo,oi"'
+  tela_contem: ["alo,oi"]
+- id: A6-3-72
+  descricao: "vírgula depois de dígito dentro do índice também é texto: batata,a1,2 dá o índice a1,2"
+  contexto: folha
+  teclas: "batata,a1,2{Enter}"
+  linear: 'batata_"a1,2"'
+  tela_contem: ["a1,2"]
+  latex_nao_contem: ['{,}']
+- id: A6-3-72
+  descricao: "índice só com dígito e vírgula decimal fora do índice continuam como antes: x,1:2,5"
+  contexto: folha
+  teclas: "x,1:2,5{Enter}"
+  linear: "x_1 := 2.5"
+- id: A6-3-55
+  descricao: "2.5: x= com x definido e depois 5: o 5 entra no nome (x5 = ?), sem ir para o marcador"
+  contexto: folha
+  antes: [x]
+  teclas: "x=5"
+  linear: "x5 = ?"
