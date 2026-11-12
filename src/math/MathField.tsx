@@ -169,6 +169,8 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
 
   // A6-4 (3.5): com a lista aberta, Tab, Ctrl+Enter, Shift+Enter e Ctrl+Espaço aceitam; Enter só aceita se o item foi escolhido
   // (decisão do usuário); setas navegam; Esc fecha só a lista. Espaço, setas laterais, Home e End fecham e seguem o caminho de sempre.
+  // a lista é a de um texto que já mudou (o "input" dele ainda não chegou: o ‰ entra como texto, sem tecla): recalcula antes de agir sobre ela
+  if (state.assist && state.assist.typed !== (partialName(before()) ?? '')) refreshAssist(mf, state, p);
   const a = state.assist;
   if (a) {
     if ((e.key === 'Tab' && !e.shiftKey) || (e.key === 'Enter' && (e.ctrlKey || e.shiftKey || a.moved)) || (e.key === ' ' && e.ctrlKey)) { acceptAssist(mf, state, p, a.sel); return true; }

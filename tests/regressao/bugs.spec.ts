@@ -199,8 +199,6 @@ for (const delay of [40, 0]) for (const [unit, shown] of [['%', '20%'], ['‰', 
     await line.locator('.unit-marker').click();
     await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
     await page.keyboard.type(unit, { delay });
-    // o ‰ não é tecla do teclado de teste: entra como texto inserido, e o Tab chegava antes de o campo aplicá-lo; a pessoa vê o ‰ antes do Tab
-    if (unit === '‰') await expect.poll(() => page.evaluate(() => (document.activeElement as unknown as { value?: string })?.value)).toContain('‰');
     for (const k of confirm) {
       if (k === 'clique fora') await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } });
       else await page.keyboard.press(k);
