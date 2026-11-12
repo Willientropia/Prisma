@@ -102,7 +102,7 @@ for (const id of ['lib.novaFuncao', 'lib.importar', 'lib.publicar']) register(id
 register('funcao.inserir', { shortcut: 'Ctrl+K', run: () => st().set({ fnSearchOpen: true }) });
 
 /** Todas as funções em vigor, de todas as bibliotecas (com a extensão mesclada). */
-export async function allFunctions(): Promise<{ sig: string; def: string; lib: string; description: string }[]> {
+export async function allFunctions(): Promise<{ sig: string; def: string; lib: string; description: string; why: string }[]> {
   const libs = resolveLibraries(await readLibraryFiles(!!st().project));
-  return [...libs.values()].flatMap((l) => l.functions.filter((f) => !f.shadowed && f.formula).map((f) => ({ sig: f.sig, def: f.formula, lib: l.nome, description: f.description })));
+  return [...libs.values()].flatMap((l) => l.functions.filter((f) => !f.shadowed && f.formula).map((f) => ({ sig: f.sig, def: f.formula, lib: l.nome, description: f.description, why: f.fields['Por que e quando usar'] ?? '' })));
 }

@@ -105,3 +105,25 @@ test('[C9-06] mudar uma cor em tokens.css passa da tolerância do teste visual',
   console.log(`C9-06: ${(ratio * 100).toFixed(1)} % dos pixels mudaram (tolerância 1 %)`);
   expect(ratio).toBeGreaterThan(0.01); // maxDiffPixelRatio de playwright.config.ts
 });
+
+// A6-4 (ADENDO 06, 06-43): o assistente aberto, nos cenários do 06-10 e do 06-11. Imagens aprovadas pelo usuário.
+const assistSheet = (body: string) => `---\ntipo: folha\ntitulo: Assistente\nbibliotecas: []\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n${body}`;
+async function assistOpen(page: Page, regions: string, typed: string) {
+  await start(page);
+  const f = 'C:/Users/voce/Documents/assistente.prsf';
+  await dev(page).write(f, assistSheet(regions));
+  await dev(page).open(f);
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 300 } });
+  await page.keyboard.type(typed, { delay: 30 });
+  await expect(page.getByRole('listbox', { name: 'Assistente dinâmico' })).toBeVisible();
+}
+
+test('[A6-4-47] 06-43: assistente aberto com s numa folha vazia (06-10)', async ({ page }) => {
+  await assistOpen(page, '', 's');
+  await shot(page, 'assistente-s.png');
+});
+
+test('[A6-4-47] 06-43: assistente aberto com f e a função do usuário acima (06-11)', async ({ page }) => {
+  await assistOpen(page, '```calc {#a x=40 y=40}\nf(x) := x + 2\n```\n', 'f');
+  await shot(page, 'assistente-f.png');
+});

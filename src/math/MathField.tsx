@@ -1,11 +1,14 @@
-// Mais de 300 linhas: o teclado do campo (handleKey) é uma peça só e já passava do limite; a lógica nova do Espaço mora em selecao.ts.
+// Mais de 300 linhas: o teclado do campo (handleKey) é uma peça só e já passava do limite; a lógica nova do Espaço mora em selecao.ts
+// e a do assistente dinâmico (o que lista e insere) em assistente.ts; aqui fica só a ligação com as teclas.
 // Campo matemático (ADENDO 02): MathLive configurado como o SMath. Edita e mostra no mesmo formato.
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MathfieldElement, convertLatexToMarkup } from 'mathlive';
 import 'mathlive/static.css'; // estilos da renderização estática e as fontes (empacotadas, sem internet)
 import { run } from '../commands/registry';
 import { math } from '../engine/math';
 import { grownOf, growSelect, topOperators } from './selecao';
+import { CATEGORY, filterItems, partialName, STRUCTURE, type AssistItem } from './assistente';
+import { Assistente, type AssistDetail, type AssistRow } from '../components/Assistente';
 import { greekLatex, LATIN_TO_GREEK, type Node, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
 
 MathfieldElement.fontsDirectory = null; // as @font-face já vêm de mathlive/static.css
@@ -25,6 +28,8 @@ const SHADOW_CSS = `
 
 /** eval: pediu o resultado ("x ="); defeval: definição completa + "=" acrescenta o resultado ("Z_0 := sqrt(L/C) ="). */
 export type Commit = 'enter' | 'shift-enter' | 'blur' | 'escape' | 'eval' | 'defeval';
+/** Assistente dinâmico (A6-4): items monta a lista quando ela abre; auto: abre sozinho ao digitar (Exibir > Assistente dinâmico). */
+export type AssistSource = { items: () => AssistItem[]; auto: boolean; units?: boolean; openOnFocus?: boolean };
 export type FieldProps = {
   latex: string;
   ctx: LatexCtx;
@@ -44,6 +49,7 @@ export type FieldProps = {
   onSymbolic?: (latex: string) => void; // Ctrl+. (A6-3, 2.4)
   onArrowEnd?: () => boolean; // seta direita no fim do campo (A6-3, 2.5): true se levou o cursor ao marcador de conversão
   ariaLabel?: string;
+  assist?: AssistSource;
 };
 
 export type Key = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean };
@@ -73,16 +79,48 @@ export function trailingFence(s: string): { start: number; inner: string } | nul
  * Teclas da B4 que o MathLive não faz sozinho. Devolve true quando tratou a tecla.
  * state.script: estamos num índice (sub) ou expoente (sup) aberto por digitação.
  */
-type FieldState = { script: 'sub' | 'sup' | 'idx' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean; struct?: number; grow?: { start: number; end: number; level: number } }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
-
-/** 2.2: a ordem dos quadradinhos é a do preenchimento (limite inferior, superior, integrando, variável). */
-const STRUCTURE: Record<string, string> = {
-  sqrt: '\\sqrt{#0}',
-  nthroot: '\\sqrt[#0]{#?}',
-  abs: '\\left\\lvert #0\\right\\rvert',
-  int: '\\int_{#0}^{#?}#?\\mathrm{d}#?', // sem "\,": o espaço fino seria uma parada a mais para as setas
-  sum: '\\sum_{#0=#?}^{#?}#?',
+type FieldState = {
+  script: 'sub' | 'sup' | 'idx' | null; edited: boolean; lastCommit?: Commit | null; unit?: boolean; struct?: number; grow?: { start: number; end: number; level: number }; // unit: o cursor está dentro da unidade aberta com apóstrofo (F04)
+  assist?: { all: AssistItem[]; shown: AssistItem[]; sel: number; typed: string; moved: boolean }; // lista aberta (A6-4); moved: escolhida com as setas ou o mouse
+  letter?: boolean; // a última tecla foi uma letra: o assistente pode abrir
+  pending?: boolean; // letra digitada cujo "input" o MathLive ainda não mandou: a próxima tecla recalcula a lista antes
+  paint?: () => void; // redesenha a lista
 };
+
+/** Abre, filtra ou fecha a lista com o nome antes do cursor. force: Ctrl+Espaço ou campo de unidade, mesmo sem nada digitado. */
+function refreshAssist(mf: MathfieldElement, state: FieldState, p: { current: FieldProps }, force = false) {
+  const src = p.current.assist;
+  const was = state.assist;
+  state.assist = undefined;
+  if (src && !state.script && (was || force || (src.auto && state.letter))) {
+    const units = !!src.units || !!state.unit;
+    const typed = partialName(beforeCaret(mf)) ?? '';
+    if (typed || units || force) {
+      const all = was?.all ?? src.items();
+      const shown = filterItems(all, typed, { units });
+      if (shown.length) state.assist = { all, shown, typed, sel: 0, moved: false };
+    }
+  }
+  if (was || state.assist) state.paint?.();
+}
+const ROWS = 100; // linhas desenhadas da lista (A6-4)
+const closeAssist = (state: FieldState) => { if (state.assist) { state.assist = undefined; state.paint?.(); } };
+
+/** Aceitar (3.5): troca o nome digitado pelo item; função com os argumentos, unidade como unidade. */
+function acceptAssist(mf: MathfieldElement, state: FieldState, p: { current: FieldProps }, i: number) {
+  const a = state.assist!;
+  const it = a.shown[i];
+  closeAssist(state);
+  state.letter = false;
+  for (let k = 0; k < a.typed.length; k++) mf.executeCommand('deleteBackward');
+  if (state.unit && it.inner !== undefined) { mf.insert(it.inner, { format: 'latex' }); mf.executeCommand('moveAfterParent'); state.unit = false; }
+  else mf.insert(it.insert, { selectionMode: it.insert.includes('#0') ? 'placeholder' : 'after', format: 'latex' });
+  if (it.kind === 'native' && STRUCTURE[it.name]) state.struct = (state.struct ?? 0) + 1;
+  state.edited = true;
+  p.current.onInput?.(mf.value);
+}
+
+// 2.2: STRUCTURE (funções que viram estrutura visual) mora em assistente.ts, que também insere por ela.
 /** Ctrl+tecla que insere um símbolo (tabela 2.1). */
 const CTRL_SYMBOL: Record<string, string> = { '3': '\\ne ', '9': '\\le ', '0': '\\ge ', '=': '=', '\\': '\\sqrt[#0]{#?}' };
 
@@ -128,6 +166,17 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   // confirmar: forma canônica (unidade em azul, índice reto) e marca como gravado, para a saída do campo
   // logo em seguida não gravar de novo por cima (BUG-004: o "= ?" era perdido)
   const commit = (how: Commit) => { state.script = null; state.unit = false; state.struct = 0; classify(true); state.edited = false; state.lastCommit = how; p.current.onCommit(mf.value, how); };
+
+  // A6-4 (3.5): com a lista aberta, Tab, Ctrl+Enter, Shift+Enter e Ctrl+Espaço aceitam; Enter só aceita se o item foi escolhido
+  // (decisão do usuário); setas navegam; Esc fecha só a lista. Espaço, setas laterais, Home e End fecham e seguem o caminho de sempre.
+  const a = state.assist;
+  if (a) {
+    if ((e.key === 'Tab' && !e.shiftKey) || (e.key === 'Enter' && (e.ctrlKey || e.shiftKey || a.moved)) || (e.key === ' ' && e.ctrlKey)) { acceptAssist(mf, state, p, a.sel); return true; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { a.sel = (a.sel + (e.key === 'ArrowDown' ? 1 : a.shown.length - 1)) % a.shown.length; a.moved = true; state.paint?.(); return true; }
+    if (e.key === 'Escape') { closeAssist(state); state.letter = false; return true; }
+    if (['Enter', ' ', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey || e.altKey) closeAssist(state); // Tab aqui é Shift+Tab
+  } else if (e.key === ' ' && e.ctrlKey && p.current.assist) { refreshAssist(mf, state, p, true); return true; }
+  state.letter = e.key.length === 1 && /\p{L}/u.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey;
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g') {
     const l = lastLetter(before());
@@ -189,7 +238,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     }
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
-    case "'": insert('\\class{u}{\\mathrm{#0}}'); state.unit = true; return true; // força unidade (B4)
+    case "'": insert('\\class{u}{\\mathrm{#0}}'); state.unit = true; state.letter = true; refreshAssist(mf, state, p); return true; // força unidade (B4); o assistente abre só com unidades (3.1)
     case '|': insert('\\lor '); return true; // o ou (A6-3, decisão do usuário conferida no SMath); o valor absoluto é abs(
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
@@ -307,6 +356,8 @@ export function MathField(props: FieldProps) {
   p.current = props;
   const focusFrame = useRef(0);
   const focusNow = useRef<() => void>(() => {});
+  const [view, setView] = useState<{ rows: AssistRow[]; sel: number; detail: AssistDetail | null; x: number; y: number } | null>(null);
+  const pick = useRef<{ select: (i: number) => void; accept: (i: number) => void }>({ select: () => {}, accept: () => {} });
 
   useEffect(() => {
     const mf = new MathfieldElement();
@@ -325,6 +376,24 @@ export function MathField(props: FieldProps) {
     mf.value = p.current.latex;
 
     const state: FieldState = { script: null, edited: false }; // edited: houve digitação desde o foco ou o último commit
+    state.paint = () => {
+      const a = state.assist;
+      if (!a) { setView(null); return; }
+      const r = host.current!.getBoundingClientRect();
+      const b = mf.getElementInfo(Math.max(0, mf.position))?.bounds;
+      const it = a.shown[a.sel];
+      setView({
+        // ponytail: só as 100 primeiras linhas são desenhadas (8 visíveis); mais que isso, o nome digitado filtra
+        rows: a.shown.slice(0, ROWS).map((x) => ({ key: `${x.kind}:${x.name}`, name: x.name, kind: x.kind, nameLatex: x.nameLatex, category: CATEGORY[x.kind] })),
+        sel: a.sel,
+        detail: { nameLatex: it.nameLatex, title: it.title, line2: it.detail, note: it.note },
+        x: Math.max(0, Math.min((b?.right ?? r.left), window.innerWidth - 490)), y: r.bottom + 2,
+      });
+    };
+    pick.current = {
+      select: (i) => { if (state.assist && i < state.assist.shown.length) { state.assist.sel = i; state.assist.moved = true; state.paint?.(); } },
+      accept: (i) => { if (state.assist) acceptAssist(mf, state, p, i); },
+    };
     // Enquanto as teclas guardadas (digitadas antes do foco) não foram aplicadas, as que chegam direto ao
     // campo esperam na fila: senão o "=" de "x=2" seria tratado com o campo ainda vazio, antes do "x".
     let waiting = !!p.current.focused && !!p.current.initialKeys?.length;
@@ -334,13 +403,22 @@ export function MathField(props: FieldProps) {
         if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); queued.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
         return;
       }
-      if (handleKey(mf, e, state, p)) { e.preventDefault(); e.stopPropagation(); }
+      if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return; // modificadora sozinha (o Ctrl de Ctrl+Enter) não mexe no campo nem na lista
+      if (state.pending) { state.pending = false; refreshAssist(mf, state, p); } // digitação rápida: o "input" da letra anterior ainda não veio
+      if (handleKey(mf, e, state, p)) {
+        e.preventDefault(); e.stopPropagation();
+        if (e.key.length === 1 && e.key !== "'" && !e.ctrlKey) closeAssist(state); // operador, "=", ";", "(": a lista fecha (3.1)
+      } else state.pending = !!state.letter && !!p.current.assist;
     };
     mf.addEventListener('keydown', onKey, { capture: true });
-    mf.addEventListener('input', () => { state.edited = true; state.grow = undefined; p.current.onInput?.(mf.value); });
-    mf.addEventListener('focusin', () => { state.edited = false; lastMathField = mf as unknown as typeof lastMathField; p.current.onFocus?.(); });
+    mf.addEventListener('input', () => { state.edited = true; state.grow = undefined; state.pending = false; refreshAssist(mf, state, p); p.current.onInput?.(mf.value); });
+    mf.addEventListener('focusin', () => {
+      state.edited = false; lastMathField = mf as unknown as typeof lastMathField; p.current.onFocus?.();
+      if (p.current.assist?.openOnFocus && p.current.assist.auto) requestAnimationFrame(() => { if (document.activeElement === mf) refreshAssist(mf, state, p, true); }); // campo de unidade: a lista abre na hora
+    });
     mf.addEventListener('focusout', () => {
       state.script = null;
+      closeAssist(state);
       // sair sem editar não grava nada (B10.11) e volta a mostrar o que está no arquivo:
       // depois de apagar uma linha, este componente pode já representar outra linha
       if (state.edited) p.current.onCommit(mf.value, 'blur');
@@ -392,11 +470,14 @@ export function MathField(props: FieldProps) {
   }, [props.focused]);
 
   return (
-    <span
-      ref={host}
-      className={`mfield mfield-${props.theme}${props.invalid ? ' mfield-invalid' : ''}`}
-      style={{ fontSize: props.size }}
-    />
+    <>
+      <span
+        ref={host}
+        className={`mfield mfield-${props.theme}${props.invalid ? ' mfield-invalid' : ''}`}
+        style={{ fontSize: props.size }}
+      />
+      {view && <Assistente {...view} theme={props.theme} onSelect={(i) => pick.current.select(i)} onAccept={(i) => pick.current.accept(i)} />}
+    </>
   );
 }
 

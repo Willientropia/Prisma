@@ -2,12 +2,11 @@
 //   app    -> config.yaml (padrão dos documentos novos; Configurações)
 //   doc    -> linha exibicao do cabeçalho do documento
 //   region -> casas=, modo=, zeros_a_direita= e notacao= da região
-import { parseDocument } from 'yaml';
 import { FormatDialog } from '../components/FormatDialog';
 import { parse } from '../format/doc';
 import { DEFAULT_FORMAT, type FormatOpts } from '../engine/format';
 import { appFormat, exibicao, regionFormat, setExibicao, setRegionFormat } from '../engine/prepare';
-import { platform } from '../platform';
+import { saveConfig } from './config';
 import { useWorkspace } from '../store/workspace';
 
 export function FormatDialogHost() {
@@ -22,15 +21,11 @@ export function FormatDialogHost() {
   if (target.scope === 'app') {
     const save = async (v: FormatOpts) => {
       try {
-        const y = parseDocument(await platform.config());
-        if (y.errors.length) throw new Error('config.yaml com erro de sintaxe: nada foi gravado');
-        y.set('casas_decimais', v.decimals);
-        y.set('modo_arredondamento', v.mode ?? 'decimais');
-        y.set('zeros_a_direita', !!v.trailingZeros);
-        y.set('notacao', v.notation ?? 'automatica');
-        y.set('limite_exponencial', v.expThreshold ?? DEFAULT_FORMAT.expThreshold);
-        await platform.writeConfig(String(y));
-        ws().set({ config: (y.toJS() ?? {}) as Record<string, unknown>, formatDialog: null, status: 'Formato salvo para documentos novos' });
+        await saveConfig({
+          casas_decimais: v.decimals, modo_arredondamento: v.mode ?? 'decimais', zeros_a_direita: !!v.trailingZeros,
+          notacao: v.notation ?? 'automatica', limite_exponencial: v.expThreshold ?? DEFAULT_FORMAT.expThreshold,
+        });
+        ws().set({ formatDialog: null, status: 'Formato salvo para documentos novos' });
       } catch (e) {
         ws().set({ formatDialog: null, status: `Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}` });
       }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '../components/ui';
 import {
-  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, nodeToLinear, parseLinear, parseUnit, splitComment, unitFromMathjs, unitLatex, unitToLinear,
+  latexToLine, latexToTarget, latexToUnit, lineToLatex, lineToLinear, nodeLatex, nodeToLinear, parseLinear, splitComment, unitFromMathjs, unitLatex, unitToLinear,
   type LatexCtx, type Line, type Node, type Unit,
 } from '../format/mathlinear';
 import { math } from '../engine/math';
@@ -11,20 +11,15 @@ import { toMath } from '../engine/syntax';
 import { symbolic as symbolicOf } from '../engine/symbolic';
 import type { LineResult } from '../engine/evaluate';
 import { useWorkspace } from '../store/workspace';
-import { MathField, MathMarkup, type Commit, type Key } from './MathField';
+import { MathField, MathMarkup, type AssistSource, type Commit, type Key } from './MathField';
+import { unitItems } from './assistente';
+import { resultLatex } from './resultado';
+import { isKnownUnit } from '../engine/unidades';
+
+export { isKnownUnit };
 
 export const LIVE_MS = 100; // B5: resultado novo até ~150 ms depois da última tecla (100 de espera + cálculo)
 
-/** Unidade conhecida pelo math.js (para classificar identificadores, B4). */
-export function isKnownUnit(name: string): boolean {
-  if (name === '%') return true;
-  try { return math.Unit.isValuelessUnit(toMath(name)); } catch { return false; }
-}
-
-/** Latex do resultado: "3{,}29\,\class{u}{\mathrm{V}}". */
-export function resultLatex(r: LineResult): string {
-  return resultLatexOf(r);
-}
 
 /** Resultado com nome em aberto (E3.3): a expressão, com os nomes que faltam sublinhados. */
 export function symbolicLatex(r: LineResult): string {
@@ -34,33 +29,6 @@ export function symbolicLatex(r: LineResult): string {
     const node = l.kind === 'def' ? l.rhs : l.expr;
     return nodeLatex(node, { defined: { has: (n: string) => !missing.has(n) } as Set<string>, isUnit: isKnownUnit });
   } catch { return `\\text{${(r.symbolic ?? '').replace(/[\\{}]/g, '')}}`; }
-}
-
-/** Número do motor -> LaTeX: "1,475e-3" vira 1,475·10⁻³ (nunca "e-3" na tela) e o i do complexo, negrito reto (E4.2). */
-export function numberLatex(t: string): string {
-  return t
-    .replace(/\s/g, '')
-    .replace(/−/g, '-')
-    .replace(/(\d),(\d)/g, '$1{,}$2')
-    .replace(/e(-?\d+)/g, (_, n: string) => `\\cdot 10^{${Number(n)}}`)
-    .replace(/·i/g, '\\cdot \\mathbf{i}');
-}
-
-function resultLatexOf(r: LineResult): string {
-  // vetor ou matriz (E4.1); texto entre aspas fica reto
-  if (r.matrix) return `\\begin{bmatrix}${r.matrix.map((row) => row.map((c) => (c.startsWith('"') ? `\\text{${c.replace(/[\\{}]/g, '')}}` : numberLatex(c))).join('&')).join('\\\\')}\\end{bmatrix}`;
-  let num = numberLatex(r.numText ?? r.text ?? '');
-  if (r.factor) {
-    // conversão por expressão (E4.3): (0,2 + 3,77·i)·10⁻⁶
-    if (/[+-]/.test(num.replace(/^-/, '').replace(/10\^\{-/g, ''))) num = `\\left(${num}\\right)`;
-    let f: string;
-    try { const l = parseLinear(r.factor); f = nodeLatex(l.kind === 'def' ? l.rhs : l.expr); } catch { f = `\\mathrm{${r.factor}}`; }
-    num = `${num}\\cdot ${f}`;
-  }
-  if (!r.unitRaw) return num;
-  let unit: string;
-  try { unit = unitLatex(parseUnit(unitFromMathjs(r.unitRaw))); } catch { unit = `\\mathrm{${r.unitRaw}}`; }
-  return `${num}\\,${unit}`;
 }
 
 type Props = {
@@ -80,6 +48,7 @@ type Props = {
   onFocus?: () => void;
   onExit?: () => void;
   onToText?: (word: string) => void; // Espaço numa região de um nome só (A6-3): a folha troca a região por texto
+  assist?: AssistSource; // A6-4: assistente dinâmico (só a folha passa)
 };
 
 export function MathLine(props: Props) {
@@ -178,13 +147,13 @@ export function MathLine(props: Props) {
   return (
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
       <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
-        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} />
+        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} assist={props.assist} />
       {sym && <span className="mresult msymbolic"><MathMarkup latex={sym} theme={theme} size={size} className="msymbolic-value" /></span>}
       {showResult && (
         <span className={`mresult${props.stale ? ' mresult-stale' : ''}`}>
           <MathMarkup latex="=" theme={theme} size={size} />
           {unitEdit ? (
-            <UnitInput theme={theme} size={size} result={result ?? { kind: 'eval' }} current={parsed && parsed.kind !== 'expr' ? { unit: parsed.unit, conv: parsed.conv } : undefined}
+            <UnitInput theme={theme} size={size} assist={props.assist && { items: unitItems, auto: props.assist.auto, units: true, openOnFocus: true }} result={result ?? { kind: 'eval' }} current={parsed && parsed.kind !== 'expr' ? { unit: parsed.unit, conv: parsed.conv } : undefined}
               onDone={(u, how) => {
                 setUnitEdit(false);
                 if (how === 'enter' || how === 'shift-enter') queueMicrotask(() => props.onEnter?.(how === 'shift-enter'));
@@ -213,7 +182,7 @@ export function MathLine(props: Props) {
  * deixa a borda vermelha e avisa na barra de status. onDone(undefined) = cancelado; onDone(null) = sem unidade.
  */
 type Target = { unit?: Unit; conv?: Node };
-function UnitInput({ theme, size, result, current, onDone }: { theme: 'paper' | 'dark'; size: number; result: LineResult; current?: Target; onDone: (t: Target | null | undefined, how: Commit) => void }) {
+function UnitInput({ theme, size, result, current, onDone, assist }: { theme: 'paper' | 'dark'; size: number; result: LineResult; current?: Target; onDone: (t: Target | null | undefined, how: Commit) => void; assist?: AssistSource }) {
   const [bad, setBad] = useState(false);
   const set = useWorkspace((s) => s.set);
   const finish = (latex: string, how: Commit) => {
@@ -239,7 +208,7 @@ function UnitInput({ theme, size, result, current, onDone }: { theme: 'paper' | 
   return (
     <span className="unit-input">
       <MathField latex={current?.unit ? unitLatex(current.unit) : current?.conv ? nodeLatex(current.conv) : ''} ctx={{}} theme={theme} size={size} focused selectOnFocus invalid={bad} onCommit={finish}
-        onLeave={() => onDone(undefined, 'blur')} /* sair sem digitar também fecha o marcador */ ariaLabel="Unidade do resultado" />
+        onLeave={() => onDone(undefined, 'blur')} /* sair sem digitar também fecha o marcador */ ariaLabel="Unidade do resultado" assist={assist} />
     </span>
   );
 }

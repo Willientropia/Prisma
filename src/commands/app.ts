@@ -4,6 +4,7 @@ import { useWorkspace, activeDoc } from '../store/workspace';
 import { interrupt, recalc } from '../engine/run';
 import { activeTextEditor } from '../editors/TextEditor';
 import '../shell/ribbons'; // registra os rótulos do ribbon
+import { saveConfig } from '../shell/config';
 
 const st = useWorkspace.getState;
 const say = (status: string) => st().set({ status, menuOpen: false });
@@ -29,6 +30,15 @@ register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });
 
 register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }) });
+// Exibir > Assistente dinâmico (ADENDO 06, 3.1): ligado por padrão, salvo na configuração
+register('exibir.assistente', {
+  run: () => {
+    const on = st().config.assistente_dinamico === false;
+    void saveConfig({ assistente_dinamico: on })
+      .then(() => say(on ? 'Assistente dinâmico ligado' : 'Assistente dinâmico desligado'))
+      .catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));
+  },
+});
 
 // grupo Texto (caderno): age no último editor de texto focado (ADENDO 02, B7)
 const text = (fn: (e: NonNullable<typeof activeTextEditor>) => void) => () => {

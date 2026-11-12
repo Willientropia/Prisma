@@ -99,6 +99,20 @@ describe('variável do laço e símbolos próprios', () => {
     expect(before('a', 0)('i')).toBe(false);
   });
 
+  it('[A6-4-09] definedBefore(...).list: só os nomes de linhas anteriores, com a linha que define', () => {
+    const before = definedBefore([{ key: 'a', lines: ['f(x) := x + 2', 's_batata := 2*7'] }, { key: 'b', lines: ['s = ?', 'zz := 5'] }], ['lib1']);
+    expect(before.list('b', 0)).toEqual([
+      { name: 'f', raw: 'f(x) := x + 2', key: 'a', line: 0 },
+      { name: 's_batata', raw: 's_batata := 2*7', key: 'a', line: 1 },
+    ]);
+    expect(before.list('a', 0)).toEqual([]);
+    expect(before.list('b', 1).map((d) => d.name)).not.toContain('zz');
+    // redefinição: vale a última definição antes da linha (revisor do A6-4)
+    const re = definedBefore([{ key: 'a', lines: ['x := 1'] }, { key: 'b', lines: ['x := 2'] }, { key: 'c', lines: ['x = ?'] }]);
+    expect(re.list('c', 0)).toEqual([{ name: 'x', raw: 'x := 2', key: 'b', line: 0 }]);
+    expect(re.list('b', 0)).toEqual([{ name: 'x', raw: 'x := 1', key: 'a', line: 0 }]);
+  });
+
   it('[E8-29] i ou e definidos pelo usuário geram o aviso com o valor; 𝐢 nunca é a variável', () => {
     const r = run('for(i, range(1, 8), q[i] := i)', '3 + 𝐢 = ?', '3 + i = ?');
     expect(r.shadow).toEqual({ name: 'i', value: '8' });

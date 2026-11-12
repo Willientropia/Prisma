@@ -1,0 +1,16 @@
+/* Assistente dinâmico (ADENDO 06, 3.4): 220 px, itens de 24 px, até 8 visíveis; detalhe com 260 px. */
+.wrap { position: fixed; z-index: 7; display: flex; align-items: flex-start; gap: 4px; font: 13px Inter, sans-serif; color: var(--text); }
+.list, .detail { background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 4px; box-shadow: var(--shadow-menu); }
+.list { width: 220px; max-height: 192px; overflow-y: auto; }
+.item { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; cursor: default; white-space: nowrap; }
+.on { background: var(--selection); }
+.icon { display: inline-flex; flex: none; }
+.var, .userfn { color: var(--accent-light); }
+.lib { color: var(--type-lib); }
+.native, .const { color: var(--text-2); }
+.unit { color: var(--math-unit); }
+.name { flex: 1; min-width: 0; overflow: hidden; font-size: 15px; }
+.cat { flex: none; font: 11px Inter, sans-serif; color: var(--text-muted); }
+.detail { width: 260px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+.line { line-height: 1.4; overflow-wrap: anywhere; }
+.hint { font: 11px Inter, sans-serif; color: var(--text-muted); }

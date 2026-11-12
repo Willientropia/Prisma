@@ -40,6 +40,9 @@ export const ICONS = {
   italic: 'M10 4h8M6 20h8M14 4l-4 16',
   heading: 'M6 4v16M18 4v16M6 12h12',
   list: 'M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1',
+  varbox: 'M4 4h16v16H4zM10 9l4.5 6M15.5 9l-6.5 6', // assistente (ADENDO 06, 3.2): x itálico no quadrado
+  fnbox: 'M4 4h16v16H4zM15.5 8c-2 0-2.6 1-3 3l-1.4 6M9.5 11.5h5', // f itálico no quadrado
+  fnboxup: 'M4 4h16v16H4zM14.5 8c-1.8 0-2.5.8-2.5 3v6M9.5 11.5h5', // f reto no quadrado
 } as const;
 
 export type IconName = keyof typeof ICONS;

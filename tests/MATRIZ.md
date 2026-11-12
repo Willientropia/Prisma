@@ -287,7 +287,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-2-55 | 2.1 (`@`): gráfico 2D numa área vazia: A6-9 | - | e2e | pendente |
 | A6-2-56 | 2.1 (Ctrl+1 transposta, Ctrl+8 produto vetorial ×): precisam de operador no formato e no motor | - | browser | pendente |
 | A6-2-58 | 2.1 (Ctrl+M matriz, Ctrl+E funções, Ctrl+W unidades): A6-6 e A6-7 | - | e2e | pendente |
-| A6-2-59 | 2.1 (Ctrl+Space, Tab, Shift+Tab, Ctrl+Enter, Shift+Enter com assistente): A6-4 | - | e2e | pendente |
+| A6-2-59 | 2.1 com o assistente (A6-4): Ctrl+Enter, Shift+Enter e Ctrl+Espaço aceitam com a lista aberta; Shift+Tab fecha a lista; depois de Esc fechar a lista, Ctrl+Enter e Shift+Enter não a reabrem nem aceitam | tests/e2e/assistente.spec.ts | e2e | ok |
 | A6-2-60 | 2.1 (F8 renomeia, F9 recalcula, Ctrl+B/I/U em texto): sessão própria do lote | - | e2e | pendente |
 | A6-2-61 | 2.2: `diff(`, `product(`, `det(`, `transpose(`, `range(`, `if(`, `for(`, `while(` como estrutura visual: A6-5 e A6-6 | - | browser | pendente |
 | A6-2-62 | Avaliar `sum` com índice e `integral` no worker com prazo (1 milhão de termos): ticket F06 | - | unit | pendente |
@@ -325,10 +325,10 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-3-70 | Decisão do usuário (conferida no SMath): dentro do índice a vírgula fica como texto (`batata,alo,oi` = batata com índice alo,oi, sem `;`) | tests/golden/teclado.yaml | browser | ok |
 | A6-3-71 | Decisão do usuário: a vírgula depois de nome continua abrindo o índice, inclusive em `f(batata,x)`; o separador de argumentos é `;` (comportamento do A6-2 mantido) | tests/golden/teclado.yaml | browser | ok |
 | A6-3-72 | Decisão do usuário: índice com vírgula grava entre aspas, `batata_"alo,oi"`: ida e volta no conversor, `batata,alo,oi` e `batata,a1,2` (vírgula depois de dígito no índice) no teclado, `define e usa` no motor | tests/golden/conversao.yaml | unit | ok |
-| A6-3-52 | 2.5: assistente com `s` e `x` (lista, detalhe, assinatura): A6-4 | - | e2e | pendente |
+| A6-3-52 | 2.5: assistente com `s` e `x` (lista, detalhe, assinatura): ordem feita no A6-4 (A6-4-12); assinatura e descrição de função nativa: A6-7 | - | e2e | pendente |
 | A6-3-90 | Arquivos antigos abrem com os mesmos bytes: nomes com índice sem aspas (`S_trafo`, `Relação_invest.Lucro`, `V_mp`, `R1_a`, `x_1`) continuam iguais na ida e volta | tests/golden/conversao.yaml | unit | ok |
 | A6-3-91 | Importador do `.sm`: nome com vírgula no índice (`batata.alo,oi`) sai `batata_"alo,oi"`; `S.trafo` e `Relação.invest.Lucro` como antes | src/format/smath.test.ts | unit | ok |
-| A6-3-60 | 06-45: as linhas da tabela 2.5: `s=10*x`, `k:5`/`t:10*k` (E8-07, E3-xx), `x=` e `5` (E8-08, A6-3-50, A6-3-55), `→` (A6-3-53), `Tab` (A6-3-54), `c+d/2` (A6-3-02), `y:2,6%` (A6-2-07), `p|q` (A6-3-51); falta só o assistente com `s` e `x` (A6-3-52, A6-4) | - | e2e | pendente |
+| A6-3-60 | 06-45: as linhas da tabela 2.5: `s=10*x`, `k:5`/`t:10*k` (E8-07, E3-xx), `x=` e `5` (E8-08, A6-3-50, A6-3-55), `→` (A6-3-53), `Tab` (A6-3-54), `c+d/2` (A6-3-02), `y:2,6%` (A6-2-07), `p|q` (A6-3-51); falta só o assistente com `s` e `x` (A6-3-52: ordem feita no A6-4, assinatura de função nativa no A6-7) | - | e2e | pendente |
 | BUG-016 | `a<=b` digitado vira a ≤ b (e `a>=b` vira a ≥ b), sem o `=` disparar avaliação | tests/golden/teclado.yaml | browser | ok |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |
@@ -344,3 +344,34 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | FCFG-10 | Folha: botão direito na área vazia → "Formato do documento..." → Notação Engenharia → OK: o resultado mostra 12,3457·10³ e o cabeçalho ganha `notacao: engenharia`; o corpo não muda | tests/e2e/folha.spec.ts | e2e | ok |
 | FCFG-11 | Home → Configurações → Casas 2 e zeros à direita → OK: a config simulada tem `casas_decimais: 2` e `zeros_a_direita: true`; uma folha nova nasce com `exibicao: {casas: 2, modo: decimais, zeros_a_direita: true, limite_exponencial: 5}`; uma folha já aberta sem `exibicao` continua com 4 casas | tests/e2e/folha.spec.ts | e2e | ok |
 | FCFG-12 | Botão direito num resultado → "Formato do resultado..." → Casas 2 → OK: a cerca dessa região ganha `casas=2 modo=decimais zeros_a_direita=nao notacao=automatica` (sem aspas) e só ela muda; "Usar o do documento" tira os quatro atributos | src/engine/prepare.test.ts, tests/e2e/folha.spec.ts | unit, e2e | ok |
+| A6-4-01 | Tabela de unidades: todo símbolo é unidade que o motor aceita, sem repetir | src/math/assistente.test.ts | unit | ok |
+| A6-4-02 | Toda função nativa listada existe no motor | src/math/assistente.test.ts | unit | ok |
+| A6-4-03 | Nome em digitação antes do cursor: `x`, `2\cdot x`, `400V`→V, `R1a`; `\rho`, `2`, `a+` não abrem; dentro da unidade do apóstrofo | src/math/assistente.test.ts | unit | ok |
+| A6-4-04 | Ordem (3.3 + decisão do A6-4): `s`→unidade s primeiro e S na lista; `s_batata` antes da unidade s; v definido antes de V; `x`→xy2pol | src/math/assistente.test.ts | unit | ok |
+| A6-4-05 | Unidade prefixada (`mm`) entra como item montado "Metro com prefixo mili (Comprimento)", nos dois modos; `m` não lista mm | src/math/assistente.test.ts | unit | ok |
+| A6-4-06 | Detalhe de unidade: `%` Porcentagem (Adimensional) = 0,01; `h` = 3600 s; `s` sem fator; `ppb` com potência de 10 | src/math/assistente.test.ts | unit | ok |
+| A6-4-07 | Modo unidades: só itens de unidade | src/math/assistente.test.ts | unit | ok |
+| A6-4-08 | Motor: definição sem `= ?` traz `assigned` (`s_batata := 2*7` → 14), normal e simbólico; matriz sem `assigned` | src/engine/engine.test.ts | unit | ok |
+| A6-4-09 | `definedBefore(...).list`: só nomes de linhas anteriores, com a linha que define (06-15); na redefinição, a última antes da linha | src/format/smath.test.ts | unit | ok |
+| A6-4-10 | Campo de unidade: a lista abre na hora, só com unidades; `mm` + Tab grava `L = ? mm` | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-11 | Itens da folha: variável com valor, função do usuário com aridade e definição, função de biblioteca com assinatura e primeira frase | src/editors/folha/assistente.test.ts | unit | ok |
+| A6-4-12 | A6-3-52 (parte): `x` → xy2pol primeiro, "Função nativa" | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-13 | Duplo clique num item aceita; botão direito na lista não abre o menu da região | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-14 | Assistente desligado vale para a folha seguinte (lido da config) e religa | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-20 | Unidade pelo assistente: `V_mp:400V` + Tab grava igual a `V_mp:400'V` | tests/golden/teclado.yaml | browser | ok |
+| A6-4-21 | Unidade pelo assistente: `I:11,5A` + Tab grava igual a `I:11,5'A` | tests/golden/teclado.yaml | browser | ok |
+| A6-4-22 | Unidade pelo assistente: `L:25m` + Tab grava igual a `L:25'm` | tests/golden/teclado.yaml | browser | ok |
+| A6-4-23 | Unidade pelo assistente: `k:x*m` + Tab grava `k := x*'m` | tests/golden/teclado.yaml | browser | ok |
+| A6-4-24 | 06-14 (decisão do usuário): `y:s` + Enter sem setas grava `y := s` (s variável) | tests/golden/teclado.yaml | browser | ok |
+| A6-4-25 | Esc com a lista aberta só fecha a lista (`s`, Esc, `+1` → `s + 1`) | tests/golden/teclado.yaml | browser | ok |
+| A6-4-26 | Função nativa com estrutura: `sq` + Tab + `4` → `sqrt(4)` | tests/golden/teclado.yaml | browser | ok |
+| A6-4-27 | Função do usuário com 2 parâmetros: `g` + Tab insere dois argumentos | tests/golden/teclado.yaml | browser | ok |
+| A6-4-30 | Desempenho: nome em digitação e filtro abaixo de 5 ms para qualquer entrada (10 000 caracteres, 5 000 itens) | src/math/assistente.test.ts | unit | ok |
+| A6-4-40 | 06-10: folha vazia, `s` → lista com s e S, detalhe "Segundo (Tempo)", "Tab para inserir" | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-41 | 06-11: com `f(x) ≔ x+2` acima, `f` → primeiro item é a função do usuário, detalhe com a definição | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-42 | 06-12: com `s_batata ≔ 2·7` acima, `s` → s_batata antes das unidades, valor 14 no detalhe | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-43 | 06-13: `'` + `mm` + Tab insere a unidade mm | tests/golden/teclado.yaml | browser | ok |
+| A6-4-44 | 06-14 (decisão do usuário): `s`, ↓, Enter aceita o item escolhido e a região continua em edição | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-45 | 06-15: variável definida mais abaixo não aparece | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-46 | 06-16: Exibir → Assistente dinâmico desliga a lista (gravado na config); Ctrl+Espaço ainda abre | tests/e2e/assistente.spec.ts | e2e | ok |
+| A6-4-47 | 06-43 (parte do assistente): imagens aprovadas do assistente aberto (06-10 e 06-11) | tests/visual/telas.spec.ts | visual | ok |

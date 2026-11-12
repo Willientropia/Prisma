@@ -19,6 +19,9 @@ import { TextEditor } from '../TextEditor';
 import { SourceView } from '../SourceView';
 import { blockProps } from '../caderno/Caderno';
 import { Plot } from './Plot';
+import { sheetItems, type LibFn } from './assistente';
+import { baseItems, sortItems } from '../../math/assistente';
+import { allFunctions } from '../../commands/library';
 import s from '../editors.module.css';
 
 const GRID = 20;
@@ -102,6 +105,15 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const own = new Set(ordered.flatMap((b) => b.lines.flatMap(definedNames)));
     return definedBefore(ordered, (result?.defined ?? []).filter((d) => !own.has(d)));
   }, [regions, result]);
+  // assistente dinâmico (A6-4): funções das bibliotecas em vigor; Exibir > Assistente dinâmico liga e desliga
+  const assistOn = useWorkspace((x) => x.config.assistente_dinamico !== false);
+  const [libFns, setLibFns] = useState<LibFn[]>([]);
+  const libKey = (result?.libs ?? []).map((l) => `${l.id}@${l.versao}`).join(',');
+  useEffect(() => { let alive = true; void allFunctions().then((fs) => alive && setLibFns(fs)).catch(() => {}); return () => { alive = false; }; }, [libKey]);
+  const itemsFor = (key: string, line: number) => () => {
+    const defined = new Set(result?.defined ?? []);
+    return sortItems([...sheetItems(before.list(key, line), result?.blocks, libFns.filter((f) => defined.has(f.sig.split('(')[0].trim()))), ...baseItems()]);
+  };
 
   const sheet = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -380,7 +392,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         const mine = focus?.id === r.id && focus.line === i;
         return (
           <div key={i} className={s.regionLine}>
-            <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20}
+            <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20} assist={{ items: itemsFor(r.key, i), auto: assistOn }}
               focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={doneCreating}
               onWrite={(w) => writeLine(r.id, i, w)}
               onToText={b.type === 'calc' && ls.length <= 1 ? (word) => toText(r.id, word) : undefined}

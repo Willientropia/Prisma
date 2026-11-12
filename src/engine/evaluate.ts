@@ -33,6 +33,7 @@ export type LineResult = {
   factor?: string; // conversão por expressão: resultado = número·factor, "= ? 10^-6" (E4.3)
   raw?: unknown; // valor do math.js, só com keepRaw
   matrix?: string[][]; // vetor ou matriz: células já formatadas (E4.1)
+  assigned?: { text?: string; numText?: string; unit?: string; unitRaw?: string }; // A6-4: valor de definição sem "= ?" (detalhe do assistente; a região não mostra)
 };
 /** Biblioteca efetivamente usada (preenchido fora do worker, por engine/run.ts). */
 export type LibInfo = { id: string; nome: string; versao: string; origem: 'projeto' | 'usuário' | 'fábrica'; path: string; duplicate?: string; readOnly?: boolean; extension?: { path: string; versao: string } };
@@ -48,6 +49,12 @@ type Shown = { text: string; value?: number; unit?: string; numText?: string; un
 type Cx = { re: number; im: number };
 const num = (x: unknown, fmt: FormatOpts) => (math.isComplex(x) ? fmtComplex((x as Cx).re, (x as Cx).im, fmt) : fmtNum(x as number, fmt));
 const real = (x: unknown) => (math.isComplex(x) ? ((x as Cx).im === 0 ? (x as Cx).re : undefined) : (x as number));
+/** Valor de definição para o assistente (A6-4): só escalar, para não formatar matrizes grandes à toa. */
+const assignedOf = (v: unknown, fmt: FormatOpts): LineResult['assigned'] => {
+  if (!(typeof v === 'number' || isUnit(v) || math.isComplex(v))) return undefined;
+  const { text, numText, unit, unitRaw } = safeShow(v, undefined, fmt);
+  return text === undefined ? undefined : { text, numText, unit, unitRaw };
+};
 const cannot = (from: string, to: string) => new Error(`Não é possível converter ${from} em ${to}`);
 
 /** show que não falha num valor sem exibição (o for devolve o último valor do corpo). */
@@ -247,12 +254,12 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           const v = value.compile().evaluate(scope);
           scope.set(name, v);
           open.delete(name);
-          return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : {}) };
+          return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : { assigned: assignedOf(v, bfmt) }) };
         }
         if (c.kind === 'assign' || c.kind === 'func') {
           const v = P(c.src).compile().evaluate(scope);
           if (c.name) defined.add(c.name);
-          return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? { ...show(v, c.target, bfmt), ...withRaw(v) } : {}) };
+          return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? { ...show(v, c.target, bfmt), ...withRaw(v) } : c.kind === 'assign' ? { assigned: assignedOf(v, bfmt) } : {}) };
         }
         if (input.symbolic && c.kind === 'eval') {
           const node = expand(P(c.src));

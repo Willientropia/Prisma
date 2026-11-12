@@ -243,3 +243,18 @@ describe('[BUG-014] nome é variável, unidade só explícita (F04)', () => {
     expect(JSON.stringify(r)).not.toContain('ǃ');
   });
 });
+
+describe('A6-4: valor das definições para o assistente', () => {
+  const ev = (symbolic: boolean, ...lines: string[]) => evaluate({ libs: [], symbolic, format: DEFAULT_FORMAT, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
+  it('[A6-4-08] definição sem "= ?" traz o valor em assigned (normal e simbólico); matriz não; "= ?" igual a antes', () => {
+    for (const symbolic of [false, true]) {
+      const [a, m, e] = ev(symbolic, 's_batata := 2*7', 'M := mat(1, 2, 3, 4, 2, 2)', 'L := 25 m = ?');
+      expect(a.assigned?.text).toBe('14');
+      expect(a.text).toBeUndefined(); // a região não passa a mostrar resultado
+      expect(m.assigned).toBeUndefined();
+      expect(e.text).toBe('25 m');
+      expect(e.assigned).toBeUndefined();
+    }
+    expect(ev(true, 'L := 25 m')[0].assigned).toMatchObject({ numText: '25', unitRaw: 'm' });
+  });
+});

@@ -186,16 +186,26 @@ export const definedNames = (raw: string): string[] => [...new Set([
  */
 export function definedBefore(blocks: { key: string; lines: string[] }[], extra: Iterable<string> = []) {
   const first = new Map<string, number>();
+  const defs: { n: number; name: string; raw: string; key: string; line: number }[] = []; // A6-4: cada linha que define, para o assistente
   const ord = new Map<string, number>();
   let n = 0;
   for (const b of blocks) b.lines.forEach((l, i) => {
     ord.set(`${b.key}:${i}`, n);
-    for (const name of definedNames(l)) if (!first.has(name)) first.set(name, n);
+    for (const name of definedNames(l)) { if (!first.has(name)) first.set(name, n); defs.push({ n, name, raw: l, key: b.key, line: i }); }
     n++;
   });
   const always = new Set(extra);
-  return (key: string, line: number) => {
-    const here = ord.get(`${key}:${line}`) ?? n;
+  const at = (key: string, line: number) => ord.get(`${key}:${line}`) ?? n;
+  const fn = (key: string, line: number) => {
+    const here = at(key, line);
     return (name: string) => always.has(name) || (first.get(name) ?? Infinity) < here;
   };
+  /** Definições da folha antes desta linha, na ordem de leitura (06-15: nunca as de depois). */
+  fn.list = (key: string, line: number) => {
+    const here = at(key, line);
+    const last = new Map<string, { name: string; raw: string; key: string; line: number }>(); // redefinição: vale a última antes da linha
+    for (const { n: k, ...d } of defs) if (k < here) { last.delete(d.name); last.set(d.name, d); }
+    return [...last.values()];
+  };
+  return fn;
 }

@@ -516,3 +516,63 @@
   antes: [x]
   teclas: "x=5"
   linear: "x5 = ?"
+# A6-4 (ADENDO 06, Parte 3): assistente dinâmico. assistente: linhas definidas antes (lista vazia = assistente ligado, sem definições).
+# A unidade digitada com o assistente grava igual à versão com apóstrofo (B10-02, B10-05, B4-07, F04-02).
+- id: A6-4-43
+  descricao: "06-13: apóstrofo, mm e Tab inserem a unidade mm"
+  contexto: folha
+  assistente: []
+  teclas: "x:2'mm{Tab}{Enter}"
+  linear: "x := 2 mm"
+  latex_contem: ['\class{u}{\mathrm{mm}}']
+- id: A6-4-20
+  descricao: "V_mp:400V e Tab: a unidade V entra pelo assistente"
+  contexto: folha
+  assistente: []
+  teclas: "V_mp:400V{Tab}{Enter}"
+  linear: "V_mp := 400 V"
+- id: A6-4-21
+  descricao: "I:11,5A e Tab: a unidade A entra pelo assistente"
+  contexto: folha
+  assistente: []
+  teclas: "I:11,5A{Tab}{Enter}"
+  linear: "I := 11.5 A"
+- id: A6-4-22
+  descricao: "L:25m e Tab: a unidade m entra pelo assistente"
+  contexto: folha
+  assistente: []
+  teclas: "L:25m{Tab}{Enter}"
+  linear: "L := 25 m"
+  latex_contem: ['\class{u}{\mathrm{m}}']
+- id: A6-4-23
+  descricao: "k:x*m e Tab: unidade solta pelo assistente grava com apóstrofo"
+  contexto: folha
+  assistente: []
+  teclas: "k:x*m{Tab}{Enter}"
+  linear: "k := x*'m"
+- id: A6-4-24
+  descricao: "06-14 (decisão do usuário): Enter sem escolher com as setas não aceita; s continua variável"
+  contexto: folha
+  assistente: []
+  teclas: "y:s{Enter}"
+  linear: "y := s"
+- id: A6-4-25
+  descricao: "Esc com a lista aberta só fecha a lista"
+  contexto: folha
+  assistente: []
+  teclas: "s{Escape}+1{Enter}"
+  linear: "s + 1"
+- id: A6-4-26
+  descricao: "função nativa com estrutura: sq, Tab e 4 dão a raiz"
+  contexto: folha
+  assistente: []
+  teclas: "sq{Tab}4{Enter}"
+  linear: "sqrt(4)"
+  latex_contem: ['\sqrt{']
+- id: A6-4-27
+  descricao: "função do usuário com 2 parâmetros: g e Tab inserem os dois argumentos"
+  contexto: folha
+  assistente: ["g(a, b) := a + b"]
+  antes: [g]
+  teclas: "g{Tab}1{ArrowRight}2{Enter}"
+  linear: "g(1, 2)"
