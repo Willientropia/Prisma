@@ -164,6 +164,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     setMenu({ x: e.clientX, y: e.clientY, items: [
       { label: 'desativado' in a ? 'Ativar avaliação' : 'Desativar avaliação', run: () => setAttr(r.id, 'desativado', 'desativado' in a ? null : true) },
       { label: 'moldura' in a ? 'Tirar moldura' : 'Moldura', run: () => setAttr(r.id, 'moldura', 'moldura' in a ? null : true) },
+      ...(EVALUATED.has(r.seg.type) ? [{ label: 'Formato do resultado...', run: () => set({ formatDialog: { scope: 'region', docId: doc.id, regionId: r.id } }) }] : []),
       { label: 'Descrição...', run: async () => {
         const q = await useWorkspace.getState().ask({ title: 'Descrição da região', message: 'Comentário curto mostrado acima da região (vazio tira):', input: a.descricao ?? '', buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
         if (q.id === 'ok') setAttr(r.id, 'descricao', q.value.trim() || null);
@@ -434,7 +435,12 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const sheetView = (
     <div className={s.sheetScroll}>
       <div ref={sheet} className={s.sheet} style={{ width: pageW, height: pageH }} tabIndex={0} aria-label="Folha"
-        onPointerDown={onSheetDown} onKeyDown={onSheetKey}>
+        onPointerDown={onSheetDown} onKeyDown={onSheetKey}
+        onContextMenu={(e) => { // área vazia: formato do documento (F-CONFIG)
+          if (e.target !== e.currentTarget) return;
+          e.preventDefault();
+          setMenu({ x: e.clientX, y: e.clientY, items: [{ label: 'Formato do documento...', run: () => set({ formatDialog: { scope: 'doc', docId: doc.id } }) }] });
+        }}>
         {regions.filter((r) => r.seg.type !== 'area' && r.seg.type !== 'fim-area' && !hidden(r.id)).map(regionView)}
         {areas.map((a) => {
           const top = a.top - shiftAt(a.top, a.region.id);

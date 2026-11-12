@@ -26,6 +26,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Folha livre: verificação rápida (TICKETS-FOLHA) | F00 | concluída |
 | Folha livre: falha guardada e aviso de disco (TICKETS-FOLHA) | FINST | concluída |
 | Adendo 06: teclado, assistente, ribbon e gráficos (lote F-A6) | A6 | em andamento |
+| Folha livre: menu de formatação do resultado (TICKETS-FOLHA) | FCFG | concluída |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
 | Fase 7: modelos e extras | F7 | futura |
@@ -331,3 +332,15 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | BUG-016 | `a<=b` digitado vira a ≤ b (e `a>=b` vira a ≥ b), sem o `=` disparar avaliação | tests/golden/teclado.yaml | browser | ok |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |
+| FCFG-01 | Notação científica: 1234,5678 → `1,2346e3`; 1,5 → `1,5e0`; 0 → `0`; −0,00123 → `-1,23e-3` | src/engine/engine.test.ts | unit | ok |
+| FCFG-02 | Engenharia: 12345,678 → `12,3457e3`; 0,00123 → `1,23e-3`; 0,000012 → `12e-6`; 123456789 → `123,4568e6`; 999999,99 → `1e6` (arredondamento sobe de faixa); 4 significativos: 12345,678 → `12,35e3` | src/engine/engine.test.ts | unit | ok |
+| FCFG-03 | `notation: 'automatica'` dá o mesmo que hoje (valores do A6-05) | src/engine/engine.test.ts | unit | ok |
+| FCFG-04 | `exibicao()` lê `notacao` (valor inválido → automática); `regionFormat` lê `notacao=cientifica`; região sem `notacao=` herda a do documento | src/engine/prepare.test.ts | unit | ok |
+| FCFG-05 | `setExibicao`: troca só a linha `exibicao:` (resto do arquivo byte a byte igual); sem a linha, insere antes de `versao_formato:`; `exibicao:` em bloco de várias linhas vira uma linha; `notacao` só sai quando ≠ automática; ida e volta com `exibicao()` devolve o mesmo formato | src/engine/prepare.test.ts | unit | ok |
+| FCFG-06 | `appFormat(config)`: config de fábrica → `DEFAULT_FORMAT`; `casas_decimais: 2` → 2 casas; chaves novas lidas; valor inválido ignorado. `stampFormat`: com o padrão, o modelo novo tem os mesmos bytes de hoje; com 2 casas, insere `exibicao: {casas: 2, modo: decimais, zeros_a_direita: false, limite_exponencial: 5}` antes de `criado:` | src/engine/prepare.test.ts | unit | ok |
+| FCFG-07 | `withAttr(…, quote=false)` grava `casas=2` sem aspas; o padrão continua com aspas (descricao, titulo) | src/format/doc.test.ts | unit | ok |
+| FCFG-08 | Golden: `exibicao: {…, notacao: engenharia}` com `12345.678 m` dá `12,3457e3 m`; `notacao: cientifica` com 2·7 dá `1,4e1` | tests/golden/calculos.yaml | unit | ok |
+| FCFG-09 | `evaluate` com bloco `fmt: {notation: 'cientifica'}` formata só aquele bloco | src/engine/engine.test.ts | unit | ok |
+| FCFG-10 | Folha: botão direito na área vazia → "Formato do documento..." → Notação Engenharia → OK: o resultado mostra 12,3457·10³ e o cabeçalho ganha `notacao: engenharia`; o corpo não muda | tests/e2e/folha.spec.ts | e2e | ok |
+| FCFG-11 | Home → Configurações → Casas 2 e zeros à direita → OK: a config simulada tem `casas_decimais: 2` e `zeros_a_direita: true`; uma folha nova nasce com `exibicao: {casas: 2, modo: decimais, zeros_a_direita: true, limite_exponencial: 5}`; uma folha já aberta sem `exibicao` continua com 4 casas | tests/e2e/folha.spec.ts | e2e | ok |
+| FCFG-12 | Botão direito num resultado → "Formato do resultado..." → Casas 2 → OK: a cerca dessa região ganha `casas=2 modo=decimais zeros_a_direita=nao notacao=automatica` (sem aspas) e só ela muda; "Usar o do documento" tira os quatro atributos | src/engine/prepare.test.ts, tests/e2e/folha.spec.ts | unit, e2e | ok |

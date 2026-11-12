@@ -98,6 +98,19 @@
   exibicao: {casas: 8, modo: decimais, zeros_a_direita: false, limite_exponencial: 5}
   esperado: {texto: "2,19999092"}
 
+# F-CONFIG: notação científica e de engenharia (exibicao.notacao)
+- id: FCFG-08
+  descricao: engenharia mostra 12,3457·10³ m (expoente múltiplo de 3)
+  expr: "12345.678 m"
+  unidade: m
+  exibicao: {casas: 4, modo: decimais, zeros_a_direita: false, limite_exponencial: 5, notacao: engenharia}
+  esperado: {texto: "12,3457e3 m"}
+- id: FCFG-08
+  descricao: científica mostra 2·7 como 1,4·10¹
+  expr: "2*7"
+  exibicao: {casas: 4, modo: decimais, zeros_a_direita: false, limite_exponencial: 5, notacao: cientifica}
+  esperado: {texto: "1,4e1"}
+
 # --- SPEC 8.6: funções nativas ---
 - id: F2-10
   expr: "sqrt(16)"

@@ -52,6 +52,8 @@ const ask = (title: string, def?: string) => {
 };
 const withMtime = (l: Recent[]) => l.map((r) => ({ ...r, modified: disk.get(find(r.path) ?? '')?.modified ?? null }));
 
+let configText = '# Configuração do Prisma\nunidades: SI\ncasas_decimais: 4\nseparador_decimal: ","\nmotor_latex: tectonic\ntema: grafite-violeta\nverificacao:\n  margem_atencao: 20 %\n';
+
 const slug = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'projeto';
 
 const handlers: Record<string, (a: Record<string, unknown>) => unknown> = {
@@ -81,7 +83,8 @@ const handlers: Record<string, (a: Record<string, unknown>) => unknown> = {
     return file;
   },
   app_paths: () => ({ docs: APP_DOCS, libraries: `${APP_DOCS}/Bibliotecas`, models: `${APP_DOCS}/Modelos`, skills: `${APP_DOCS}/Skills`, factory: FACTORY }),
-  config_read: () => '# Configuração do Prisma\nunidades: SI\ncasas_decimais: 4\nseparador_decimal: ","\nmotor_latex: tectonic\ntema: grafite-violeta\nverificacao:\n  margem_atencao: 20 %\n',
+  config_read: () => configText,
+  config_write: (a) => { configText = String(a.content); return null; },
   library_files: () => ({
     user: [...disk.keys()].filter((k) => key(dir(k)) === key(`${APP_DOCS}/Bibliotecas`) && /\.prsl$/i.test(k)).sort(),
     factory: [...disk.keys()].filter((k) => key(dir(k)) === key(`${FACTORY}/bibliotecas`) && /\.prsl$/i.test(k)).sort(),
@@ -126,5 +129,7 @@ Object.assign(window, {
       for (const k of [...disk.keys()]) if (key(k).startsWith(key(from) + '/')) { disk.set(norm(to) + k.slice(from.length), disk.get(k)!); disk.delete(k); }
     },
     recoveryNames: () => [...recovery.keys()],
+    /** config.yaml simulado (F-CONFIG). */
+    config: () => configText,
   },
 });

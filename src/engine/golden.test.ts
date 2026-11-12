@@ -16,7 +16,7 @@ export type CalcCase = {
   verificar?: string;
   margem?: string | number; // config.yaml verificacao.margem_atencao
   folha?: boolean; // avalia como folha livre: nome indefinido fica simbólico (ADENDO 05, E3.3)
-  exibicao?: { casas?: number; modo?: 'decimais' | 'significativos'; zeros_a_direita?: boolean; limite_exponencial?: number }; // E4.2
+  exibicao?: { casas?: number; modo?: 'decimais' | 'significativos'; zeros_a_direita?: boolean; limite_exponencial?: number; notacao?: 'automatica' | 'cientifica' | 'engenharia' }; // E4.2
   atencao?: string; // atributo atencao= do bloco verificar
   linha?: number;
   esperado?: { valor?: number; unidade?: string; tolerancia?: number | string; texto?: string; estado?: 'ok' | 'warn' | 'fail'; simbolico?: string; faltando?: string[] };
@@ -33,7 +33,7 @@ export function runCase(c: CalcCase) {
   const blocks: BlockInput[] = [{ key: 'calc', type: 'calc', lines }];
   if (c.verificar) blocks.push({ key: 'check', type: 'verificar', lines: [c.verificar], atencao: parseMargin(c.atencao) });
   const x = c.exibicao;
-  const format = x ? { decimals: x.casas ?? 4, sep: ',', mode: x.modo ?? 'significativos', trailingZeros: x.zeros_a_direita ?? false, expThreshold: x.limite_exponencial ?? 5 } : undefined;
+  const format = x ? { decimals: x.casas ?? 4, sep: ',', mode: x.modo ?? 'significativos', trailingZeros: x.zeros_a_direita ?? false, expThreshold: x.limite_exponencial ?? 5, notation: x.notacao } : undefined;
   const r = evaluate({ libs: [], blocks, margem: parseMargin(c.margem), symbolic: c.folha, format });
   if (c.verificar) return r.blocks.check[0];
   return r.blocks.calc[c.linha ?? lines.length - 1];

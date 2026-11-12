@@ -79,6 +79,14 @@ pub fn config_read(app: AppHandle) -> Res<String> {
     fs::read_to_string(config_dir(&app)?.join("config.yaml")).map_err(err)
 }
 
+/// Grava o config.yaml inteiro (padrão do app para documentos novos: Configurações > formato do resultado).
+#[tauri::command]
+pub fn config_write(app: AppHandle, content: String) -> Res<()> {
+    let dir = config_dir(&app)?;
+    fs::create_dir_all(&dir).map_err(err)?;
+    write_atomic(&dir.join("config.yaml"), &content).map_err(err)
+}
+
 fn with_ext(dir: &Path, ext: &str) -> Vec<String> {
     let mut v: Vec<String> = fs::read_dir(dir)
         .map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case(ext))).map(|p| slash(&p)).collect())
