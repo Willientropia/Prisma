@@ -1,0 +1,66 @@
+# Publica uma versão do Prisma: compila no Windows e cria a release com o instalador.
+# As notas são a seção da versão no CHANGELOG.md. O Williehub lê essa release para
+# mostrar a versão nova e atualizar o app instalado.
+#
+# Versão nova: suba a versão em package.json, src-tauri/tauri.conf.json e src-tauri/Cargo.toml,
+# escreva a seção "## vX.Y.Z" no CHANGELOG.md, commite e publique a tag:
+#   git tag vX.Y.Z && git push origin main vX.Y.Z
+# Tag que já existia antes deste workflow (ex.: v0.2.0): Actions → Release → Run workflow → informe a tag.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag já existente para publicar (ex.: v0.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Versão igual à tag (package.json, tauri.conf.json, Cargo.toml)
+        shell: bash
+        run: |
+          V="${TAG#v}"
+          PKG=$(node -p "require('./package.json').version")
+          TAURI=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          CARGO=$(grep -m1 '^version' src-tauri/Cargo.toml | cut -d'"' -f2)
+          for x in "$PKG" "$TAURI" "$CARGO"; do
+            [ "$x" = "$V" ] || { echo "::error::A tag é $TAG mas as versões são package=$PKG tauri=$TAURI cargo=$CARGO"; exit 1; }
+          done
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: src-tauri }
+
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npx tauri build --bundles nsis
+
+      - name: Notas da versão (CHANGELOG.md)
+        shell: bash
+        run: |
+          awk -v t="## $TAG" 'index($0, t) == 1 { on = 1; next } on && /^## / { exit } on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Versão $TAG." > notes.md
+          cat notes.md
+
+      - name: Cria a release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$TAG" src-tauri/target/release/bundle/nsis/*-setup.exe --title "$TAG" --notes-file notes.md --verify-tag
