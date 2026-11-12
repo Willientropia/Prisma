@@ -198,9 +198,13 @@ function UnitInput({ theme, size, result, current, onDone, assist }: { theme: 'p
     const from = result.unitRaw ? unitFromMathjs(result.unitRaw) : '';
     let ok: boolean;
     try {
-      const want = math.unit(toMath(target));
+      // BUG-019: "%" não é unidade do math.js (math.unit('%') lança); o motor converte por conta própria
       // número puro pedido em ângulo (arg(z) = ? deg): o número está em radianos (E4.3)
-      ok = target === '%' ? !from || from === '%' : !from ? want.equalBase(math.unit('rad')) : from !== '%' && math.unit(1, toMath(from)).equalBase(want);
+      if (target === '%') ok = !from || from === '%';
+      else {
+        const want = math.unit(toMath(target));
+        ok = !from ? want.equalBase(math.unit('rad')) : from !== '%' && math.unit(1, toMath(from)).equalBase(want);
+      }
     } catch { ok = false; }
     if (!ok) { setBad(true); set({ status: `Não é possível converter ${from || 'número sem unidade'} em ${target}` }); return; }
     onDone({ unit: u }, how);

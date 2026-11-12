@@ -305,7 +305,9 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
       // seleção/inserção do MathLive cai dentro dos parênteses; reescreve o valor e põe o cursor no denominador
       const b = before();
       const f = trailingFence(b);
-      if (!f) return false;
+      // BUG-018: sem parênteses, a fração também é montada aqui. O atalho nativo do MathLive perdia a corrida quando o "/" vinha
+      // logo depois do índice (V.o/T.total digitado depressa saía com a barra solta); #@ é o operando anterior, o mesmo que ele usa
+      if (!f) { mf.insert('\\frac{#@}{#?}', { selectionMode: 'placeholder', format: 'latex' }); return true; }
       const after = atEnd() ? '' : mf.getValue(mf.position, mf.lastOffset, 'latex');
       mf.setValue(`${b.slice(0, f.start)}\\frac{${f.inner}}{\\placeholder{}}${after}`);
       mf.position = 0;

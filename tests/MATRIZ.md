@@ -375,3 +375,5 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-4-45 | 06-15: variável definida mais abaixo não aparece | tests/e2e/assistente.spec.ts | e2e | ok |
 | A6-4-46 | 06-16: Exibir → Assistente dinâmico desliga a lista (gravado na config); Ctrl+Espaço ainda abre | tests/e2e/assistente.spec.ts | e2e | ok |
 | A6-4-47 | 06-43 (parte do assistente): imagens aprovadas do assistente aberto (06-10 e 06-11) | tests/visual/telas.spec.ts | visual | ok |
+| BUG-018 | Teste manual do lote F-A6: `/` depois de nome com índice monta a fração na hora (`V.o/T.total`), sem precisar sair da região e voltar; `a/b`, `x^2/3` e `a+b`, Espaço, `/2` continuam montando a fração | tests/golden/teclado.yaml, tests/regressao/bugs.spec.ts | browser, e2e | ok |
+| BUG-019 | Teste manual do lote F-A6: `V_o/T_total = 0,2` com `%` no campo de unidade do resultado (Tab ou Enter) mostra 20 % e grava `= ? %`. `‰` e `ppm` (não são unidades do math.js, o motor e o formato do arquivo não as conhecem): pendentes de autorização do usuário | tests/regressao/bugs.spec.ts | e2e | ok |

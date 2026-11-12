@@ -44,6 +44,7 @@ const MAX = 64; // nome mais longo que o assistente considera; acima disso a lis
  */
 export function partialName(before: string): string | null {
   const tail = before.slice(-(MAX + 1));
+  if (tail.endsWith('\\%')) return '%'; // BUG-019: o % digitado é o nome parcial se a lista está aberta (Tab o troca pelo item, não o duplica); a lista só abre por letra, ' ou Ctrl+Espaço
   const m = /[\p{L}\d]+$/u.exec(tail);
   if (!m) return null;
   // depois de "\" vem um comando (\cdot, \rho), que é só letras; o MathLive cola o número nele (\coloneq25m)

@@ -157,3 +157,52 @@ test('[BUG-014] [F04-01] na folha, nome que coincide com unidade (L) fica em abe
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toContain('z := 9*j');
 });
+
+// A6-FIX (teste manual do lote F-A6)
+async function sheetWith(page: Page, lines: string[]) {
+  await start(page);
+  await dev(page).newDoc('folha');
+  let y = 60;
+  for (const l of lines) {
+    await page.getByLabel('Folha').click({ position: { x: 100, y } });
+    await page.keyboard.type(l, { delay: 30 });
+    await page.keyboard.press('Enter');
+    y += 70;
+  }
+  await page.getByLabel('Folha').click({ position: { x: 100, y } });
+}
+
+// o "/" digitado depressa (sem intervalo entre as teclas) chegava ao MathLive antes de ele fechar o índice e saía como barra solta
+for (const delay of [0, 30]) {
+  test(`[BUG-018] "/" depois de nome com índice monta a fração na hora: V.o/T.total (${delay} ms entre teclas)`, async ({ page }) => {
+    await sheetWith(page, ['V.o:1', 'T.total:5']);
+    await page.keyboard.type('V.o/T.total', { delay });
+    const val = async () => (await fieldValues(page)).at(-1)!;
+    await expect.poll(val).toContain('\\frac{');
+    expect(await val()).not.toMatch(/\}\/|\/\\/); // nenhuma barra solta no meio do campo
+    await page.keyboard.press('=');
+    await expect.poll(() => dev(page).text()).toContain('V_o/T_total = ?');
+    await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('0,2');
+  });
+}
+
+// BUG-019: % no campo de unidade do resultado converte (o math.js não conhece %); ‰ e ppm: pendentes de autorização (ver adendo-06)
+// Tab com a lista aberta aceita o item (A6-4) e um segundo Tab, Enter ou o clique fora confirma
+for (const confirm of [['Enter'], ['Tab', 'Tab'], ['Tab', 'clique fora']]) {
+  test(`[BUG-019] V_o/T_total = 0,2 com % no campo de unidade (${confirm.join(' + ')}) mostra 20 %`, async ({ page }) => {
+    await sheetWith(page, ['V.o:1', 'T.total:5']);
+    await page.keyboard.type('V.o/T.total=', { delay: 30 });
+    await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('0,2');
+    const line = page.locator('.mline').filter({ has: page.locator('.mresult-value') }).last();
+    await line.hover();
+    await line.locator('.unit-marker').click();
+    await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
+    await page.keyboard.type('%', { delay: 40 });
+    for (const k of confirm) {
+      if (k === 'clique fora') await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } });
+      else await page.keyboard.press(k);
+    }
+    await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe('20%');
+    await expect.poll(() => dev(page).text()).toContain('V_o/T_total = ? %');
+  });
+}

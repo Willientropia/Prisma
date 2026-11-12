@@ -576,3 +576,50 @@
   antes: [g]
   teclas: "g{Tab}1{ArrowRight}2{Enter}"
   linear: "g(1, 2)"
+# A6-FIX
+- id: BUG-018
+  descricao: "/ depois de nome com índice monta a fração na hora (sem sair e voltar): V.o/T.total"
+  contexto: folha
+  definidos: [V_o, T_total]
+  teclas: "V.o/T.total"
+  latex_contem: ['\frac{V_']
+  latex_nao_contem: ['V_{\mathrm{o}}/']
+- id: BUG-018-02
+  descricao: "/ depois de nome sem índice já montava a fração: a/b"
+  contexto: folha
+  definidos: [a, b]
+  teclas: "a/b"
+  latex_contem: ['\frac{a}{b']
+- id: BUG-018-03
+  descricao: "/ depois de x^2 (expoente aberto): a fração leva x^2 inteiro em cima"
+  contexto: folha
+  definidos: [x]
+  teclas: "x^2/3"
+  latex_contem: ['\frac{x^2}{3']
+- id: BUG-018-04
+  descricao: "/ depois de a+b com Espaço (seleção ampliada): a+b vira o numerador"
+  contexto: folha
+  definidos: [a, b]
+  teclas: "a+b{Space}/2"
+  latex_contem: ['\frac{a+b}{2']
+- id: BUG-018-05
+  descricao: "o mesmo V.o/T.total com o assistente ligado (como na folha de verdade)"
+  contexto: folha
+  definidos: [V_o, T_total]
+  assistente: []
+  teclas: "V.o/T.total"
+  latex_contem: ['\frac{V_']
+  latex_nao_contem: ['V_{\mathrm{o}}/']
+- id: BUG-018-06
+  descricao: "V.o/T.total com os nomes ainda não definidos"
+  contexto: folha
+  teclas: "V.o/T.total"
+  latex_contem: ['\frac{V_']
+  latex_nao_contem: ['V_{\mathrm{o}}/']
+- id: BUG-018-07
+  descricao: "V.o/T.total sem definidos, com o assistente ligado e Enter no fim"
+  contexto: folha
+  assistente: []
+  teclas: "V.o/T.total{Enter}"
+  linear: "V_o/T_total"
+  latex_contem: ['\frac{']
