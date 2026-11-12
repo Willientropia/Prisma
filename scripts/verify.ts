@@ -3,10 +3,11 @@
 // (C7-01 e C7-02, que oscilam com a carga da máquina; F00). Por ticket, use npm run verify:rapido.
 // Qualquer falha devolve código diferente de 0.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkMatriz } from './check-matriz';
 import { measureCoverage } from './coverage';
+import { diskWarning, saveFailure } from './falhas';
 import { renderReport, type Origin, type Step } from './report';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -32,6 +33,9 @@ function step(name: string, cmd: string, env: Record<string, string> = {}): stri
 }
 const readJson = <T>(f: string): T | null => (existsSync(f) ? (JSON.parse(readFileSync(f, 'utf8')) as T) : null);
 
+const lowDisk = diskWarning((({ bavail, bsize }) => bavail * bsize)(statfsSync(ROOT)));
+if (lowDisk) console.warn(`\n${lowDisk}\n`);
+
 mkdirSync(OUT, { recursive: true });
 for (const d of ['coverage', 'coverage-e2e', 'vitest.json', 'playwright.json']) rmSync(join(OUT, d), { recursive: true, force: true });
 
@@ -46,7 +50,9 @@ const cargo = step('Rust (cargo test)', 'cargo test --manifest-path src-tauri/Ca
 let rust = { passed: 0, failed: 0, ignored: 0 };
 for (const m of cargo.matchAll(/test result: \w+\. (\d+) passed; (\d+) failed; (\d+) ignored/g)) rust = { passed: rust.passed + +m[1], failed: rust.failed + +m[2], ignored: rust.ignored + +m[3] };
 
-step('Playwright: interface, regressão e visual', full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"', { PRISMA_COVERAGE: '1' });
+const pwOut = step('Playwright: interface, regressão e visual', full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"', { PRISMA_COVERAGE: '1' });
+const failureDir = steps.at(-1)!.ok ? null : saveFailure(OUT, pwOut);
+if (failureDir) console.log(`\nSaída e relatório do Playwright guardados em ${failureDir}`);
 type PwSpec = { title: string; file: string; tests: { status: string; results: { stdout?: { text?: string }[] }[] }[] };
 type PwSuite = { specs?: PwSpec[]; suites?: PwSuite[] };
 const perf: { recalc: number | null; open: number | null; app?: number | null } = { recalc: null, open: null };
@@ -128,5 +134,7 @@ const report = renderReport({
   origins: [...origins.values()], coverage: areas, minimums: MIN, perf, newTests, steps, problems,
 });
 writeFileSync(join(OUT, 'RELATORIO.md'), report);
+if (failureDir) writeFileSync(join(failureDir, 'RELATORIO.md'), report);
+if (lowDisk) console.warn(`\n${lowDisk}`);
 console.log(`\n${report}`);
 process.exit(ok ? 0 : 1);

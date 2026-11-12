@@ -24,6 +24,7 @@ Todo critério de aceite dos documentos tem um ID e pelo menos um teste que cita
 | Fase 4: bibliotecas | F4 | concluída |
 | Adendo 05: folha estilo SMath | E8 | concluída |
 | Folha livre: verificação rápida (TICKETS-FOLHA) | F00 | concluída |
+| Folha livre: falha guardada e aviso de disco (TICKETS-FOLHA) | FINST | concluída |
 | Adendo 06: teclado, assistente, ribbon e gráficos (lote F-A6) | A6 | em andamento |
 | Fase 5: LaTeX | F5 | futura |
 | Fase 6: exportação e skills | F6 | futura |
@@ -244,3 +245,5 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-8-16 | `diff(vetor)` do math.js continua valendo | src/engine/calculus.test.ts | unit | ok |
 | A6-8-17 | Limite com unidade e outro número puro diferente de 0 dá "Unidades incompatíveis"; unidade com deslocamento (°C) é recusada | src/engine/calculus.test.ts | unit | ok |
 | A6-8-18 | Prazo do worker para integral divergente ou aninhada (1/x faz cerca de 60 mil avaliações; aninhada multiplica): ticket F06 | - | unit | pendente |
+| FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
+| FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |
