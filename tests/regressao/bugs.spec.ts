@@ -201,6 +201,7 @@ for (const [unit, shown] of [['%', '20%'], ['‰', '200‰'], ['ppm', '2⋅105pp
     for (const k of confirm) {
       if (k === 'clique fora') await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } });
       else await page.keyboard.press(k);
+      await page.waitForTimeout(150); // sob carga o primeiro Tab (aceita o item da lista) ainda não tinha sido tratado quando o segundo chegava
     }
     await expect.poll(() => resultTexts(page).then((r) => r.at(-1))).toBe(shown);
     await expect.poll(() => dev(page).text()).toContain(`V_o/T_total = ? ${unit}`);
