@@ -25,7 +25,7 @@ jobs:
     runs-on: windows-latest
     env:
       TAG: ${{ inputs.tag || github.ref_name }}
-      SKIP_INSTALL_SIMPLE_GIT_HOOKS: '1'
+    # (sem SKIP_INSTALL_SIMPLE_GIT_HOOKS: o teste C9-08 confere o gancho de pre-commit que o "npm ci" instala; o workflow não faz commit)
     steps:
       - uses: actions/checkout@v4
         with:
@@ -63,4 +63,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$TAG" src-tauri/target/release/bundle/nsis/*-setup.exe --title "$TAG" --notes-file notes.md --verify-tag
+        run: |
+          # Release publicada à mão antes (v0.3.0): não recria nem troca o instalador
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "A release $TAG já existe; nada a publicar."
+          else
+            gh release create "$TAG" src-tauri/target/release/bundle/nsis/*-setup.exe --title "$TAG" --notes-file notes.md --verify-tag
+          fi
