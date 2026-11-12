@@ -68,3 +68,9 @@ Prazo: `CALC_LIMIT_MS = 1500` em `calculus.ts` (por linha, só dentro do motor),
 - **Achado 11 (feito):** em `MathLine.tsx`, `parsed` só vale se `lineToLatex` também funciona; linha com 3000 termos vira "Não foi possível ler esta linha" (arquivo intacto, confirmação do A6-FIX2 vale) e o `fieldLatex` tem try/catch. **Pendente:** `nodeLatex` continua recursivo (a linha não é desenhada, só marcada); os outros chamadores (`Folha`, `assistente`, `resultado`) já têm try/catch.
 
 Testes: `src/engine/robustez.test.ts` (entradas travadas rodam em processo filho via `tests/helpers/eval-cli.ts`, morto em 6 s, para falhar sem pendurar a suíte) e `src/math/robustez.browser.test.tsx`.
+
+## Pendências abertas na v0.3.0
+
+- **simplify (decisão do usuário, 12/11):** o corte em 70 caracteres (`MAX_SIMPLIFY_LEN`) fica como está. Pendente: rodar o `math.simplify` num worker separado com prazo, o que manteria o resultado simplificado em expressões longas.
+- **Leitor linear:** `a b` (nome, espaço, nome) ainda não é lido como produto (o math.js lê). Baixa prioridade.
+- **Ordem seguinte:** A6-TECLADO2, A6-ESCALA, F-LAYOUT, A6-5.
