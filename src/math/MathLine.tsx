@@ -61,7 +61,9 @@ export function MathLine(props: Props) {
   const unreadable = !!code.trim() && !parsed;
   const [invalid, setInvalid] = useState(false);
   const [unitEdit, setUnitEdit] = useState(false);
+  const [fieldKey, setFieldKey] = useState(0); // muda para o campo voltar ao que o arquivo mostra (linha ilegível mantida)
   const live = useRef(0);
+  const rawNow = useRef(raw); rawNow.current = raw; // a linha ainda é a do diálogo quando a resposta chega?
   // A6-1 (ADENDO 06, 1.2): a região é reclassificada a cada edição, pelo que está no campo agora.
   // cleared: a expressão foi toda apagada, então a avaliação antiga acabou (nada dela vai para a linha nova);
   // pending: o campo está vazio ou incompleto, então o resultado antigo some na hora.
@@ -100,6 +102,19 @@ export function MathLine(props: Props) {
     return true;
   };
 
+  /** A6-FIX2 (achado 5): a linha ilegível nunca é trocada nem apagada sem o usuário confirmar. */
+  const confirmLoss = async (what: 'substituir' | 'apagar'): Promise<boolean> => {
+    const shown = code.trim().length > 120 ? `${code.trim().slice(0, 120)}…` : code.trim();
+    const r = await useWorkspace.getState().ask({
+      title: 'Linha que não foi lida',
+      message: `O Prisma não conseguiu ler esta linha do arquivo: ${shown}. Se continuar, o texto original ${what === 'apagar' ? 'será apagado' : 'será substituído pelo que você digitou'} e não volta.`,
+      buttons: [{ id: 'sim', label: what === 'apagar' ? 'Apagar' : 'Substituir', primary: true }, { id: 'nao', label: 'Manter a linha' }],
+    });
+    return r.id === 'sim';
+  };
+  /** Ficou com a linha como estava: o que foi digitado no campo sai e o estado de edição recomeça. */
+  const keepLine = () => { cleared.current = false; forceEval.current = false; setPending(false); setInvalid(false); setFieldKey((k) => k + 1); };
+
   useEffect(() => () => clearTimeout(live.current), []);
   useEffect(() => { cleared.current = false; forceEval.current = false; setPending(false); }, [raw]); // a linha mudou (gravação, desfazer, outra visão): o estado de edição recomeça
 
@@ -109,7 +124,8 @@ export function MathLine(props: Props) {
     const n = toRaw(latex, false);
     if (n === '') { cleared.current = true; forceEval.current = false; }
     setPending(n === null || n === '');
-    live.current = window.setTimeout(() => { if (n !== null && n !== '') { write(n); cleared.current = false; } }, LIVE_MS);
+    // linha ilegível: nada vai para o arquivo enquanto se digita; a troca só acontece na saída, depois de confirmada
+    live.current = window.setTimeout(() => { if (n !== null && n !== '' && !unreadable) { write(n); cleared.current = false; } }, LIVE_MS);
   };
 
   /** Ctrl+.: derivada e simplificação do math.js; sem resultado, avisa na barra de status. */
@@ -129,16 +145,22 @@ export function MathLine(props: Props) {
   const onCommit = (latex: string, how: Commit) => {
     setSym(null);
     clearTimeout(live.current);
+    const asEval = how === 'eval' || how === 'defeval';
+    const next = toRaw(latex, asEval);
+    if (unreadable && next) { const asked = raw; void confirmLoss('substituir').then((ok) => (ok && rawNow.current === asked ? commitTo(next, how) : keepLine())); return; }
+    commitTo(next, how);
+  };
+  const commitTo = (next: string | null, how: Commit) => {
     // depois do "=" o resultado aparece na hora e o cursor fica no campo; o marcador de conversão abre com seta direita ou clique (ADENDO 06, 2.5)
-    if (how === 'eval' || how === 'defeval') { if (write(toRaw(latex, true))) { cleared.current = false; forceEval.current = true; setPending(false); } return; }
-    const next = toRaw(latex, false);
-    if (next === null && cleared.current && how === 'blur') { cleared.current = false; setPending(false); props.onWrite(''); return; } // saiu com o que sobrou incompleto: a avaliação apagada não volta
+    if (how === 'eval' || how === 'defeval') { if (write(next)) { cleared.current = false; forceEval.current = true; setPending(false); } return; }
+    if (next === null && cleared.current && how === 'blur') { cleared.current = false; setPending(false); if (!unreadable) props.onWrite(''); return; } // saiu com o que sobrou incompleto: a avaliação apagada não volta (a linha ilegível não é apagada)
     const ok = write(next);
     cleared.current = false; setPending(false); // saiu: vale o que está gravado; sem gravação, o resultado antigo (ainda no arquivo) volta
     if (!ok && how !== 'blur') { set({ status: 'Expressão incompleta: termine ou apague antes de sair' }); return; }
     if (how === 'enter' || how === 'shift-enter') props.onEnter?.(how === 'shift-enter');
     if (how === 'escape') props.onExit?.();
   };
+  const onBackspaceEmpty = props.onBackspaceEmpty && (unreadable ? () => { const asked = raw; void confirmLoss('apagar').then((ok) => ok && rawNow.current === asked && props.onBackspaceEmpty?.()); } : props.onBackspaceEmpty);
 
   if (!code.trim() && comment) return <span className="mline-comment">{comment.replace(/^#\s*/, '')}</span>;
 
@@ -151,8 +173,8 @@ export function MathLine(props: Props) {
   const onArrowEnd = () => { if (!showResult || unitEdit) return false; setUnitEdit(true); return true; };
   return (
     <span className={`mline${err || invalid ? ' mline-error' : ''}`} title={err} onMouseEnter={() => err && set({ status: err })}>
-      <MathField latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
-        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={props.onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} assist={props.assist} />
+      <MathField key={fieldKey} latex={fieldLatex} ctx={ctx} theme={theme} size={size} focused={props.focused} initialKeys={props.initialKeys} onReady={props.onReady}
+        invalid={invalid || !!err} onInput={onInput} onCommit={onCommit} onBackspaceEmpty={onBackspaceEmpty} onFocus={props.onFocus} onLeave={props.onExit} onToText={unreadable ? undefined : props.onToText} onSymbolic={onSymbolic} onArrowEnd={onArrowEnd} assist={props.assist} />
       {unreadable && <span className={`mline-unreadable${theme === 'dark' ? ' mline-unreadable-dark' : ''}`}>{UNREADABLE}</span>}
       {sym && <span className="mresult msymbolic"><MathMarkup latex={sym} theme={theme} size={size} className="msymbolic-value" /></span>}
       {showResult && (

@@ -239,3 +239,92 @@ test('[BUG-020] linha ilegível aparece marcada como erro, nunca com ":=" ou tex
     expect(await dev(page).text(), `depois de ${key}`).toContain('I_o := 5 $ A');
   }
 });
+
+// A6-FIX2-04 (achado 5 do Fable nº 1): a linha ilegível nunca é sobrescrita nem apagada sem o usuário confirmar
+const ILEGIVEL = 'I_o := 5 $ A';
+const aviso = (page: Page) => page.getByRole('alertdialog', { name: 'Linha que não foi lida' });
+async function abrirIlegivel(page: Page, nome: string) {
+  await start(page);
+  await dev(page).write(`${CALC}/${nome}.prsf`, folhaCom(ILEGIVEL));
+  await dev(page).open(`${CALC}/${nome}.prsf`);
+  await expect(page.locator('.mline-unreadable')).toBeVisible();
+  await focusField(page, page.locator('math-field').first());
+}
+
+test('[A6-FIX2-04] digitar x, apagar, digitar ( e sair não apaga a linha ilegível', async ({ page }) => {
+  await abrirIlegivel(page, 'fix2a');
+  await page.keyboard.type('x');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type('(');
+  await page.keyboard.press('Tab');
+  await page.waitForTimeout(400);
+  expect(await dev(page).text()).toContain(ILEGIVEL);
+});
+
+test('[A6-FIX2-04] Backspace no campo vazio de uma linha ilegível pergunta antes de apagar', async ({ page }) => {
+  await abrirIlegivel(page, 'fix2b');
+  await page.keyboard.press('Backspace');
+  await expect(aviso(page)).toBeVisible();
+  await aviso(page).getByRole('button', { name: 'Manter a linha' }).click();
+  await expect(aviso(page)).toHaveCount(0);
+  expect(await dev(page).text()).toContain(ILEGIVEL);
+  await focusField(page, page.locator('math-field').first());
+  await page.keyboard.press('Backspace');
+  await aviso(page).getByRole('button', { name: 'Apagar' }).click();
+  await expect.poll(() => dev(page).text()).not.toContain(ILEGIVEL);
+});
+
+test('[A6-FIX2-04] digitar numa linha ilegível só troca o texto depois de confirmar', async ({ page }) => {
+  await abrirIlegivel(page, 'fix2c');
+  await page.keyboard.type('x');
+  await page.waitForTimeout(500); // passa do LIVE_MS: antes, o texto original já tinha sido trocado
+  expect(await dev(page).text()).toContain(ILEGIVEL);
+  await page.keyboard.press('Enter'); // com x digitado a lista do assistente está aberta e o Tab a aceitaria
+  await expect(aviso(page)).toBeVisible();
+  await expect(aviso(page)).toContainText(ILEGIVEL);
+  await aviso(page).getByRole('button', { name: 'Manter a linha' }).click();
+  expect(await dev(page).text()).toContain(ILEGIVEL);
+  await expect(page.locator('.mline-unreadable')).toBeVisible();
+  expect(await fieldValues(page)).toEqual(['']); // o campo volta ao estado de linha ilegível, sem o x
+  await focusField(page, page.locator('math-field').first());
+  await page.keyboard.type('y');
+  await page.keyboard.press('Enter'); // com x digitado a lista do assistente está aberta e o Tab a aceitaria
+  await aviso(page).getByRole('button', { name: 'Substituir' }).click();
+  await expect.poll(() => dev(page).text()).not.toContain(ILEGIVEL);
+  expect(await dev(page).text()).toContain('\ny\n');
+});
+
+test('[A6-FIX2-04] nome e Espaço numa linha ilegível não trocam a região por texto', async ({ page }) => {
+  await abrirIlegivel(page, 'fix2d');
+  await page.keyboard.type('abc');
+  await page.keyboard.press(' ');
+  await page.waitForTimeout(500);
+  expect(await dev(page).text()).toContain(ILEGIVEL);
+  expect(await dev(page).text()).not.toContain('abc');
+});
+
+// A6-FIX2-02: 2e3 passa pela tela do MathLive sem virar 2*e3
+test('[A6-FIX2-02] editar a linha x := 2e3 = ? mantém 2e3 e o valor', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${CALC}/fix2e.prsf`, folhaCom('x := 2e3 = ?'));
+  await dev(page).open(`${CALC}/fix2e.prsf`);
+  await expect.poll(() => resultTexts(page)).toEqual(['2000']);
+  await focusField(page, page.locator('math-field').first());
+  await page.keyboard.press('End');
+  await page.keyboard.type('+1');
+  await expect.poll(() => dev(page).text()).toContain('x := 2e3 + 1 = ?');
+  await expect.poll(() => resultTexts(page)).toEqual(['2001']);
+});
+
+// A6-FIX2-01: a/2x é a/(2x) na tela, no arquivo e no motor
+test('[A6-FIX2-01] editar y := a/2x não muda o valor (a/(2x), não (a/2)·x)', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${CALC}/fix2f.prsf`, folhaCom('a := 6', 'x := 3', 'y := a/2x = ?'));
+  await dev(page).open(`${CALC}/fix2f.prsf`);
+  await expect.poll(() => resultTexts(page)).toEqual(['1']);
+  await focusField(page, page.locator('math-field').nth(2));
+  await page.keyboard.press('End');
+  await page.keyboard.type('+0');
+  await expect.poll(() => dev(page).text()).toContain('y := a/(2*x) + 0 = ?');
+  await expect.poll(() => resultTexts(page)).toEqual(['1']);
+});

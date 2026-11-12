@@ -8,6 +8,7 @@ import { math } from './math';
 import { isKnownUnit, unitFactor } from './unidades';
 import { blocks, lines, parse } from '../format/doc';
 import { byPosition } from '../format/views';
+import { toLatex, toLinear } from '../format/mathlinear';
 
 const RES = join(import.meta.dirname, '../../resources');
 const EX = join(import.meta.dirname, '../../tests/fixtures/usina-boa-vista');
@@ -286,4 +287,63 @@ describe('[BUG-020] número colado em nome', () => {
     expect(r.text).toBe('10');
     expect(last(['x := 2', 'y := 1/2x', 'y = ?']).text).toBe('1'); // (1/2)*x, como o leitor linear mostra
   });
+});
+
+// A6-FIX2: tela, arquivo e motor dão o mesmo valor, e editar a linha (arquivo -> tela -> arquivo) não muda o valor
+const editada = (l: string) => toLinear(toLatex(l));
+const valor = (defs: string[], l: string) => last([...defs, l, 'r := y', 'r = ?']).numText;
+
+describe('[A6-FIX2-01] produto colado: valor igual no arquivo e depois de editar', () => {
+  const casos: [string[], string, string][] = [
+    [['a := 6', 'x := 3'], 'y := a/2x', '1'],
+    [['x := 3', 'y0 := 2'], 'y := 2x/3y0', '1'],
+    [['x := 3'], 'y := 1/2x', '1,5'],
+    [['x := 3'], 'y := 2x/3', '2'],
+    [['a := 6', 'x := 3'], 'y := a/2x/3', '0,3333'],
+    [['x := 3'], 'y := 2/3x', '2'],
+    [['x := 4'], 'y := 1/2 (x)', '2'],
+  ];
+  for (const [defs, l, want] of casos) {
+    it(`[A6-FIX2-01] ${l} (${defs.join(', ')}) vale ${want}, antes e depois de editar`, () => {
+      expect(valor(defs, l), 'arquivo').toBe(want);
+      expect(valor(defs, editada(l)), `editada: ${editada(l)}`).toBe(want);
+    });
+  }
+});
+
+describe('[A6-FIX2-02] notação científica: o valor não muda ao editar', () => {
+  it('[A6-FIX2-02] x := 2e3 vale 2000 antes e depois de editar; 2e3 m e 1e-3x também', () => {
+    expect(last(['x := 2e3', 'x = ?']).value).toBe(2000);
+    expect(last([editada('x := 2e3'), 'x = ?']).value).toBe(2000);
+    expect(last([editada('x := 2e3 m'), 'x = ?']).value).toBe(2000);
+    expect(last(['x := 1000', editada('y := 1e-3x'), 'y = ?']).value).toBe(1);
+  });
+});
+
+describe('[A6-FIX2-03] % e ° colados', () => {
+  it('[A6-FIX2-03] x := 5% vale 0,05 no arquivo e depois de editar', () => {
+    expect(last(['x := 5%', 'x = ?']).value).toBeCloseTo(0.05);
+    expect(last([editada('x := 5%'), 'x = ?']).value).toBeCloseTo(0.05);
+  });
+  it('[A6-FIX2-03] t := 25°C é a unidade °C: mesmo resultado de 25 °C', () => {
+    const a = last(['t := 25 °C', 't = ?']);
+    const b = last([editada('t := 25°C'), 't = ?']);
+    expect(b.text).toBe(a.text);
+    expect(b.value).toBe(a.value);
+  });
+});
+
+describe('[A6-FIX2-05] A6-LEITOR: o produto que o motor lê, o leitor também lê', () => {
+  const casos: [string[], string, string][] = [
+    [['x := 2'], 'y := 3(x)', '6'],
+    [['x := 0'], 'y := 2 sin(x)', '0'],
+    [['a := 1', 'b := 2'], 'y := 2(a+b)', '6'],
+    [['a := 1', 'b := 2', 'c := 3', 'd := 4'], 'y := (a+b)(c+d)', '21'],
+  ];
+  for (const [defs, l, want] of casos) {
+    it(`[A6-FIX2-05] ${l} vale ${want} no motor e depois de passar pela tela`, () => {
+      expect(valor(defs, l), 'arquivo').toBe(want);
+      expect(valor(defs, editada(l)), `editada: ${editada(l)}`).toBe(want);
+    });
+  }
 });
