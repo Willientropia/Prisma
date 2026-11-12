@@ -31,7 +31,11 @@ const deep = (x: X, tag: string): X | undefined => (x.tag === tag ? x : x.childr
 
 // ---------- nomes e expressões ----------
 /** S.trafo -> S_trafo; Relação.invest.Lucro -> Relação_invest.Lucro (só o primeiro ponto vira índice, E7.1). */
-export const smName = (n: string) => n.replace('.', '_');
+export const smName = (n: string) => {
+  const m = n.replace('.', '_'), i = m.indexOf('_');
+  // índice com vírgula ou outro caractere fora do comum vai entre aspas (A6-3): batata.alo,oi -> batata_"alo,oi"
+  return i > 0 && !/^[\p{L}\p{N}_.%]*$/u.test(m.slice(i + 1)) ? `${m.slice(0, i + 1)}"${m.slice(i + 1)}"` : m;
+};
 /** Funções que vêm de plugins do SMath sem equivalente no Prisma (E7.1). */
 export const PLUGIN = /^excel_/;
 

@@ -113,7 +113,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | E8-05 | `s≔10·x` acima, `x≔2` abaixo, `s=` mais abaixo: 20 (simbólico resolvido na avaliação) | tests/golden/calculos.yaml | unit | ok |
 | E8-06 | `x≔2`, `s≔10·x`, `x≔3`, `s=`: 20 (valor guardado na definição) | tests/golden/calculos.yaml | unit | ok |
 | E8-07 | `s=` sem x definido: s = 10·x, sem erro, x sublinhado | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
-| E8-08 | `x=` com x já definido, digitar 5: o 5 vai para o marcador de conversão | tests/e2e/smath.spec.ts | e2e | ok |
+| E8-08 | `x=` com x já definido mostra x = 2 na hora e o cursor continua no campo; digitar 5 edita o nome (x5, sem resultado e sem erro, porque x5 não está definido); `→` leva ao marcador de conversão. Antes (até a v0.2.0): o 5 ia para o marcador. Trocado com autorização do usuário em 11/11 (ADENDO 06, 2.5, conferido no SMath) | tests/e2e/smath.spec.ts | e2e | ok |
 | E8-09 | `x:3` com x já definido redefine x ≔ 3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml | e2e, unit | ok |
 | E8-10 | `S.trafo:5kV*A`: S com índice trafo ≔ 5 kV·A; arquivo `S_trafo := 5 kV*A` | tests/e2e/smath.spec.ts, tests/golden/conversao.yaml | e2e, unit | ok |
 | E8-11 | `Z,0=sqrt(L/C)=` com L e C definidos: Z0 ≔ √(L/C) = 387,3 | tests/e2e/smath.spec.ts, tests/golden/calculos.yaml, tests/golden/conversao.yaml | e2e, unit | ok |
@@ -316,13 +316,18 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-3-35 | Motor simbólico: expressão com mais de 500 caracteres não vai ao simplify (sem prazo) e devolve null na hora | src/engine/symbolic.test.ts | unit | ok |
 | A6-3-40 | Folha: digitar `batata casa` cria uma região de texto "batata casa" (sem região de cálculo), com o cursor seguindo no texto | tests/e2e/folha.spec.ts | e2e | ok |
 | A6-3-41 | Folha: `a+b /2` continua região de cálculo e grava (a + b)/2 | tests/e2e/folha.spec.ts | e2e | ok |
-| A6-3-50 | 2.5 e correção do E8-08: `x=` com x definido mostra x = 2 na hora e o cursor continua no fim do lado esquerdo; digitar 5 edita o nome (x5); `→` leva ao marcador; Tab sai da região. Aguarda autorização do usuário para trocar o esperado do E8-08 | - | e2e | pendente |
-| A6-3-51 | 2.5 e decisão do usuário (conferida no SMath): `|` é o operador "ou" entre operandos (`a|a`) e não abre mais o valor absoluto, que fica em `abs(`. Aguarda a proposta de como o `|` é gravado no `.prsf` (formato do arquivo) e a autorização do usuário | - | browser | pendente |
+| A6-3-50 | 2.5: `x=` mostra o resultado na hora, o cursor fica no campo (fora do marcador) e Enter grava `x = ?` e sai | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-53 | 2.5: depois do `=`, `→` leva ao marcador e a unidade digitada converte (`L=`, `→`, `mm` grava `L = ? mm`) | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-54 | 2.5: depois do `=`, `Tab` sai da região e grava `x = ?` | tests/e2e/smath.spec.ts | e2e | ok |
+| A6-3-55 | 2.5: `x=5` com x definido grava `x5 = ?` (o 5 entra no nome, não vai para o marcador) | tests/golden/teclado.yaml | browser | ok |
+| A6-3-51 | Decisão do usuário (conferida no SMath: `1\|0=` mostra 1 ∨ 0 = 1): `\|` é o ou, gravado `a \|\| b` no `.prsf`, `∨` na tela, `or` no motor (1 ou 0), abaixo das comparações; não abre mais o valor absoluto (`abs(`). Ida e volta no conversor, `1\|0=` no teclado, motor e verificação em `src/engine/ou-indice.test.ts` | tests/golden/conversao.yaml | unit | ok |
 | A6-3-70 | Decisão do usuário (conferida no SMath): dentro do índice a vírgula fica como texto (`batata,alo,oi` = batata com índice alo,oi, sem `;`) | tests/golden/teclado.yaml | browser | ok |
 | A6-3-71 | Decisão do usuário: a vírgula depois de nome continua abrindo o índice, inclusive em `f(batata,x)`; o separador de argumentos é `;` (comportamento do A6-2 mantido) | tests/golden/teclado.yaml | browser | ok |
-| A6-3-72 | O índice com vírgula (`batata_alo,oi`) volta a ser lido do `.prsf`: hoje o campo grava `batata_alo,oi` e a leitura para em "Sobrou: ,oi"; precisa de mudança no formato do arquivo (aguarda proposta e autorização do usuário) | - | unit | pendente |
+| A6-3-72 | Decisão do usuário: índice com vírgula grava entre aspas, `batata_"alo,oi"`: ida e volta no conversor, `batata,alo,oi` e `batata,a1,2` (vírgula depois de dígito no índice) no teclado, `define e usa` no motor | tests/golden/conversao.yaml | unit | ok |
 | A6-3-52 | 2.5: assistente com `s` e `x` (lista, detalhe, assinatura): A6-4 | - | e2e | pendente |
-| A6-3-60 | 06-45: as demais linhas da tabela 2.5 (s=10*x, k:5/t:10*k, y:2,6%, c+d/2) já passam em E8-07, E3-xx, A6-2-07 e A6-3-02 | - | e2e | pendente |
+| A6-3-90 | Arquivos antigos abrem com os mesmos bytes: nomes com índice sem aspas (`S_trafo`, `Relação_invest.Lucro`, `V_mp`, `R1_a`, `x_1`) continuam iguais na ida e volta | tests/golden/conversao.yaml | unit | ok |
+| A6-3-91 | Importador do `.sm`: nome com vírgula no índice (`batata.alo,oi`) sai `batata_"alo,oi"`; `S.trafo` e `Relação.invest.Lucro` como antes | src/format/smath.test.ts | unit | ok |
+| A6-3-60 | 06-45: as linhas da tabela 2.5: `s=10*x`, `k:5`/`t:10*k` (E8-07, E3-xx), `x=` e `5` (E8-08, A6-3-50, A6-3-55), `→` (A6-3-53), `Tab` (A6-3-54), `c+d/2` (A6-3-02), `y:2,6%` (A6-2-07), `p|q` (A6-3-51); falta só o assistente com `s` e `x` (A6-3-52, A6-4) | - | e2e | pendente |
 | BUG-016 | `a<=b` digitado vira a ≤ b (e `a>=b` vira a ≥ b), sem o `=` disparar avaliação | tests/golden/teclado.yaml | browser | ok |
 | FINST-01 | Playwright falhou no `verify` (e no hook de push, que roda o `verify`): saída, `playwright.json`, pasta de resultados e RELATORIO.md ficam em `test-results/falhas/<data-hora>/`, e a rodada seguinte não apaga | tests/meta/falhas.test.ts | meta | ok |
 | FINST-02 | O `verify` avisa no início (e repete no fim) quando há menos de 5 GB livres no disco | tests/meta/falhas.test.ts | meta | ok |

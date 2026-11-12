@@ -101,3 +101,21 @@
 - {id: A6-2-24, linear: "v[2]", digitado: 'v_{\lbrack 2\rbrack}'}
 - {id: A6-2-24, linear: "batata[2]", digitado: 'batata_{\lbrack 2\rbrack}'}
 - {id: A6-2-24, linear: "M[2, 3]", digitado: 'M_{\lbrack 2;3\rbrack}'}
+
+# --- A6-3: "ou" (a || b, tela ∨) e índice entre aspas (batata_"alo,oi") ---
+- {id: A6-3-51, linear: "a || b", tela_contem: ['a\lor b']}
+- {id: A6-3-51, linear: "1 || 0 = ?", tela_contem: ['\lor']}
+- {id: A6-3-51, linear: "a < 1 || b > 2", tela_contem: ['a<1\lor b>2']}
+- {id: A6-3-51, linear: "(a || b) < c"}
+- {id: A6-3-51, linear: "a || b || c"}
+- {id: A6-3-51, linear: "x := a || b"}
+- {id: A6-3-51, linear: "a || b", digitado: 'a\lor b'}
+- {id: A6-3-72, linear: 'batata_"alo,oi"', tela_contem: ['batata_{\mathrm{alo,oi}}']}
+- {id: A6-3-72, linear: 'batata_"a1,2" := 5'}
+- {id: A6-3-72, linear: 'batata_"alo,oi" = ?'}
+- {id: A6-3-72, linear: 'x := 2*batata_"alo,oi" + 1'}
+- {id: A6-3-72, linear: 'batata_"alo,oi"', digitado: 'batata_{alo,oi}'}
+- {id: A6-3-90, linear: "S_trafo := 5 kV*A"}
+- {id: A6-3-90, linear: "Relação_invest.Lucro"}
+- {id: A6-3-90, linear: "V_mp := 400 V"}
+- {id: A6-3-90, linear: "R1_a + x_1"}

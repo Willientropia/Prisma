@@ -103,12 +103,14 @@ export function polyroots(coefIn: unknown): (number | Complex)[] {
 // Engenharia: log é base 10 e ln é natural. Guarda as originais antes de sobrescrever.
 const naturalLog = math.log;
 const log10 = math.log10;
+const originalOr = math.or;
 math.import(
   {
     ln: (x: V) => naturalLog(x as never),
     log: (x: V, base?: V) => (base === undefined ? log10(x as never) : naturalLog(x as never, base as never)),
     solve: (A: unknown, b: unknown) => math.lusolve(A as never, b as never),
     root, deriv, interp, polyroots,
+    or: (a: unknown, b: unknown) => { const r = originalOr(a as never, b as never); return typeof r === 'boolean' ? (r ? 1 : 0) : r; }, // o ou do SMath (a || b) dá 1 ou 0 (A6-3)
     ...calculusFunctions(math), // integral (Gauss-Kronrod) e diff (Ridders): ADENDO 06, 5.3
   },
   { override: true },

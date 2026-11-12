@@ -46,13 +46,51 @@ test('[E8-07] s= sem x definido mostra 10·x, sem erro, com x sublinhado', async
   await expect(r.locator('xpath=..')).toHaveAttribute('title', 'x ainda não foi definido');
 });
 
-test('[E8-08] x= com x definido: o que se digita depois vai para o marcador de conversão', async ({ page }) => {
+// ADENDO 06, 2.5 (conferido no SMath em 11/11, autorizado pelo usuário): o "=" não leva o cursor ao marcador.
+test('[E8-08] x= com x definido mostra x = 2 na hora; digitar 5 edita o nome (x5, sem resultado nem erro); → leva ao marcador', async ({ page }) => {
   await sheet(page, 'x=2');
-  await page.keyboard.type('x=5', { delay: 30 });
-  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
+  await page.keyboard.type('x=', { delay: 30 });
+  await expect.poll(() => resultTexts(page)).toEqual(['2']);
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('MATH-FIELD'); // o cursor continua no campo
   await expect.poll(() => body(page)).toContain('x := 2\nx = ?');
-  const unit = await page.evaluate(() => (document.activeElement as unknown as { value: string }).value);
-  expect(unit).toBe('5');
+  await page.keyboard.type('5', { delay: 30 });
+  await expect.poll(() => body(page)).toContain('x := 2\nx5 = ?');
+  await expect.poll(() => resultTexts(page)).toEqual([]); // x5 não está definido: resultado vazio
+  await expect(page.locator('.mline-error')).toHaveCount(0);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
+});
+
+test('[A6-3-50] x= mostra o resultado na hora com o cursor no campo e Enter grava x = ? e sai', async ({ page }) => {
+  await sheet(page, 'x=2');
+  await page.keyboard.type('x=', { delay: 30 });
+  await expect.poll(() => resultTexts(page)).toEqual(['2']);
+  expect(await page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(false);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => body(page)).toContain('x := 2\nx = ?');
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName === 'MATH-FIELD')).toBe(false);
+});
+
+test("[A6-3-53] depois do =, → leva ao marcador e a unidade digitada converte: L=, →, mm", async ({ page }) => {
+  await sheet(page, "L:25'm");
+  await page.keyboard.type('L=', { delay: 30 });
+  await expect.poll(() => resultTexts(page)).toEqual(['25m']);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('.unit-input'))).toBe(true);
+  await page.keyboard.type('mm', { delay: 40 });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => body(page)).toContain('L = ? mm');
+  await expect.poll(() => resultTexts(page)).toEqual(['25000mm']);
+});
+
+test('[A6-3-54] depois do =, Tab sai da região e grava x = ?', async ({ page }) => {
+  await sheet(page, 'x=2');
+  await page.keyboard.type('x=', { delay: 30 });
+  await expect.poll(() => resultTexts(page)).toEqual(['2']);
+  await page.keyboard.press('Tab');
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName === 'MATH-FIELD' || !!document.activeElement?.closest('.unit-input'))).toBe(false);
+  await expect.poll(() => body(page)).toContain('x := 2\nx = ?');
+  await expect.poll(() => resultTexts(page)).toEqual(['2']);
 });
 
 test('[E8-09] x:3 redefine x mesmo já definido', async ({ page }) => {

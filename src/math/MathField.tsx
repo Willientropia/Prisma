@@ -42,11 +42,12 @@ export type FieldProps = {
   onLeave?: () => void; // perdeu o foco (com ou sem edição)
   onToText?: (word: string) => void; // Espaço numa região de um nome só (A6-3): quem hospeda troca a região por texto
   onSymbolic?: (latex: string) => void; // Ctrl+. (A6-3, 2.4)
+  onArrowEnd?: () => boolean; // seta direita no fim do campo (A6-3, 2.5): true se levou o cursor ao marcador de conversão
   ariaLabel?: string;
 };
 
 export type Key = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean };
-const OPERATOR_KEYS = new Set(['+', '-', '<', '>', ';', ')', ':', '=', '*', '/', ',']);
+const OPERATOR_KEYS = new Set(['+', '-', '<', '>', ';', ')', ':', '=', '*', '/', ',', '|']);
 
 /** LaTeX do começo até o cursor. getValue(pos-1, pos) volta vazio logo depois de parênteses, então lemos o prefixo. */
 const beforeCaret = (mf: MathfieldElement) => (mf.position > 0 ? mf.getValue(0, mf.position, 'latex') : '');
@@ -189,7 +190,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case '*': insert('\\cdot '); return true;
     case '\\': insert('\\sqrt{#0}'); return true;
     case "'": insert('\\class{u}{\\mathrm{#0}}'); state.unit = true; return true; // força unidade (B4)
-    case '|': insert('\\left\\lvert #0\\right\\rvert'); return true;
+    case '|': insert('\\lor '); return true; // o ou (A6-3, decisão do usuário conferida no SMath); o valor absoluto é abs(
     case ',': {
       if (afterDigit()) { insert('{,}'); return true; } // vírgula decimal
       // depois de letra abre o índice do nome, como no SMath: s,tensao (ADENDO 05, E2.2)
@@ -246,7 +247,10 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
       if (!growSelection()) classify();
       return true;
     }
-    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown': state.script = null; state.unit = false; return false;
+    case 'Tab': if (e.shiftKey) return false; commit('blur'); mf.blur(); return true; // sai da região (tabela 2.1): grava e solta o foco
+    case 'ArrowRight': case 'ArrowLeft': case 'ArrowUp': case 'ArrowDown':
+      if (e.key === 'ArrowRight' && atEnd() && !state.script && p.current.onArrowEnd?.()) return true; // depois do "=", seta direita vai ao marcador (2.5)
+      state.script = null; state.unit = false; return false;
     case '/': {
       // (a+b)/ -> fração com a+b em cima, sem os parênteses (B4)
       // seleção/inserção do MathLive cai dentro dos parênteses; reescreve o valor e põe o cursor no denominador
@@ -280,10 +284,6 @@ export function holdKeys(): void {
   };
   window.addEventListener('keydown', listener, true);
   held = { keys, listener, timer: window.setTimeout(releaseKeys, HOLD_MS) };
-}
-/** Acrescenta teclas à fila guardada (se houver uma esperando o próximo campo). */
-function holdMore(keys: Key[]): void {
-  held?.keys.push(...keys);
 }
 /** Teclas digitadas depois do Espaço que trocou a região por texto: quem recebe o foco as aplica (A6-3). */
 export const takeHeldKeys = (): Key[] => releaseKeys();
@@ -372,10 +372,7 @@ export function MathField(props: FieldProps) {
       waiting = false;
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
-        state.lastCommit = null;
         if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
-        // depois do "=" que avalia, o resto do lote é do marcador de conversão, não deste campo (E8-08)
-        if (state.lastCommit === 'eval' || state.lastCommit === 'defeval') { holdMore(keys.slice(i + 1)); break; }
       }
       p.current.onReady?.();
     };

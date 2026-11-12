@@ -18,6 +18,7 @@ const REPLACE: [RegExp, string][] = [
   [/≤/g, '<='],
   [/≥/g, '>='],
   [/≠/g, '!='],
+  [/\|\|/g, ' or '], // o ou (A6-3): operador "or" do math.js (em math.ts devolve 1 ou 0, como o SMath)
   [/°C/g, 'degC'],
   [/°F/g, 'degF'],
   [/°/g, 'deg'],
@@ -30,7 +31,7 @@ const REPLACE: [RegExp, string][] = [
  * Nomes que o math.js não aceita, vindos do SMath: ponto no índice (Relação_invest.Lucro) e "%" no nome
  * (Z%_modulo) viram letras parecidas ("ǀ" e "ǂ") e voltam em fromMath. π sozinho é pi.
  */
-const ODD_NAME = /[\p{L}][\p{L}\p{N}%]*_[\p{L}\p{N}_.%]*|[\p{L}][\p{L}\p{N}]*%[\p{L}\p{N}%]*/gu;
+const ODD_NAME = /[\p{L}][\p{L}\p{N}%]*_(?:"[^"]*"|[\p{L}\p{N}_.%]*)|[\p{L}][\p{L}\p{N}]*%[\p{L}\p{N}%]*/gu;
 /**
  * F04: dentro da expressão, nome é sempre variável (como no SMath). O math.js, porém, resolve qualquer símbolo
  * indefinido que seja nome de unidade (L, m, b, S) como unidade. Por isso o nome em posição de variável que
@@ -86,7 +87,7 @@ export function markVars(s: string, isVar?: (name: string) => boolean): string {
         if (t[k] === '/') { k++; while (/^\s/.test(t[k] ?? '')) k++; }
         let after = k + 1;
         while (/^\s/.test(t[after] ?? '')) after++;
-        if (isName(k) && t[after] !== '(' && !isVar?.(t[k])) { out += t.slice(i + 1, k).join(''); i = unitChain(k); continue; } // número e espaço: unidade
+        if (isName(k) && t[k] !== 'or' && t[after] !== '(' && !isVar?.(t[k])) { out += t.slice(i + 1, k).join(''); i = unitChain(k); continue; } // número e espaço: unidade
       }
       i++;
       continue;
@@ -108,7 +109,7 @@ export function markVars(s: string, isVar?: (name: string) => boolean): string {
 }
 
 export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.replace(re, to), s.trim())
-  .replace(ODD_NAME, (n) => n.replace(/\./g, 'ǀ').replace(/%/g, 'ǂ'))
+  .replace(ODD_NAME, (n) => n.replace(/"/g, 'ǁ').replace(/,/g, 'ǅ').replace(/\./g, 'ǀ').replace(/%/g, 'ǂ'))
   .replace(/(?<![\p{L}\p{N}_])π(?![\p{L}\p{N}_])/gu, 'pi')
   .replace(/𝐢/gu, 'ⅈ').replace(/𝐞/gu, 'ℯ'); // símbolos próprios, que variável nenhuma esconde
 
@@ -116,7 +117,7 @@ export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.repla
 export const toMathVars = (s: string) => markVars(toMath(s));
 
 /** De volta do math.js para a sintaxe linear (resultado simbólico, E3.3): "10 * x" -> "10*x". */
-export const fromMath = (s: string) => s.replace(/ǃ/g, '').replace(/ⅈ/g, '𝐢').replace(/ℯ/g, '𝐞').replace(/ǀ/g, '.').replace(/ǂ/g, '%').replace(/\bpi\b/g, 'π').replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°').replace(/\bInfinity\b/g, '∞');
+export const fromMath = (s: string) => s.replace(/ǃ/g, '').replace(/ⅈ/g, '𝐢').replace(/ℯ/g, '𝐞').replace(/ǀ/g, '.').replace(/ǂ/g, '%').replace(/ǁ/g, '"').replace(/ǅ/g, ',').replace(/\bpi\b/g, 'π').replace(/\s*\*\s*/g, '*').replace(/\bohm\b/g, 'Ω').replace(/\bdeg\b/g, '°').replace(/\bInfinity\b/g, '∞');
 
 const GREEK: Record<string, string> = {
   alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', zeta: 'ζ', eta: 'η', theta: 'θ', iota: 'ι', kappa: 'κ',

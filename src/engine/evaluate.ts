@@ -263,12 +263,13 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
         }
         const v = P(c.src).compile().evaluate(scope);
         if (c.kind === 'check') {
-          if (typeof v !== 'boolean') return { kind: 'check', error: 'A verificação precisa ser uma condição, como x < 1 %' };
+          const cond = typeof v === 'number' && /\bor\b/.test(c.src) ? v !== 0 : v; // o ou (||) dá 1 ou 0 (A6-3)
+          if (typeof cond !== 'boolean') return { kind: 'check', error: 'A verificação precisa ser uma condição, como x < 1 %' };
           const r = usage(c.src, scope);
           const m = b.atencao ?? input.margem ?? DEFAULT_MARGIN;
           let shown: Shown | undefined;
           try { shown = lhsShown(c.src, c.limit, scope, bfmt); } catch { /* sem valor exibido; o estado já basta */ }
-          const status = !v ? 'fail' : r !== undefined && r >= 1 - m ? 'warn' : 'ok';
+          const status = !cond ? 'fail' : r !== undefined && r >= 1 - m ? 'warn' : 'ok';
           return { kind: 'check', status, limit: c.limit, ...shown };
         }
         return { kind: 'eval', ...show(v, c.target, bfmt), ...withRaw(v) };

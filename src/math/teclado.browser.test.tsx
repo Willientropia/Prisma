@@ -15,6 +15,7 @@ import golden from '../../tests/golden/teclado.yaml?raw';
 type Case = {
   id: string; descricao?: string; contexto: 'folha' | 'caderno'; teclas: string;
   inicial?: string; definidos?: string[]; // A6-1: linha já gravada (raw) e nomes já definidos; a gravação volta para a linha, como na folha
+  antes?: string[]; // A6-3 (2.5): nomes definidos ANTES desta linha, para o "=" avaliar em vez de definir
   raw_final?: string; raw_sem?: string[]; sem_resultado?: boolean; sair?: boolean; // linha gravada no fim; nenhum "= resultado" na tela; tirar o foco no fim
   linear?: string; latex_contem?: string[]; latex_nao_contem?: string[]; tela_contem?: string[]; tela_nao_contem?: string[];
   virou_texto?: string; nao_virou_texto?: boolean; // A6-3: Espaço numa região de um nome só pede para virar texto (a palavra), ou não pede
@@ -37,14 +38,14 @@ let host: HTMLDivElement | null = null;
 afterEach(() => { act(() => root?.unmount()); host?.remove(); root = null; host = null; });
 
 /** Como a folha: o que o campo grava volta como `raw`; linha de avaliação mostra um resultado de mentira. */
-function Harness(p: { inicial: string; definidos: string[]; contexto: Case['contexto']; log: (r: string) => void; text: (w: string) => void }) {
+function Harness(p: { inicial: string; definidos: string[]; antes: string[]; contexto: Case['contexto']; log: (r: string) => void; text: (w: string) => void }) {
   const [raw, setRaw] = useState(p.inicial);
   const result = / = \?/.test(raw) ? { kind: 'eval' as const, numText: '4', text: '4' } : undefined;
-  return <MathLine raw={raw} result={result} ctx={{ defined: new Set(p.definidos), isUnit: isKnownUnit }} theme={p.contexto === 'folha' ? 'dark' : 'paper'} size={20} focused
+  return <MathLine raw={raw} result={result} ctx={{ defined: new Set(p.definidos), isUnit: isKnownUnit, before: (n: string) => p.antes.includes(n) }} theme={p.contexto === 'folha' ? 'dark' : 'paper'} size={20} focused
     onWrite={(r) => { p.log(r); setRaw(r); }} onToText={p.text} />;
 }
 
-async function mountLine(contexto: Case['contexto'], inicial = '', definidos: string[] = []) {
+async function mountLine(contexto: Case['contexto'], inicial = '', definidos: string[] = [], antes: string[] = []) {
   const writes: string[] = [];
   const texts: string[] = [];
   const cur = { raw: inicial };
@@ -53,7 +54,7 @@ async function mountLine(contexto: Case['contexto'], inicial = '', definidos: st
   document.body.appendChild(host);
   root = createRoot(host);
   await act(async () => {
-    root!.render(<Harness inicial={inicial} definidos={definidos} contexto={contexto} log={(r) => { writes.push(r); cur.raw = r; }} text={(w) => texts.push(w)} />);
+    root!.render(<Harness inicial={inicial} definidos={definidos} antes={antes} contexto={contexto} log={(r) => { writes.push(r); cur.raw = r; }} text={(w) => texts.push(w)} />);
   });
   await expect.poll(() => document.activeElement?.tagName, { timeout: 3000 }).toBe('MATH-FIELD');
   const field = host.querySelector('math-field') as HTMLElement & { value: string };
@@ -64,7 +65,7 @@ async function mountLine(contexto: Case['contexto'], inicial = '', definidos: st
 describe('tests/golden/teclado.yaml', () => {
   for (const c of parseYaml(golden) as Case[]) {
     it(`[${c.id}] ${c.descricao ?? c.teclas}`, async () => {
-      const { writes, texts, cur, host, field, shown } = await mountLine(c.contexto, c.inicial, c.definidos);
+      const { writes, texts, cur, host, field, shown } = await mountLine(c.contexto, c.inicial, c.definidos, c.antes);
       if (c.inicial) { // edição de linha existente: uma tecla por vez, como a pessoa digita (em rajada o MathLive perde Backspace)
         for (const k of toUserEvent(c.teclas).match(/\{[^}]+\}|./g) ?? []) { await userEvent.keyboard(k); await new Promise((r) => setTimeout(r, 40)); }
       } else await userEvent.keyboard(toUserEvent(c.teclas));

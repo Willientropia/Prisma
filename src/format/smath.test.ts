@@ -127,3 +127,13 @@ describe('[F04-03] unidade solta importada do SMath', () => {
     expect(nodeToLinear(produto.node)).toBe("x*'m");
   });
 });
+
+// A6-3: nome do .sm com vírgula no índice sai no formato novo, entre aspas
+describe('[A6-3-91] índice com vírgula importado do SMath', () => {
+  const op = (v: string) => ({ type: 'operand', args: 0, v });
+  it('[A6-3-91] batata.alo,oi vira batata_"alo,oi"; S.trafo e Relação.invest.Lucro ficam como antes', () => {
+    expect(nodeToLinear(fromRpn([op('batata.alo,oi')]).node)).toBe('batata_"alo,oi"');
+    expect(nodeToLinear(fromRpn([op('S.trafo')]).node)).toBe('S_trafo');
+    expect(nodeToLinear(fromRpn([op('Relação.invest.Lucro')]).node)).toBe('Relação_invest.Lucro');
+  });
+});

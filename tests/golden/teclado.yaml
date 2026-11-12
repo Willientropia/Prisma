@@ -473,3 +473,46 @@
   teclas: "x:a+b{Space}{Space}/2{Enter}"
   latex_contem: ['\frac{a+b}{2}']
   latex_nao_contem: ['\frac{x']
+- id: A6-3-51
+  descricao: "decisão do usuário (conferida no SMath): 1|0= mostra 1 ∨ 0 e grava 1 || 0 = ?"
+  contexto: folha
+  teclas: "1|0="
+  linear: "1 || 0 = ?"
+  tela_contem: ["∨"]
+  latex_nao_contem: ['lvert']
+- id: A6-3-51
+  descricao: "| entre operandos é o ou: a|b grava a || b e não abre valor absoluto"
+  contexto: folha
+  teclas: "a|b{Enter}"
+  linear: "a || b"
+  latex_contem: ['\lor']
+  latex_nao_contem: ['lvert']
+- id: A6-3-51
+  descricao: "o ou fica abaixo das comparações: a<1|b>2"
+  contexto: folha
+  teclas: "a<1|b>2{Enter}"
+  linear: "a < 1 || b > 2"
+- id: A6-3-72
+  descricao: "índice com vírgula grava entre aspas: batata,alo,oi"
+  contexto: folha
+  teclas: "batata,alo,oi{Enter}"
+  linear: 'batata_"alo,oi"'
+  tela_contem: ["alo,oi"]
+- id: A6-3-72
+  descricao: "vírgula depois de dígito dentro do índice também é texto: batata,a1,2 dá o índice a1,2"
+  contexto: folha
+  teclas: "batata,a1,2{Enter}"
+  linear: 'batata_"a1,2"'
+  tela_contem: ["a1,2"]
+  latex_nao_contem: ['{,}']
+- id: A6-3-72
+  descricao: "índice só com dígito e vírgula decimal fora do índice continuam como antes: x,1:2,5"
+  contexto: folha
+  teclas: "x,1:2,5{Enter}"
+  linear: "x_1 := 2.5"
+- id: A6-3-55
+  descricao: "2.5: x= com x definido e depois 5: o 5 entra no nome (x5 = ?), sem ir para o marcador"
+  contexto: folha
+  antes: [x]
+  teclas: "x=5"
+  linear: "x5 = ?"
