@@ -39,7 +39,7 @@ Conflito entre adendos: vale o de número maior. MANUTENCAO-* valem sempre e nã
 ## Regras de código
 
 - `<button>`, `<input>`, `<select>` só em `src/components/`; componentes recebem props, não acessam o store.
-- Respeitar `scripts/check-camadas.ts`. Prettier e knip limpos. Arquivo com mais de 300 linhas só com justificativa no topo.
+- Respeitar `scripts/check-camadas.ts` quando existir (MANUTENCAO-01, M5). Prettier e knip limpos. Arquivo com mais de 300 linhas só com justificativa no topo.
 - Laço de parser com avanço garantido ou guarda de progresso; recursão com limite de profundidade.
 - Nada chamado a cada tecla demora mais que alguns milissegundos, para qualquer entrada.
 - `window.addEventListener` sempre com remoção garantida e prazo.
