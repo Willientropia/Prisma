@@ -134,3 +134,15 @@ describe('sistema de testes', () => {
     for (const parte of ['npx vitest related --run', '**Por versão, não por ticket:**', 'npm run verify:full', '**Push só com autorização do usuário.**']) expect(md).toContain(parte);
   });
 });
+
+describe('[06-32] nenhum atalho repetido no mesmo contexto (ADENDO 06, 4.8)', () => {
+  it('[06-32] os comandos registrados e os botões da guia Matemática não repetem atalho', async () => {
+    const dup = (xs: string[]) => xs.filter((x, i) => xs.indexOf(x) !== i);
+    const src = ['src/commands/app.ts', 'src/commands/library.ts'].map((f) => readFileSync(join(ROOT, f), 'utf8')).join('\n');
+    const cmds = [...src.matchAll(/shortcut: '([^']+)'/g)].map((m) => m[1]);
+    expect(cmds.length).toBeGreaterThan(5);
+    expect(dup(cmds)).toEqual([]);
+    const { MATH_RIBBON } = await import('../../src/shell/ribbonMath');
+    for (const [tab, groups] of Object.entries(MATH_RIBBON)) expect(dup(groups.flatMap((g) => g.buttons.map((b) => b.key)).filter(Boolean)), tab).toEqual([]);
+  });
+});

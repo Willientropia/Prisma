@@ -14,6 +14,12 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
     - "Todas as funções" fica para o A6-7.
     - Matrizes, Lógica e programação e Símbolos chegam vazias e são o A6-6.
     - No caderno sem edição, os botões não criam linha.
+- **A6-5 (2ª parte):**
+  - Em janela estreita, os grupos se recolhem da direita para a esquerda, cada um num botão com menu. A altura do ribbon não muda.
+  - Apertar e soltar `Alt` mostra as letras das guias: I Início, M Matemática, X Matrizes, L Lógica, S Símbolos, N Inserir, E Exibir, A Saída. A letra abre a guia, e `Esc` ou 8 s escondem.
+  - Teste contra atalho repetido.
+  - Clicar num botão enquanto a região nova ainda monta não perde a inserção.
+  - **Pendente:** letras sobre os botões depois da guia (só as guias têm letra).
 
 - **F-LAYOUT 1 a 3:**
   - BUG-022: arrastar várias regiões até a borda para o grupo inteiro, e elas não se empilham mais.

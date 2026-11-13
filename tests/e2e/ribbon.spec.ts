@@ -63,3 +63,28 @@ test('[A6-5-01] cada tipo de documento lembra a última guia usada (4.8)', async
   await tabs(page).filter({ hasText: 'Folha' }).first().click();
   await expect(guias(page).filter({ hasText: 'Matemática' })).toHaveAttribute('aria-selected', 'true');
 });
+
+test('[06-30] Alt e depois M abre a guia Matemática', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.keyboard.press('Alt');
+  await page.keyboard.press('m');
+  await expect(guias(page).filter({ hasText: 'Matemática' })).toHaveAttribute('aria-selected', 'true');
+});
+
+test('[06-31] janela com 1024 px: grupos recolhidos e todos os botões acessíveis', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 720 });
+  await start(page);
+  await dev(page).newDoc('folha');
+  await guias(page).filter({ hasText: 'Matemática' }).click();
+  const recolhidos = page.locator('button[aria-haspopup="menu"]');
+  expect(await recolhidos.count()).toBeGreaterThan(0);
+  const vistos = new Set(await page.locator('button[aria-label]').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent && e.getBoundingClientRect().right <= innerWidth).map((e) => e.getAttribute('aria-label')!)));
+  for (let i = 0; i < (await recolhidos.count()); i++) {
+    await recolhidos.nth(i).click();
+    for (const l of await page.getByRole('menu').locator('button[aria-label]').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')!))) vistos.add(l);
+    await page.mouse.click(5, 700); // clicar fora fecha o menu
+    await expect(page.getByRole('menu')).toHaveCount(0);
+  }
+  for (const b of ['Definir', 'Fração', 'Pi', 'sin( )', 'Todas as funções', 'Somatório', 'Integral', 'Por partes', 'a ≤ x ≤ b']) expect(vistos, b).toContain(b);
+});

@@ -30,10 +30,12 @@
 .ribbon { flex: none; height: 124px; overflow: hidden; background: var(--bg-ribbon); }
 .rtabs { display: flex; height: 32px; padding: 0 6px; background: var(--bg-ribbon); }
 .rt, .rtOn {
-  height: 32px; padding: 0 14px; border: none; border-bottom: 2px solid transparent;
+  position: relative; height: 32px; padding: 0 14px; border: none; border-bottom: 2px solid transparent;
   background: transparent; color: var(--text-3); font: 500 12px Inter, sans-serif;
 }
 .rt:hover { color: var(--text-strong); }
+/* letra da guia depois de Alt (ADENDO 06, 4.8) */
+.keytip { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); z-index: 5; min-width: 16px; padding: 0 3px; border: 1px solid var(--border-strong); border-radius: 3px; background: var(--bg-raised); color: var(--text-strong); font: 600 10px/14px 'JetBrains Mono', monospace; text-align: center; pointer-events: none; }
 .rtOn { border-bottom-color: var(--accent-light); background: var(--bg-ribbon); color: var(--text-strong); font-weight: 600; }
 .rbody { display: flex; height: 92px; overflow: hidden; background: var(--bg-ribbon); border-bottom: 1px solid var(--border); }
 .group { display: flex; flex-direction: column; padding: 4px 8px 0; border-right: 1px solid var(--border); }

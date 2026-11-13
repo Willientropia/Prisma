@@ -22,3 +22,11 @@
 .tipKey { font: 12px 'JetBrains Mono', monospace; color: var(--accent-light); white-space: nowrap; }
 .tipDesc { font: 12px/1.5 Inter, sans-serif; color: var(--text-2); }
 .tipOff { font: 11px Inter, sans-serif; color: var(--text-muted); }
+
+/* janela estreita (4.8): grupos recolhidos num botão com menu */
+.row { display: flex; flex: 1; min-width: 0; overflow: hidden; }
+.fold { width: 72px; min-width: 72px; justify-content: center; }
+.foldName { white-space: normal; line-height: 1.2; }
+.foldIcon { transform: rotate(90deg); color: var(--icon-ribbon); }
+.shade { position: fixed; inset: 0; z-index: 40; }
+.pop { position: fixed; z-index: 45; padding: 6px 8px; background: var(--bg-ribbon); border: 1px solid var(--border-strong); border-radius: 4px; box-shadow: var(--shadow-menu); }

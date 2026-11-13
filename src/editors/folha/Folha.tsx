@@ -120,9 +120,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [crossState, setCrossState] = useState<{ x: number; y: number } | null>(null);
   // ref junto do estado: a tecla digitada logo depois do Enter já encontra a cruz nova (ADENDO 05)
   const crossRef = useRef<{ x: number; y: number } | null>(null);
+  const syncCruz = (on: boolean) => { if (useWorkspace.getState().folhaCruz !== on) useWorkspace.getState().set({ folhaCruz: on }); };
   const setCross = (c: { x: number; y: number } | null) => {
     crossRef.current = c; setCrossState(c);
-    if (useWorkspace.getState().folhaCruz !== !!c) useWorkspace.getState().set({ folhaCruz: !!c }); // botões matemáticos do ribbon (ADENDO 06, 4.8)
+    syncCruz(!!c || creating.current); // botões matemáticos do ribbon (ADENDO 06, 4.8): também enquanto a região nova monta
   };
   const cross = crossState;
   const [focus, setFocus] = useState<Focus>(null);
@@ -132,7 +133,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [spaceFor, setSpaceFor] = useState<string | null>(null); // região que acabou de virar texto: o espaço do Espaço entra no texto
   const creating = useRef(false);
   const creatingTimer = useRef(0);
-  const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; };
+  const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; syncCruz(!!crossRef.current); };
   // botão matemático do ribbon com a cruz (sem edição): cria a região nela; o LaTeX entra na frente das teclas pendentes (ADENDO 06, 4.8)
   const onRibbonInsert = useRef<(latex: string) => void>(() => {});
   const [msg, setMsg] = useState('Clique na grade e digite para criar uma região.');
@@ -364,6 +365,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   };
 
   onRibbonInsert.current = (latex) => {
+    if (creating.current) { pendingKeys.current.push({ key: '', latex }); return; } // região nova ainda montando: entra depois das teclas já digitadas
     const at = crossRef.current;
     if (!at) return;
     pendingKeys.current = [{ key: '', latex }];

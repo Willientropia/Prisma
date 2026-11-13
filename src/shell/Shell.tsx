@@ -6,7 +6,7 @@ import { all, run } from '../commands/registry';
 import { useWorkspace, activeDoc } from '../store/workspace';
 import { FORMATS } from '../mock';
 import { displayPath, shortenPath } from '../format/display';
-import { RIBBONS, RIBBON_TABS, isMathTab } from './ribbons';
+import { RIBBONS, RIBBON_TABS, isMathTab, type RibbonTab } from './ribbons';
 import { MATH_RIBBON } from './ribbonMath';
 import { RibbonMath } from '../components/RibbonMath';
 import { focusedField, insertInFocused } from '../math/insert';
@@ -74,6 +74,42 @@ function useEditingMath() {
   return on;
 }
 
+/** Letras das guias depois de apertar e soltar Alt (ADENDO 06, 4.8). */
+const KEYTIPS: Partial<Record<RibbonTab, string>> = { inicio: 'I', matematica: 'M', matrizes: 'X', logica: 'L', simbolos: 'S', inserir: 'N', exibir: 'E', saida: 'A' };
+
+/** Alt sozinho (apertar e soltar) mostra as letras; a letra escolhe a guia; Esc ou 8 s escondem. */
+function useKeyTips(choose: (letter: string) => boolean) {
+  const [on, setOn] = useState(false);
+  const pick = useRef(choose);
+  pick.current = choose;
+  const shown = useRef(false);
+  shown.current = on;
+  useEffect(() => {
+    let alone = false;
+    let timer: number | undefined;
+    const hide = () => { clearTimeout(timer); setOn(false); };
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') { alone = !e.repeat; return; }
+      alone = false;
+      if (!shown.current) return;
+      if (e.key === 'Escape' || pick.current(e.key)) { e.preventDefault(); e.stopPropagation(); hide(); } // a letra não vai para o campo
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key !== 'Alt' || !alone) return;
+      alone = false;
+      e.preventDefault();
+      clearTimeout(timer);
+      if (shown.current) return hide();
+      setOn(true);
+      timer = window.setTimeout(hide, 8000); // prazo
+    };
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    return () => { clearTimeout(timer); window.removeEventListener('keydown', down, true); window.removeEventListener('keyup', up, true); };
+  }, []);
+  return on;
+}
+
 export function Ribbon() {
   const doc = useWorkspace(activeDoc);
   const wanted = useWorkspace((x) => x.ribbonTab);
@@ -81,10 +117,16 @@ export function Ribbon() {
   const cruz = useWorkspace((x) => x.folhaCruz);
   const set = useWorkspace((x) => x.set);
   const editing = useEditingMath();
+  const tabs = doc ? RIBBON_TABS[doc.type] : [];
+  const go = (id: RibbonTab) => doc && set({ ribbonTab: id, lastTabs: { ...lastTabs, [doc.type]: id } });
+  const tips = useKeyTips((letter) => {
+    const hit = tabs.find(([id]) => KEYTIPS[id] === letter.toUpperCase());
+    if (hit) go(hit[0]);
+    return !!hit;
+  });
   useWorkspace((x) => x.project); // botões que dependem do projeto mudam de estado
   if (!doc) return null;
   const cmds = all();
-  const tabs = RIBBON_TABS[doc.type];
   const tab = tabs.some(([id]) => id === wanted) ? wanted : 'inicio';
   // folha sem edição: a folha cria a região no cursor em cruz (Folha.tsx ouve prisma:inserir)
   const insert = (latex: string) => { if (!insertInFocused(latex)) window.dispatchEvent(new CustomEvent('prisma:inserir', { detail: latex })); };
@@ -94,11 +136,11 @@ export function Ribbon() {
         {tabs.map(([id, text]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? s.rtOn : s.rt}
             onMouseDown={(e) => e.preventDefault() /* trocar de guia não tira o foco da expressão */}
-            onClick={() => set({ ribbonTab: id, lastTabs: { ...lastTabs, [doc.type]: id } })}>{text}</button>
+            onClick={() => go(id)}>{text}{tips && KEYTIPS[id] && <span className={s.keytip} aria-hidden="true">{KEYTIPS[id]}</span>}</button>
         ))}
       </div>
       <div className={s.rbody}>
-        {isMathTab(tab) ? <RibbonMath groups={MATH_RIBBON[tab]} canInsert={editing || (doc.type === 'folha' && cruz)} onInsert={insert} /> : RIBBONS[doc.type][tab].map((g) => (
+        {isMathTab(tab) ? <RibbonMath key={tab} groups={MATH_RIBBON[tab]} canInsert={editing || (doc.type === 'folha' && cruz)} onInsert={insert} /> : RIBBONS[doc.type][tab].map((g) => (
           <div key={g.title} className={s.group}>
             <div className={s.groupBtns}>
               {g.buttons.map((b) => {
