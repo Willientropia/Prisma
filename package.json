@@ -14,6 +14,7 @@
     "test:visual": "playwright test --project=visual",
     "test:app": "tsx scripts/test-app.ts",
     "test": "npm run test:unit && npm run test:browser && npm run test:rust",
+    "test:commit": "tsc --noEmit && vitest run --project unit --mode commit",
     "lint": "eslint .",
     "check:matriz": "tsx scripts/check-matriz.ts",
     "verify:rapido": "tsx scripts/verify-rapido.ts",
@@ -69,7 +70,7 @@
     "webdriverio": "^9.32.0"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run test",
+    "pre-commit": "npm run test:commit",
     "pre-push": "npm run verify"
   }
 }

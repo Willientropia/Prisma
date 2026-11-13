@@ -2,14 +2,13 @@
 
 Lido em toda sessão, por qualquer modelo. Siga sempre.
 
-## Como trabalhar (economia de contexto)
+## Como trabalhar (protocolo enxuto, decisão do usuário em 12/11: agilidade primeiro)
 
-- Uma sessão = um ticket de `docs/TICKETS.md`. Leia só esse ticket e os arquivos que ele cita.
-- Não leia documentos inteiros. Abra só a seção que o ticket indica (use o índice abaixo).
-- Não varra o repositório. Para achar algo, use o subagente `explorador`.
-- Testes sempre pelo subagente `testador`. Não rode a suíte na sessão principal.
-- Tickets marcados [R]: passe o diff pelo `revisor` antes do commit.
-- Resposta final curta: o que mudou, arquivos, resultado do `testador`. Sem recapitular passos.
+- Uma sessão, uma pasta, vários tickets em sequência. Sem worktree nova por ticket e sem sessão orquestradora: cada worktree custa 3 a 4 GB de disco e disputa a porta 1420.
+- Tickets em `docs/TICKETS-FOLHA.md`. Leia só o ticket e os arquivos que ele cita; dos documentos, só a seção indicada (índice abaixo).
+- Não varra o repositório. Para achar algo, use Grep ou o subagente `explorador`.
+- Sonnet por padrão. Opus com plano só para desenho grande (ribbon, gráfico 2D, importação do `.sm`).
+- Resposta final curta: o que mudou, arquivos, testes rodados. Sem recapitular passos.
 
 ## Índice dos documentos (na raiz)
 
@@ -20,13 +19,12 @@ Conflito entre adendos: vale o de número maior. MANUTENCAO-* valem sempre e nã
 
 ## Fluxo de cada ticket
 
-1. Registrar o critério de aceite em `tests/MATRIZ.md` (com ID).
-2. Escrever primeiro o teste que falha. Bug ganha teste `BUG-<nº>`; travamento vai para `tests/regressao/` e, se for de parser, vira caso fixo no fuzz.
-3. Corrigir a causa raiz.
-4. `testador` com `npm run verify:rapido` por ticket; `npm run verify` no fim do lote; `npm run verify:full` antes de push (inclui o app real e os testes de desempenho C7-01 e C7-02). Resumo: verify:rapido por ticket; verify no fim do lote; verify:full antes de push.
-5. Só dizer que terminou com tudo verde, testes antigos incluídos.
-6. Anotar em `docs/` o que foi feito e o que ficou pendente (uma ou duas linhas).
-7. Commit local `T<nº>: <resumo>`. **Push só com autorização do usuário.**
+1. Bug: primeiro o teste `BUG-<nº>` que falha, depois a correção na causa raiz. Funcionalidade: teste junto com o código (o essencial, não um por linha de tabela).
+2. Durante o trabalho, rode direto na sessão só os testes ligados à mudança: `npx vitest related --run <arquivos>` e o spec do Playwright da área (`npx playwright test <arquivo>`). Sem subagente `testador` por ticket.
+3. Anote em `CHANGELOG.md` (seção "Em andamento") uma linha do que mudou e do que ficou pendente. `tests/MATRIZ.md` e `docs/adendo-*.md` só quando muda comportamento combinado nos documentos; o `check-matriz` é aviso, não bloqueia.
+4. Commit local `<ticket>: <resumo>`. O hook de pre-commit roda tipos e testes de unidade (segundos).
+5. **Por versão, não por ticket:** quando o usuário pedir release ou push, rode `npm run verify:full`, o `revisor` no diff da versão e, se ele quiser, o Fable. Os achados viram uma lista para resolver de uma vez.
+6. **Push só com autorização do usuário.**
 
 ## Proibido sem autorização explícita do usuário
 

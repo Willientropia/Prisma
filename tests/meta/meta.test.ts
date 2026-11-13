@@ -90,21 +90,23 @@ describe('sistema de testes', () => {
     expect(readFileSync(join(ROOT, 'scripts/verify.ts'), 'utf8')).toContain("writeFileSync(join(OUT, 'RELATORIO.md'), report)");
   });
 
-  it('[C9-08] o pre-commit roda npm run test e bloqueia commit com teste falhando', () => {
+  it('[C9-08] o pre-commit roda tipos e testes de unidade (protocolo enxuto, 12/11) e bloqueia commit com teste falhando', () => {
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-    expect(pkg['simple-git-hooks']).toEqual({ 'pre-commit': 'npm run test', 'pre-push': 'npm run verify' });
+    expect(pkg['simple-git-hooks']).toEqual({ 'pre-commit': 'npm run test:commit', 'pre-push': 'npm run verify' });
+    // robustez.test.ts abre processos com prazo de 6 s e fica no verify, não no commit
+    expect(pkg.scripts['test:commit']).toBe('tsc --noEmit && vitest run --project unit --mode commit');
     // dentro do próprio gancho o git define GIT_DIR e afins; sem limpar, os comandos git do teste herdam o repositório de fora
     const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
     // numa worktree ".git" é um arquivo: pergunta ao git onde o gancho está
     const hook = resolve(ROOT, spawnSync('git rev-parse --git-path hooks/pre-commit', { cwd: ROOT, shell: true, encoding: 'utf8', env }).stdout.trim());
-    expect(existsSync(hook) && readFileSync(hook, 'utf8')).toContain('npm run test');
+    expect(existsSync(hook) && readFileSync(hook, 'utf8')).toContain('npm run test:commit');
     // mesmo gancho num repositório temporário cujo "npm run test" falha: o commit não acontece
     const dir = tmp('hook');
     try {
       const git = (args: string) => spawnSync(`git -c user.name=t -c user.email=t@t -c core.hooksPath=.git/hooks ${args}`, { cwd: dir, shell: true, encoding: 'utf8', env });
       git('init -q');
       copyFileSync(hook, join(dir, '.git/hooks/pre-commit'));
-      writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { test: 'node -e "process.exit(1)"' } }));
+      writeFileSync(join(dir, 'package.json'), JSON.stringify({ scripts: { 'test:commit': 'node -e "process.exit(1)"' } }));
       git('add package.json');
       expect(git('commit -q -m teste').status).not.toBe(0);
       expect(git('rev-parse --verify HEAD').status).not.toBe(0); // nenhum commit criado
@@ -127,7 +129,8 @@ describe('sistema de testes', () => {
     expect(spec).toContain('[C7-02]');
   });
 
-  it('[F00-03] o CLAUDE.md manda usar verify:rapido por ticket, verify no fim do lote e verify:full antes de push', () => {
-    expect(readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8')).toContain('verify:rapido por ticket; verify no fim do lote; verify:full antes de push');
+  it('[F00-03] o CLAUDE.md manda rodar os testes da mudança por ticket e o verify:full por versão (protocolo enxuto, 12/11)', () => {
+    const md = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8');
+    for (const parte of ['npx vitest related --run', '**Por versão, não por ticket:**', 'npm run verify:full', '**Push só com autorização do usuário.**']) expect(md).toContain(parte);
   });
 });

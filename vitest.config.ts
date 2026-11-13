@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   test: {
     coverage: {
@@ -21,7 +21,8 @@ export default defineConfig({
           name: 'unit',
           environment: 'node',
           include: ['src/**/*.test.ts', 'tests/meta/**/*.test.ts'],
-          exclude: ['src/**/*.browser.test.{ts,tsx}'],
+          // no pre-commit (--mode commit) fica de fora o robustez.test.ts, que abre processos com prazo; ele roda no verify
+          exclude: ['src/**/*.browser.test.{ts,tsx}', ...(mode === 'commit' ? ['src/engine/robustez.test.ts'] : [])],
         },
       },
       {
@@ -40,4 +41,4 @@ export default defineConfig({
       },
     ],
   },
-});
+}));

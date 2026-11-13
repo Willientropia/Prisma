@@ -2,6 +2,10 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
+## Em andamento
+
+- **Protocolo enxuto (12/11):** uma pasta só, testes ligados à mudança durante o trabalho, `verify:full` e `revisor` por versão. O pre-commit roda só tipos e testes de unidade (sem `robustez.test.ts`, que abre processos com prazo e fica no `verify`), e o `check-matriz` vira aviso.
+
 ## v0.3.0 — 2026-11-12
 
 Lote F-A6 da folha livre (ADENDO 06, docs/TICKETS-FOLHA.md). verify:full aprovado: 669 testes, nenhuma falha.

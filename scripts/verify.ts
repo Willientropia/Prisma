@@ -80,8 +80,8 @@ const t0 = Date.now();
 const matriz = checkMatriz(ROOT);
 console.log(`\n=== Matriz: ${matriz.summary}`);
 for (const e of matriz.errors) console.error(`ERRO: ${e}`);
-steps.push({ name: 'Matriz de rastreio (check-matriz)', ok: !matriz.errors.length, ms: Date.now() - t0, detail: matriz.errors.length ? `${matriz.errors.length} erros` : undefined });
-problems.push(...matriz.errors);
+// protocolo enxuto (12/11): a matriz é aviso, não bloqueia
+steps.push({ name: 'Matriz de rastreio (check-matriz, aviso)', ok: true, ms: Date.now() - t0, detail: matriz.errors.length ? `${matriz.errors.length} avisos` : undefined });
 
 // cobertura somada (Vitest + Playwright), mínimos do C7.5 e valor guardado com folga de 0,5 ponto
 const t1 = Date.now();

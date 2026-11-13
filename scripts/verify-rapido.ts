@@ -25,8 +25,7 @@ results.push(['Tipos', run('Tipos (tsc --noEmit)', 'npx tsc --noEmit')]);
 console.log('\n=== Matriz de rastreio');
 const matriz = checkMatriz(ROOT);
 console.log(matriz.summary);
-for (const e of matriz.errors) console.error(`ERRO: ${e}`);
-results.push(['Matriz', matriz.errors.length === 0]);
+for (const e of matriz.errors) console.warn(`AVISO: ${e}`); // protocolo enxuto (12/11): não bloqueia
 
 const changed = changedSources();
 results.push(['Vitest dos arquivos mudados', changed.length === 0 ? (console.log('\n=== Vitest: nenhum arquivo de código mudado'), true) : run('Vitest dos arquivos mudados', `npx vitest related --run ${changed.map((f) => `"${f}"`).join(' ')}`)]);
