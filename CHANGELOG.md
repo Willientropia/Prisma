@@ -2,74 +2,43 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
-## Em andamento
+## v0.4.0 — 2026-11-13
 
-- **Revisão da versão (revisor):**
-  - O catálogo usa a linha real da região como destino. Com o cursor no campo de unidade do resultado, `Ctrl+W` não abre o catálogo, porque antes a unidade ia para outra linha.
-  - BUG-021 vale para cada elemento da matriz: unidade ou complexo dão erro, e texto em `%` dá erro em português.
-  - Depois de um `Alt` por engano, qualquer tecla fecha as letras.
-  - Ao fechar um documento, a última guia do próximo é aplicada, e a cruz da folha é zerada.
-  - O Ribbon e o catálogo saíram do `Shell.tsx` (300 linhas).
-  - Teste BUG-023 do `Ctrl+W` apertado enquanto a região monta.
-  - **Pendente (não bloqueia):**
-    - O catálogo na folha insere no fim da linha, e não no cursor.
-    - Depois de Potência ou Índice pelo ribbon, o Espaço não sai do expoente.
-    - O catálogo sem destino perde a escolha em silêncio.
-    - Testar à mão o clique dentro de regiões com escala.
-    - `1/3 ppm` e `1/3 mm` aparecem como 1/(3 ppm), mas o motor calcula (1/3)·ppm; o defeito já existia antes.
+Ribbon matemático, catálogos e layout da folha (ADENDO 06, docs/TICKETS-FOLHA.md). verify:full aprovado: 699 testes, nenhuma falha.
 
-- **A6-7:**
-  - Catálogo de funções (`Ctrl+E` e o botão "Todas as funções") e de unidades (`Ctrl+W` com expressão em edição; fora dela, `Ctrl+W` continua fechando o documento).
-  - O diálogo tem 720 × 480 px, com as categorias (Todas, Recentes, por tipo, por biblioteca e por grandeza), a lista com busca e o detalhe com a fórmula. Enter ou duplo clique insere com quadradinhos (`ΔV(□; □; □)`).
-  - Na folha, a escolha reabre a linha que estava em edição ou cria a região na cruz.
-  - **Correção:** uma tecla guardada enquanto a região nova monta não dispara mais o atalho global (antes, `Ctrl+W` nesse intervalo fechava o documento).
-  - **Pendente:**
-    - As descrições das funções nativas foram escritas aqui; o ADENDO 06 não as traz.
-    - A categoria "Texto" fica de fora, porque não há função de texto.
-    - "Recentes" vale só para a sessão.
-
-- **A6-6:**
-  - As guias Matrizes, Lógica e programação e Símbolos seguem a referência.
-  - `Ctrl+M` insere uma matriz 2 × 2, e `Ctrl+1`, a transposta.
-  - Um teste confere que tudo o que os botões habilitados inserem é lido pela folha.
-  - **Pendente:**
-    - O diálogo de linhas e colunas da Matriz (hoje ela é 2 × 2).
-    - Desabilitados porque o formato ainda não lê:
-      - **Matrizes:** Menor e Cofator.
-      - **Lógica e programação:** ≈, ≉, ∧, ¬, try, Bloco, continue e break.
-      - **Símbolos:** ∂, ∇, ′, ″, ∅, ∈ e ∠.
-    - Produto vetorial com `cross(` em vez de `Ctrl+8`.
-
-- **A6-5 (1ª parte):**
-  - As 8 guias do caderno e da folha, na ordem de 4.1. A biblioteca ganha Símbolos.
-  - A guia Matemática segue a referência, com os quatro tipos de botão, os ícones de estrutura e a dica depois de 400 ms.
-  - Os botões inserem no cursor (com seleção, envolvem a seleção) ou criam a região no cursor em cruz da folha. Sem lugar, ficam a 40 % com a dica "Clique numa região de cálculo".
+- **A6-5** O caderno e a folha têm 8 guias: Início, Matemática, Matrizes, Lógica e programação, Símbolos, Inserir, Exibir e Saída.
+  - A guia Matemática segue a referência, com botões grandes, pequenos, em grade e de texto.
+  - Os botões inserem no cursor (com seleção, envolvem a seleção) ou criam a região no cursor em cruz da folha.
+  - A dica aparece depois de 400 ms, com o atalho.
+  - Em janela estreita, os grupos se recolhem em botões com menu.
+  - Apertar e soltar `Alt` mostra as letras das guias.
   - Cada tipo de documento lembra a última guia.
-  - **Pendente:**
-    - Fatorial, Mais ou menos, Por partes e os intervalos ficam desabilitados ("Ainda não disponível"), porque o formato ainda não lê `!`, `±`, casos e intervalos.
-    - "Todas as funções" fica para o A6-7.
-    - Matrizes, Lógica e programação e Símbolos chegam vazias e são o A6-6.
-    - No caderno sem edição, os botões não criam linha.
-- **A6-5 (2ª parte):**
-  - Em janela estreita, os grupos se recolhem da direita para a esquerda, cada um num botão com menu. A altura do ribbon não muda.
-  - Apertar e soltar `Alt` mostra as letras das guias: I Início, M Matemática, X Matrizes, L Lógica, S Símbolos, N Inserir, E Exibir, A Saída. A letra abre a guia, e `Esc` ou 8 s escondem.
-  - Teste contra atalho repetido.
-  - Clicar num botão enquanto a região nova ainda monta não perde a inserção.
-  - **Pendente:** letras sobre os botões depois da guia (só as guias têm letra).
+- **A6-6** Guias Matrizes, Lógica e programação e Símbolos (letras gregas). `Ctrl+M` insere uma matriz 2 × 2, e `Ctrl+1`, a transposta.
+- **A6-7** Catálogo de funções (`Ctrl+E`) e de unidades (`Ctrl+W` com expressão em edição), com categorias, busca e detalhe. Enter insere com quadradinhos, como `ΔV(□; □; □)`.
+- **F-LAYOUT**
+  - Arrastar várias regiões até a borda para o grupo inteiro, sem empilhar (BUG-022).
+  - Enter com a cruz desce uma linha.
+  - Alinhar regiões selecionadas, com `Ctrl+Shift+←` e `Ctrl+Shift+↑` ou pelo menu.
+  - O `.sm` importado grava `pagina.escala: 0.55` e desenha do tamanho do SMath (no `08do10`, as sobreposições caem de 34 para 13).
+- **A6-ESCALA** `‰` e `ppm` valem em expressão, como o `%`. Matriz em `%`, `‰` ou `ppm` converte elemento a elemento, como no SMath; complexo com parte imaginária dá erro em português (BUG-021).
+- **A6-TECLADO2** `V.o^2` é V_o ao quadrado e `f.a(x)` é a função f_a. Depois de apagar o índice, `+` não sai mais da fração.
+- **Correções** Uma tecla apertada enquanto a região nova monta não dispara mais atalho global (antes, `Ctrl+W` fechava o documento; BUG-023). A revisão da versão corrigiu o destino do catálogo, o `Alt` por engano e a última guia ao fechar um documento.
+- **Protocolo de desenvolvimento** Uma pasta só, testes ligados à mudança durante o trabalho, e `verify:full` e revisor por versão. O pre-commit roda tipos e testes de unidade.
 
-- **F-LAYOUT 1 a 3:**
-  - BUG-022: arrastar várias regiões até a borda para o grupo inteiro, e elas não se empilham mais.
-  - Enter com a cruz na folha desce uma linha da grade.
-  - Alinhar as regiões selecionadas, pelo menu do botão direito ou pelo atalho:
-    - na vertical (mesmo x), com Ctrl+Shift+←;
-    - na horizontal (mesmo topo), com Ctrl+Shift+↑.
-
-  Os textos dos menus e os atalhos foram escolhidos aqui, porque o ADENDO 06 não os define. O botão no ribbon fica para o A6-5.
-- **F-LAYOUT 4 (formato novo, autorizado):** o .sm importado grava `pagina: {…, escala: 0.55}`, e a folha reduz só o conteúdo das regiões, para desenhar do tamanho do SMath. As sobreposições no `08do10` caem de 34 para 13 (o SMath tem 5). "Separar regiões" ficou de fora. Detalhes em `docs/adendo-06.md`.
-
-- **Protocolo enxuto (12/11):** uma pasta só, testes ligados à mudança durante o trabalho, `verify:full` e `revisor` por versão. O pre-commit roda só tipos e testes de unidade (sem `robustez.test.ts`, que abre processos com prazo e fica no `verify`), e o `check-matriz` vira aviso.
-- **A6-TECLADO2:** `V.o^2` é V_o ao quadrado e `f.a(x)` é a função f_a: `^` e `(` saem do índice (achado 7 do Fable). Operador e Espaço só saem do índice se o cursor está mesmo nele: `x/a.b`, apagar o `b` e digitar `+c` dá x/(a + c), não x/a + c (achado 9). O achado 8 não se reproduz: dentro da unidade do apóstrofo a lista só tem unidades, e as 70 têm a forma interna. Não testado à parte: `state.struct` velho com `)`.
-- **A6-ESCALA:** `‰` e `ppm` valem em expressão, iguais ao `%`: `5‰ = ?` dá 0,005, `3 ppm = ?` dá 3·10⁻⁶, `x := 2‰` grava `2 ‰`. **BUG-021 (achado 12, como o SMath, decisão do usuário):** matriz em `%`, `‰` ou `ppm` converte elemento a elemento (`DIi_h = ? %` dá [100; 80; …], igual ao SMath no `Prova_de_Qualidade_2.sm`); complexo sem parte imaginária vira número; com parte imaginária dá "Não é possível converter número complexo em %".
+Pendente:
+- **Itens que o formato ainda não lê:**
+  - Matemática: Fatorial, ±, Por partes e intervalos.
+  - Matrizes: Menor e Cofator.
+  - Lógica e programação: ≈, ≉, ∧, ¬, try, Bloco, continue e break.
+  - Símbolos: ∂, ∇, ′, ″, ∅, ∈ e ∠.
+- **Ribbon:** o diálogo de linhas e colunas da Matriz, as letras do `Alt` sobre os botões e os botões no caderno sem edição.
+- **Catálogo e inserção pelo ribbon:**
+  - Na folha, o catálogo insere no fim da linha, e não no cursor.
+  - Depois de Potência ou Índice pelo ribbon, o Espaço não sai do expoente.
+- **Desenho de `1/3 ppm`:** aparece como 1/(3 ppm), mas o motor calcula (1/3)·ppm.
+- **Layout:** "Separar regiões" (F-LAYOUT 4b).
+- **Fora deste lote:** A6-9 (gráfico 2D) e o Lote F2.
+- **Aprovação dos textos de interface novos:** "Ainda não disponível", "Nada encontrado", os rótulos de alinhar e as descrições das funções nativas.
 
 ## v0.3.0 — 2026-11-12
 
