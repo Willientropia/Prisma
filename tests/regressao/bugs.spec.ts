@@ -102,6 +102,29 @@ test('[BUG-012] arrastar várias regiões selecionadas move todas e não corromp
   await expect.poll(() => dev(page).text()).toBe(`${head}${moved('a', 80, 'a := 1')}\n${moved('b', 140, 'b := 2')}\n${moved('c', 200, 'c := 3')}`);
 });
 
+test('[BUG-022] arrastar várias regiões até a borda para o grupo quando a mais à esquerda e a mais alta chegam nela, sem empilhar (F-LAYOUT)', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const head = '---\ntipo: folha\ntitulo: Borda\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n';
+  const file = `${DOCS}/borda.prsf`;
+  await dev(page).write(file, `${head}${f}calc {#a x=60 y=60}\na := 1\n${f}\n\n${f}calc {#b x=200 y=120}\nb := 2\n${f}\n`);
+  await dev(page).open(file);
+  const sheet = (await page.getByLabel('Folha').boundingBox())!;
+  await page.mouse.move(sheet.x + 10, sheet.y + 20); // laço em volta das duas
+  await page.mouse.down();
+  await page.mouse.move(sheet.x + 500, sheet.y + 300, { steps: 5 });
+  await page.mouse.up();
+  const box = (await page.locator('[data-region="a"]').boundingBox())!;
+  await page.mouse.move(box.x + 1, box.y + 1);
+  await page.mouse.down();
+  await page.mouse.move(box.x - 99, box.y - 99, { steps: 5 });
+  await page.mouse.move(box.x - 199, box.y - 199, { steps: 5 }); // 200 para a esquerda e para cima: passa da borda
+  await page.mouse.up();
+  // o grupo anda só 60 (até a de cima e a da esquerda tocarem a borda); a distância entre as duas continua 140 x 60
+  await expect.poll(() => dev(page).text()).toContain(`${f}calc {#a x=0 y=0}`);
+  expect(await dev(page).text()).toContain(`${f}calc {#b x=140 y=60}`);
+});
+
 // F03 (AUDITORIA B5/B6): documento somente leitura (versao_formato maior que o suportado) recusa a edição,
 // então o campo novo nunca monta; antes, o teclado ficava preso para sempre.
 const READONLY = `${CALC}/futuro`;

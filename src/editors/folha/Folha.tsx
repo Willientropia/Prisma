@@ -266,6 +266,13 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     edit(doc.id, start, start + cur.length, raw);
   };
 
+  /** Deslocamento do grupo: para quando a região mais à esquerda ou a mais alta chega na borda, sem empilhar (BUG-022). */
+  const groupDelta = (ids: string[], dx: number, dy: number) => {
+    const rs = fresh().filter((x) => ids.includes(x.id));
+    if (!rs.length) return { dx, dy };
+    return { dx: Math.max(dx, -Math.min(...rs.map((r) => num(r.seg, 'x')))), dy: Math.max(dy, -Math.min(...rs.map((r) => num(r.seg, 'y')))) };
+  };
+
   const moveRegions = (ids: string[], dx: number, dy: number) => {
     // de trás para a frente: a linha de abertura muda de tamanho (x=60 vira x=100) e deslocaria as posições seguintes
     for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) {
@@ -322,12 +329,12 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     setSelected(new Set(ids));
     setCross(null);
     const p0 = { x: e.clientX, y: e.clientY };
-    const move = (ev: globalThis.PointerEvent) => setDrag({ ids, dx: snap(ev.clientX - p0.x), dy: snap(ev.clientY - p0.y) });
+    const move = (ev: globalThis.PointerEvent) => setDrag({ ids, ...groupDelta(ids, snap(ev.clientX - p0.x), snap(ev.clientY - p0.y)) });
     const up = (ev: globalThis.PointerEvent) => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       setDrag(null);
-      const dx = snap(ev.clientX - p0.x), dy = snap(ev.clientY - p0.y);
+      const { dx, dy } = groupDelta(ids, snap(ev.clientX - p0.x), snap(ev.clientY - p0.y));
       if (dx || dy) moveRegions(ids, dx, dy);
       sheet.current?.focus();
     };
