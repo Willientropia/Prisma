@@ -131,9 +131,9 @@ class LinearParser {
       a = { t: 'bin', op: '/', a: neg ? { t: 'neg', a } : a, b: this.atom() };
       r2 = true;
     }
-    // % e ° colados no número são unidade (5% é 5 %, 25°C é 25 °C), não o produto 5*%
+    // %, ‰ e ° colados no número são unidade (5% é 5 %, 5‰ é 5 ‰, 25°C é 25 °C), não o produto 5*%
     const t0 = tk(0);
-    if (!r2 && last === 'num' && t0?.k === 'id' && (t0.v === '%' || t0.v.startsWith('°'))) {
+    if (!r2 && last === 'num' && t0?.k === 'id' && (t0.v === '%' || t0.v === '‰' || t0.v.startsWith('°'))) {
       a = { t: 'qty', n: a, u: this.unit() };
       last = 'other';
     }

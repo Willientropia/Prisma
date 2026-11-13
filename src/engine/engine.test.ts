@@ -281,6 +281,15 @@ describe('[BUG-019] ‰ e ppm pedidos como o %', () => {
   });
 });
 
+describe('[A6-ESCALA] ‰ e ppm valem em expressão, iguais ao %', () => {
+  it('[A6-ESCALA-01] 5‰ = ? dá 0,005, 3 ppm = ? dá 3e-6, e 5% continua 0,05', () => {
+    expect(last(['5% = ?']).value).toBe(0.05);
+    expect(last(['5‰ = ?']).value).toBeCloseTo(0.005, 15);
+    expect(last(['3 ppm = ?']).value).toBeCloseTo(3e-6, 20);
+    expect(last(['x := 2‰', 'y := x*1000', 'y = ?']).value).toBeCloseTo(2, 12);
+  });
+});
+
 describe('[BUG-020] número colado em nome', () => {
   it('[BUG-020] I_o:=5A calcula como 5*A (A é a variável, não a unidade)', () => {
     const r = last(['A := 2', 'I_o:=5A', 'I_o = ?']);

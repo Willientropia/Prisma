@@ -69,7 +69,7 @@ export function markVars(s: string, isVar?: (name: string) => boolean): string {
   /** Unidade composta a partir do nome em i, sem marca: mm^2, ohm*mm^2/m. Devolve o índice seguinte. */
   const unitChain = (i: number) => {
     for (;;) {
-      out += t[i];
+      out += t[i] === 'ppm' ? '*1e-6' : t[i]; // o math.js não tem ppm: 3 ppm vale 3·10^-6, como o % (A6-ESCALA)
       i = exponent(i + 1);
       if ((t[i] === '*' || t[i] === '/') && isName(i + 1) && isUnitName(t[i + 1]) && !isVar?.(t[i + 1])) { out += t[i]; i++; continue; } // só continua em unidade; "2 m*L" com L definida: L é variável
       return i;
@@ -77,7 +77,7 @@ export function markVars(s: string, isVar?: (name: string) => boolean): string {
   };
   for (let i = 0; i < t.length; ) {
     const tk = t[i];
-    if (tk === "'" && isName(i + 1)) { out += t[i + 1]; i = exponent(i + 2); continue; } // unidade explícita (um só termo)
+    if (tk === "'" && isName(i + 1)) { out += t[i + 1] === 'ppm' ? '1e-6' : t[i + 1]; i = exponent(i + 2); continue; } // unidade explícita (um só termo); ppm vale 10^-6 (A6-ESCALA)
     if (isNum(i)) {
       out += tk;
       let j = i + 1;
@@ -111,6 +111,7 @@ export function markVars(s: string, isVar?: (name: string) => boolean): string {
 export const toMath = (s: string) => REPLACE.reduce((acc, [re, to]) => acc.replace(re, to), s.trim())
   .replace(ODD_NAME, (n) => n.replace(/"/g, 'ǁ').replace(/,/g, 'ǅ').replace(/\./g, 'ǀ').replace(/%/g, 'ǂ'))
   .replace(/(?<![\p{L}\p{N}_])π(?![\p{L}\p{N}_])/gu, 'pi')
+  .replace(/\s*\*?\s*‰/g, '*1e-3') // 5‰ e 5 ‰ valem 0,005, como o % do math.js (A6-ESCALA)
   .replace(/𝐢/gu, 'ⅈ').replace(/𝐞/gu, 'ℯ'); // símbolos próprios, que variável nenhuma esconde
 
 /** Texto linear -> math.js já com as variáveis marcadas (F04): o que o motor avalia. classify() devolve o texto sem marca. */
