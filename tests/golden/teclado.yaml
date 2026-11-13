@@ -640,3 +640,14 @@
   definidos: [x, a, c]
   teclas: "x/a.b{Backspace}{Backspace}+c{Enter}"
   linear: "x/(a + c)"
+- id: A6-6-03
+  descricao: "Ctrl+1 depois do nome põe a transposta: M{Ctrl+1} é M^T"
+  contexto: folha
+  definidos: [M]
+  teclas: "A:M{Ctrl+1}{Enter}"
+  linear: "A := M^T"
+- id: A6-6-04
+  descricao: "Ctrl+M insere uma matriz 2 x 2 com o cursor no primeiro elemento"
+  contexto: folha
+  teclas: "B:{Ctrl+M}1"
+  latex_contem: ['\begin{bmatrix}1 &']

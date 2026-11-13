@@ -122,7 +122,8 @@ function acceptAssist(mf: MathfieldElement, state: FieldState, p: { current: Fie
 
 // 2.2: STRUCTURE (funções que viram estrutura visual) mora em assistente.ts, que também insere por ela.
 /** Ctrl+tecla que insere um símbolo (tabela 2.1). */
-const CTRL_SYMBOL: Record<string, string> = { '3': '\\ne ', '9': '\\le ', '0': '\\ge ', '=': '=', '\\': '\\sqrt[#0]{#?}' };
+// Ctrl+1 transposta e Ctrl+M matriz 2 x 2 (A6-6)
+const CTRL_SYMBOL: Record<string, string> = { '3': '\\ne ', '9': '\\le ', '0': '\\ge ', '=': '=', '\\': '\\sqrt[#0]{#?}', '1': '^{T}', m: '\\begin{bmatrix}#0&#?\\\\#?&#?\\end{bmatrix}' };
 
 const GREEK_CMD =/^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
 

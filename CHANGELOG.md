@@ -4,6 +4,18 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **A6-6:**
+  - As guias Matrizes, Lógica e programação e Símbolos seguem a referência.
+  - `Ctrl+M` insere uma matriz 2 × 2, e `Ctrl+1`, a transposta.
+  - Um teste confere que tudo o que os botões habilitados inserem é lido pela folha.
+  - **Pendente:**
+    - O diálogo de linhas e colunas da Matriz (hoje ela é 2 × 2).
+    - Desabilitados porque o formato ainda não lê:
+      - **Matrizes:** Menor e Cofator.
+      - **Lógica e programação:** ≈, ≉, ∧, ¬, try, Bloco, continue e break.
+      - **Símbolos:** ∂, ∇, ′, ″, ∅, ∈ e ∠.
+    - Produto vetorial com `cross(` em vez de `Ctrl+8`.
+
 - **A6-5 (1ª parte):**
   - As 8 guias do caderno e da folha, na ordem de 4.1. A biblioteca ganha Símbolos.
   - A guia Matemática segue a referência, com os quatro tipos de botão, os ícones de estrutura e a dica depois de 400 ms.

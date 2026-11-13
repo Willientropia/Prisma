@@ -57,5 +57,60 @@ const MATEMATICA: MathGroup[] = [
   ] },
 ];
 
-/** Guias com conteúdo matemático; Matrizes, Lógica e programação e Símbolos chegam no A6-6. */
-export const MATH_RIBBON: Record<string, MathGroup[]> = { matematica: MATEMATICA, matrizes: [], logica: [], simbolos: [] };
+// 4.3 a 4.5 (A6-6). Sem latex = o formato ainda não lê (fica desabilitado, "Ainda não disponível").
+const MATRIZES: MathGroup[] = [
+  { title: 'Inserir', kind: 'big', buttons: [
+    B('Matriz', 'Ctrl+M', 'Insere uma matriz 2 × 2.', { icon: 'matrix' }, '\\begin{bmatrix}#0&#?\\\\#?&#?\\end{bmatrix}'), // o diálogo de linhas e colunas fica pendente
+    B('Vetor', '', 'Vetor coluna.', { icon: 'vector' }, '\\begin{bmatrix}#0\\\\#?\\\\#?\\end{bmatrix}'),
+  ] },
+  { title: 'Elementos', kind: 'small', buttons: [
+    B('Elemento', '[', 'Índice de elemento: v[2], M[2;3]. Índices começam em 1.', { icon: 'elem' }, '#@_{\\lbrack #?\\rbrack}'),
+    B('Intervalo', 'range(', 'range: 1..n.', '‥', '\\operatorname{range}(#0;\\,#?)'),
+    B('Intervalo com passo', '', 'range com início, fim e passo.', '⋯', '\\operatorname{range}(#0;\\,#?;\\,#?)'),
+  ] },
+  { title: 'Operações', kind: 'small', buttons: [
+    B('Transposta', 'Ctrl+1', 'Aᵀ', 'ᵀ', '#@^{T}'),
+    B('Inversa', '^-1', 'A⁻¹', '⁻¹', '#@^{-1}'),
+    B('Determinante', 'det(', '|A|', '‖', '\\operatorname{det}(#0)'),
+    B('Menor', '', 'M com índices i, j.', 'M'),
+    B('Cofator', '', 'A com índices i, j.', 'A'),
+    B('Produto vetorial', 'cross(', 'a × b', '×', '\\operatorname{cross}(#0;\\,#?)'),
+  ] },
+  { title: 'Funções de matriz', kind: 'text', cols: 4, buttons: [
+    fn('rows', 'Número de linhas'), fn('cols', 'Número de colunas'), fn('length', 'Número de elementos'), fn('stack', 'Empilha matrizes'),
+    fn('augment', 'Junta matrizes lado a lado'), fn('row', 'Extrai uma linha'), fn('col', 'Extrai uma coluna'), fn('sum', 'Soma dos elementos'),
+    fn('max', 'Maior elemento'), fn('min', 'Menor elemento'), fn('sort', 'Ordena'), fn('fft', 'Transformada rápida de Fourier'),
+  ] },
+];
+
+const LOGICA: MathGroup[] = [
+  { title: 'Comparação', kind: 'grid', cols: 4, buttons: [
+    sy('=', 'Igual lógico', 'Ctrl+=', '='), sy('≠', 'Diferente', 'Ctrl+3', '\\ne '), sy('<', 'Menor', '<', '<'), sy('>', 'Maior', '>', '>'),
+    sy('≤', 'Menor ou igual', 'Ctrl+9', '\\le '), sy('≥', 'Maior ou igual', 'Ctrl+0', '\\ge '),
+    B('Aproximadamente igual', '', 'Insere ≈ no cursor.', '≈'), B('Não aproximadamente igual', '', 'Insere ≉ no cursor.', '≉'),
+  ] },
+  { title: 'Lógica', kind: 'grid', cols: 2, buttons: [
+    B('E', '&', 'Insere ∧ no cursor.', '∧'), sy('∨', 'OU', '|', '\\lor '),
+    B('NÃO', '~', 'Insere ¬ no cursor.', '¬'), sy('⊕', 'OU exclusivo', 'xor(', '\\operatorname{xor}(#0;\\,#?)'),
+  ] },
+  { title: 'Programação', kind: 'big', buttons: [
+    B('if', '', 'Condição com ramo senão.', 'if', '\\operatorname{if}(#0;\\,#?;\\,#?)'),
+    B('for', '', 'Laço com contador e intervalo.', 'for', '\\operatorname{for}(#0;\\,#?;\\,#?)'),
+    B('while', '', 'Laço com condição.', 'while', '\\operatorname{while}(#0;\\,#?)'),
+    B('try', '', 'Tenta e captura erro.', 'try'),
+    B('Bloco', '[', 'Bloco de várias linhas (line do SMath).', { icon: 'prog' }),
+  ] },
+  { title: 'Controle', kind: 'small', buttons: [B('continue', '', 'Pula para a próxima volta do laço.', ''), B('break', '', 'Sai do laço.', '')] }, // sem símbolo: seta como ícone é proibida (V-02)
+];
+
+const LOWER = 'α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω'.split(' ');
+const UPPER = 'Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω'.split(' ');
+const LATIN = 'a b g d e z h q i k l m n x o p r s t u f c y w'.split(' ');
+const OUTROS: [string, string?][] = [['∂'], ['∇'], ['°', '\\degree '], ['′'], ['″'], ['ℏ', 'ℏ'], ['∅'], ['∈'], ['∠'], ['‰', '‰']];
+const SIMBOLOS: MathGroup[] = [
+  { title: 'Gregas minúsculas', kind: 'grid', cols: 12, buttons: LOWER.map((c, k) => sy(c, `Letra grega ${c}`, `${LATIN[k]}, Ctrl+G`, c)) },
+  { title: 'Gregas maiúsculas', kind: 'grid', cols: 12, buttons: UPPER.map((c, k) => sy(c, `Letra grega ${c}`, `${LATIN[k].toUpperCase()}, Ctrl+G`, c)) },
+  { title: 'Outros', kind: 'grid', cols: 5, buttons: OUTROS.map(([c, latex]) => (latex ? sy(c, `Símbolo ${c}`, '', latex) : B(`Símbolo ${c}`, '', `Insere ${c} no cursor.`, c))) },
+];
+
+export const MATH_RIBBON: Record<string, MathGroup[]> = { matematica: MATEMATICA, matrizes: MATRIZES, logica: LOGICA, simbolos: SIMBOLOS };

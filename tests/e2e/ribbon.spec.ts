@@ -88,3 +88,14 @@ test('[06-31] janela com 1024 px: grupos recolhidos e todos os botões acessíve
   }
   for (const b of ['Definir', 'Fração', 'Pi', 'sin( )', 'Todas as funções', 'Somatório', 'Integral', 'Por partes', 'a ≤ x ≤ b']) expect(vistos, b).toContain(b);
 });
+
+test('[A6-6-05] guia Símbolos: clicar α com a cruz cria a região com α; ∂ ainda não está disponível', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await guias(page).filter({ hasText: 'Símbolos' }).click();
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await expect(page.getByRole('button', { name: 'Símbolo ∂' })).toHaveAttribute('aria-disabled', 'true');
+  await page.getByRole('button', { name: 'Letra grega α', exact: true }).click();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toMatch(/calc \{#\S+ x=100 y=100\}\nα\n/);
+});

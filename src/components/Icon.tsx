@@ -67,6 +67,10 @@ export const STRUCT_ICONS = {
   paren: { f: 'M9 8h6v8H9z', s: 'M8 3c-4 5-4 13 0 18M16 3c4 5 4 13 0 18' },
   cases: { f: 'M12 6h8v4h-8zM12 14h8v4h-8z', s: 'M10 3c-3 0-3 2-3 5s-1 4-3 4c2 0 3 1 3 4s0 5 3 5' },
   fx: { f: '', s: 'M11 4c-3 0-3 2-3 5v11M5 10h7M14 12l6 7M20 12l-6 7' },
+  matrix: { f: 'M6 6h5v5H6zM13 6h5v5h-5zM6 13h5v5H6zM13 13h5v5h-5z', s: 'M6 3H3v18h3M18 3h3v18h-3' },
+  vector: { f: 'M5 12h12v8H5z', s: 'M4 7h15M15 3l4 4-4 4' },
+  elem: { f: 'M3 4h10v12H3z', s: 'M15 13h2v8h-2M21 13h-2v8h2' },
+  prog: { f: 'M6 8h12v3H6zM6 14h12v3H6z', s: 'M3 4v16' },
 } as const;
 
 export type StructIcon = keyof typeof STRUCT_ICONS;
