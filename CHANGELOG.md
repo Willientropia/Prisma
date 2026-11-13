@@ -2,6 +2,11 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
+## Em andamento
+
+- **BUG-024** `π` digitado como símbolo não aparece mais sublinhado como variável não definida (a tela só reconhecia `pi`).
+- **BUG-025** Expressão longa no caderno não sai mais do papel: o campo fica na largura do bloco e rola por dentro, seguindo o cursor. Pendente: quebrar a linha de verdade nos operadores, que o MathLive não faz.
+
 ## v0.4.0 — 2026-11-13
 
 Ribbon matemático, catálogos e layout da folha (ADENDO 06, docs/TICKETS-FOLHA.md). verify:full aprovado: 699 testes, nenhuma falha.

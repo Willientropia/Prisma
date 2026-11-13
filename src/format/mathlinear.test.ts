@@ -50,6 +50,12 @@ describe('conversor: regras', () => {
     expect(toLatex('f(x) := x*L', ctx)).toBe('f(x)\\;\\coloneq\\;x\\cdot L');
   });
 
+  it('[BUG-024] π escrito como símbolo é constante, não variável indefinida', () => {
+    const ctx = { defined: new Set(['f']) };
+    expect(toLatex('ω := 2*π*f', ctx)).not.toContain('undef');
+    expect(toLatex('ω := 2*pi*f', ctx)).not.toContain('undef');
+  });
+
   it('[B10-08] unidade do math.js para a do arquivo; linha eval guarda a unidade pedida', () => {
     expect(unitFromMathjs('(ohm mm^2) / m')).toBe('Ω*mm^2/m');
     expect(unitFromMathjs('kWh')).toBe('kWh');

@@ -349,7 +349,7 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
       const user = ctx.defined?.has(n.name) || ctx.params?.has(n.name) || ctx.before?.(n.name); // before vem do texto da folha: vale mesmo antes do motor responder (2.5: x5 depois de x=)
       if (n.name === 'i' && !user) return '\\mathbf{i}'; // unidade imaginária: negrito reto (ADENDO 05, E2.3)
       if (n.name === '𝐢' || n.name === '𝐞') return `\\class{imag}{\\mathbf{${n.name === '𝐢' ? 'i' : 'e'}}}`; // símbolo próprio
-      const known = !ctx.defined || user || n.name === 'pi' || n.name === 'e';
+      const known = !ctx.defined || user || n.name === 'pi' || n.name === 'π' || n.name === 'e'; // o motor lê π como pi (BUG-024)
       return known ? idLatex(n.name) : `\\class{undef}{${idLatex(n.name)}}`;
     }
     case 'qty': {

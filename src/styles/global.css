@@ -32,6 +32,9 @@ a:hover { color: var(--accent-lighter); }
   border: none; background: transparent; padding: 0 2px; outline: none; color: inherit; font-size: inherit;
 }
 math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { display: none; }
+/* BUG-025: o MathLive não quebra linha; a expressão longa fica na largura do bloco (container-type no caderno) e rola por dentro, seguindo o cursor */
+.mfield math-field { max-width: 100cqw; }
+.mfield math-field::part(content) { overflow-x: auto; overflow-y: hidden; }
 .mfield-paper { color: var(--paper-text); --mf-unit: var(--math-unit-paper); }
 .mfield-dark { color: var(--math-var); --mf-unit: var(--math-unit); }
 .mfield-invalid math-field { text-decoration: underline wavy var(--math-error); text-decoration-skip-ink: none; }

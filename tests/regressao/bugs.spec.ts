@@ -364,3 +364,24 @@ test('[BUG-023] Ctrl+W apertado enquanto a região nova monta não fecha o docum
   await expect(page.getByRole('button', { name: 'Não salvar' })).toHaveCount(0); // o fechar do documento não foi disparado
   expect(await tabs(page).count()).toBe(abertas);
 });
+
+test('[BUG-025] função longa no caderno fica na largura do bloco e rola por dentro, sem sair do papel', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const file = `${DOCS}/longa.prsm`;
+  const head = '---\ntipo: caderno\ntitulo: Longa\nbibliotecas: []\nunidades: SI\nversao_formato: 1\n---\n\n';
+  const longa = 'g(t, λ) := sqrt(2)*sin(2*π*t + λ - 1) - sqrt(2)*sin(λ - 1)*exp(-2*π*t/10) + sqrt(2)*sin(2*π*t + λ - 1) - sqrt(2)*sin(λ - 1)*exp(-2*π*t/10)';
+  await dev(page).write(file, `${head}${f}calc {#c}\na := 1\n${f}\n\n${f}funcao {#g nome=g}\n${longa}\n${f}\n`);
+  await dev(page).open(file);
+  const fields = page.locator('article math-field');
+  await expect(fields).toHaveCount(2);
+  const [curta, bloco, campo, conteudo] = await page.evaluate(() => {
+    const [a, g] = [...document.querySelectorAll('article math-field')] as HTMLElement[];
+    const body = g.closest('.mline')!.parentElement!;
+    const pad = parseFloat(getComputedStyle(body).paddingRight);
+    return [a.getBoundingClientRect().width, body.getBoundingClientRect().right - pad, g.getBoundingClientRect().right, g.shadowRoot!.querySelector('.ML__content')!.scrollWidth];
+  });
+  expect(campo).toBeLessThanOrEqual(bloco + 1);
+  expect(conteudo).toBeGreaterThan(campo); // a expressão continua inteira, rolando dentro do campo
+  expect(curta).toBeLessThan(100); // linha curta não estica nem encolhe
+});
