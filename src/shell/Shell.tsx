@@ -6,7 +6,10 @@ import { all, run } from '../commands/registry';
 import { useWorkspace, activeDoc } from '../store/workspace';
 import { FORMATS } from '../mock';
 import { displayPath, shortenPath } from '../format/display';
-import { RIBBONS, RIBBON_TABS } from './ribbons';
+import { RIBBONS, RIBBON_TABS, isMathTab } from './ribbons';
+import { MATH_RIBBON } from './ribbonMath';
+import { RibbonMath } from '../components/RibbonMath';
+import { focusedField, insertInFocused } from '../math/insert';
 import { MathMarkup, lastMathField } from '../math/MathField';
 import { toLatex } from '../format/mathlinear';
 import { allFunctions } from '../commands/library';
@@ -58,23 +61,44 @@ export function TitleBar() {
   );
 }
 
+/** Há um campo de matemática em edição? Acompanha o foco (os botões matemáticos inserem nele, ADENDO 06 4.8). */
+function useEditingMath() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const check = () => setOn(!!focusedField());
+    const later = () => setTimeout(check, 0); // no focusout o activeElement ainda é o campo que sai
+    document.addEventListener('focusin', check);
+    document.addEventListener('focusout', later);
+    return () => { document.removeEventListener('focusin', check); document.removeEventListener('focusout', later); };
+  }, []);
+  return on;
+}
+
 export function Ribbon() {
   const doc = useWorkspace(activeDoc);
-  const tab = useWorkspace((x) => x.ribbonTab);
+  const wanted = useWorkspace((x) => x.ribbonTab);
+  const lastTabs = useWorkspace((x) => x.lastTabs);
+  const cruz = useWorkspace((x) => x.folhaCruz);
   const set = useWorkspace((x) => x.set);
+  const editing = useEditingMath();
   useWorkspace((x) => x.project); // botões que dependem do projeto mudam de estado
   if (!doc) return null;
   const cmds = all();
+  const tabs = RIBBON_TABS[doc.type];
+  const tab = tabs.some(([id]) => id === wanted) ? wanted : 'inicio';
+  // folha sem edição: a folha cria a região no cursor em cruz (Folha.tsx ouve prisma:inserir)
+  const insert = (latex: string) => { if (!insertInFocused(latex)) window.dispatchEvent(new CustomEvent('prisma:inserir', { detail: latex })); };
   return (
     <div className={s.ribbon}>
       <div role="tablist" aria-label="Guias da faixa de opções" className={s.rtabs}>
-        {RIBBON_TABS.map(([id, text]) => (
+        {tabs.map(([id, text]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? s.rtOn : s.rt}
-            onClick={() => set({ ribbonTab: id })}>{text}</button>
+            onMouseDown={(e) => e.preventDefault() /* trocar de guia não tira o foco da expressão */}
+            onClick={() => set({ ribbonTab: id, lastTabs: { ...lastTabs, [doc.type]: id } })}>{text}</button>
         ))}
       </div>
       <div className={s.rbody}>
-        {RIBBONS[doc.type][tab].map((g) => (
+        {isMathTab(tab) ? <RibbonMath groups={MATH_RIBBON[tab]} canInsert={editing || (doc.type === 'folha' && cruz)} onInsert={insert} /> : RIBBONS[doc.type][tab].map((g) => (
           <div key={g.title} className={s.group}>
             <div className={s.groupBtns}>
               {g.buttons.map((b) => {

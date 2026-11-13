@@ -46,6 +46,8 @@ type State = {
   openDocs: OpenDoc[];
   active: string; // 'home' ou id do documento
   ribbonTab: RibbonTab;
+  lastTabs: Partial<Record<string, RibbonTab>>; // última guia usada por tipo de documento (ADENDO 06, 4.8)
+  folhaCruz: boolean; // a folha ativa tem o cursor em cruz: os botões matemáticos criam região nele (4.8)
   menuOpen: boolean;
   exportOpen: boolean;
   fnSearchOpen: boolean; // busca de função (Ctrl+K, Inserir função)
@@ -195,6 +197,8 @@ export const useWorkspace = create<State>((set, get) => {
     openDocs: [],
     active: 'home',
     ribbonTab: 'inicio',
+    lastTabs: {},
+    folhaCruz: false,
     menuOpen: false,
     exportOpen: false,
     showSource: false,
@@ -222,7 +226,10 @@ export const useWorkspace = create<State>((set, get) => {
 
     isFactory: (path) => { const f = get().paths?.factory; return !!f && !!path && normPath(path).toLowerCase().startsWith(`${normPath(f).toLowerCase()}/`); },
 
-    activate: (id) => set({ active: id, ribbonTab: 'inicio', menuOpen: false, status: null }),
+    activate: (id) => {
+      const type = get().openDocs.find((d) => d.id === id)?.type;
+      set({ active: id, ribbonTab: (type && get().lastTabs[type]) || 'inicio', folhaCruz: false, menuOpen: false, status: null });
+    },
 
     newDoc: (type, opts) => {
       const name = `${NEW_NAME[type]}${++counters[type]}`;

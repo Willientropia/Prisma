@@ -55,3 +55,28 @@ export function Icon({ name, size = 24, stroke = 1.6, className }: { name: IconN
     </svg>
   );
 }
+
+/** Ícones de estrutura do ribbon matemático (ADENDO 06, 4.7): f = quadradinhos de posição, s = traço. Caminhos do objeto I da referência. */
+export const STRUCT_ICONS = {
+  frac: { f: 'M9 3h6v6H9zM9 15h6v6H9z', s: 'M5 12h14' },
+  pow: { f: 'M4 9h9v11H4zM15 3h6v6h-6z', s: '' },
+  sub: { f: 'M4 4h9v11H4zM15 15h6v6h-6z', s: '' },
+  sqrt: { f: 'M13 8h7v8h-7z', s: 'M2 13l3-2 3 9 4-17h10' },
+  nroot: { f: 'M13 8h7v8h-7zM2 4h4v4H2z', s: 'M2 13l3-2 3 9 4-17h10' },
+  abs: { f: 'M8 8h8v8H8z', s: 'M5 4v16M19 4v16' },
+  paren: { f: 'M9 8h6v8H9z', s: 'M8 3c-4 5-4 13 0 18M16 3c4 5 4 13 0 18' },
+  cases: { f: 'M12 6h8v4h-8zM12 14h8v4h-8z', s: 'M10 3c-3 0-3 2-3 5s-1 4-3 4c2 0 3 1 3 4s0 5 3 5' },
+  fx: { f: '', s: 'M11 4c-3 0-3 2-3 5v11M5 10h7M14 12l6 7M20 12l-6 7' },
+} as const;
+
+export type StructIcon = keyof typeof STRUCT_ICONS;
+
+export function StructIconView({ name, size, stroke }: { name: StructIcon; size: number; stroke: number }) {
+  const { f, s } = STRUCT_ICONS[name];
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      {f && <path d={f} fill="var(--accent-light)" opacity={0.55} />}
+      {s && <path d={s} fill="none" stroke="var(--text-2)" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
+}

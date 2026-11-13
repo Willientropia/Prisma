@@ -3,17 +3,29 @@ import type { DocType } from '../constants';
 import { register } from '../commands/registry';
 
 // Ribbon como dados (SPEC seção 6). Cada botão é um comando registrado.
-export type RibbonTab = 'inicio' | 'inserir' | 'exibir' | 'saida';
+export type CommandTab = 'inicio' | 'inserir' | 'exibir' | 'saida';
+export type MathTab = 'matematica' | 'matrizes' | 'logica' | 'simbolos'; // ADENDO 06, Parte 4 (ribbonMath.ts)
+export type RibbonTab = CommandTab | MathTab;
 export type RibbonButton = { cmd: string; label: string; icon: IconName };
 export type RibbonGroup = { title: string; buttons: RibbonButton[] };
 
-export const RIBBON_TABS: [RibbonTab, string][] = [['inicio', 'Início'], ['inserir', 'Inserir'], ['exibir', 'Exibir'], ['saida', 'Saída']];
+const BASE: [RibbonTab, string][] = [['inicio', 'Início'], ['inserir', 'Inserir'], ['exibir', 'Exibir'], ['saida', 'Saída']];
+const MATH: [RibbonTab, string][] = [['matematica', 'Matemática'], ['matrizes', 'Matrizes'], ['logica', 'Lógica e programação'], ['simbolos', 'Símbolos']];
+const SYMBOLS: [RibbonTab, string] = ['simbolos', 'Símbolos'];
+/** Guias por tipo de documento (ADENDO 06, 4.1). */
+export const RIBBON_TABS: Record<DocType, [RibbonTab, string][]> = {
+  caderno: [BASE[0], ...MATH, ...BASE.slice(1)],
+  folha: [BASE[0], ...MATH, ...BASE.slice(1)],
+  tex: BASE,
+  lib: [BASE[0], SYMBOLS, ...BASE.slice(1)],
+};
+export const isMathTab = (t: RibbonTab): t is MathTab => MATH.some(([id]) => id === t);
 
 type Spec = [string, [string, string, IconName][]][];
 const g = (spec: Spec): RibbonGroup[] =>
   spec.map(([title, btns]) => ({ title, buttons: btns.map(([cmd, label, icon]) => ({ cmd, label, icon })) }));
 
-export const RIBBONS: Record<DocType, Record<RibbonTab, RibbonGroup[]>> = {
+export const RIBBONS: Record<DocType, Record<CommandTab, RibbonGroup[]>> = {
   caderno: {
     inicio: g([
       ['Células', [['caderno.texto', 'Texto', 'text'], ['caderno.calculo', 'Cálculo', 'calc'], ['caderno.funcao', 'Função', 'fn'], ['caderno.grafico', 'Gráfico', 'plot'], ['caderno.verificacao', 'Verificação', 'check']]],

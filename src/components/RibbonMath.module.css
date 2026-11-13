@@ -1,0 +1,24 @@
+/* ribbon matemático (ADENDO 06, 4.7; medidas de referencia-ribbon-matematica.dc.html) */
+.group { display: flex; flex-direction: column; padding: 4px 8px 0; border-right: 1px solid var(--border); height: 92px; box-sizing: border-box; flex: none; }
+.title { height: 18px; line-height: 18px; text-align: center; font: 11px Inter, sans-serif; color: var(--text-group); white-space: nowrap; }
+.bigRow { display: flex; gap: 2px; flex: 1; align-items: flex-start; }
+.smallCols { display: grid; grid-template-rows: repeat(3, 22px); grid-auto-flow: column; gap: 1px 4px; flex: 1; }
+.gridBox { display: grid; gap: 1px; padding-top: 6px; flex: 1; align-content: start; }
+.textBox { display: grid; gap: 1px 2px; padding-top: 2px; flex: 1; align-content: start; }
+
+.big, .small, .grid, .text { border: 1px solid transparent; background: transparent; color: var(--text); cursor: pointer; padding: 0; }
+.big:hover:not([aria-disabled="true"]), .small:hover:not([aria-disabled="true"]), .grid:hover:not([aria-disabled="true"]), .text:hover:not([aria-disabled="true"]) { background: var(--hover-strong); border-color: var(--border-strong); }
+.big[aria-disabled="true"], .small[aria-disabled="true"], .grid[aria-disabled="true"], .text[aria-disabled="true"] { opacity: 0.4; cursor: default; }
+.big { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; height: 66px; padding: 6px 5px 0; border-radius: 4px; font: 11px/1.2 Inter, sans-serif; text-align: center; box-sizing: border-box; }
+.small { display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 6px; border-radius: 3px; font: 11px Inter, sans-serif; white-space: nowrap; }
+.grid { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 3px; font: 17px 'STIX Two Text', serif; }
+.text { height: 22px; padding: 0 6px; border-radius: 3px; font: 15px 'STIX Two Text', serif; }
+.bigSym { height: 26px; display: flex; align-items: center; font: 22px 'STIX Two Text', serif; color: var(--text-strong); }
+.smallSym { width: 16px; text-align: center; font: 14px 'STIX Two Text', serif; color: var(--text-strong); }
+
+.tip { position: fixed; z-index: 50; max-width: 280px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-raised); border: 1px solid var(--border-strong); border-radius: 4px; box-shadow: var(--shadow-menu); pointer-events: none; }
+.tipHead { display: flex; justify-content: space-between; gap: 12px; }
+.tipName { font: 600 12px Inter, sans-serif; color: var(--text-strong); }
+.tipKey { font: 12px 'JetBrains Mono', monospace; color: var(--accent-light); white-space: nowrap; }
+.tipDesc { font: 12px/1.5 Inter, sans-serif; color: var(--text-2); }
+.tipOff { font: 11px Inter, sans-serif; color: var(--text-muted); }

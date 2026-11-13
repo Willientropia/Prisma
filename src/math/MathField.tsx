@@ -52,7 +52,7 @@ export type FieldProps = {
   assist?: AssistSource;
 };
 
-export type Key = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean };
+export type Key = { key: string; ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; altKey?: boolean; latex?: string }; // latex: botão do ribbon (ADENDO 06, 4.8)
 const OPERATOR_KEYS = new Set(['+', '-', '<', '>', ';', ')', ':', '=', '*', '/', ',', '|']);
 
 /** LaTeX do começo até o cursor. getValue(pos-1, pos) volta vazio logo depois de parênteses, então lemos o prefixo. */
@@ -477,6 +477,7 @@ export function MathField(props: FieldProps) {
       waiting = false;
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
+        if (k.latex) { mf.insert(k.latex, { selectionMode: 'placeholder', format: 'latex' }); state.edited = true; p.current.onInput?.(mf.value); continue; } // na ordem das teclas
         if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
       }
       p.current.onReady?.();

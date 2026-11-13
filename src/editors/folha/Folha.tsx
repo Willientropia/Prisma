@@ -120,7 +120,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const [crossState, setCrossState] = useState<{ x: number; y: number } | null>(null);
   // ref junto do estado: a tecla digitada logo depois do Enter já encontra a cruz nova (ADENDO 05)
   const crossRef = useRef<{ x: number; y: number } | null>(null);
-  const setCross = (c: { x: number; y: number } | null) => { crossRef.current = c; setCrossState(c); };
+  const setCross = (c: { x: number; y: number } | null) => {
+    crossRef.current = c; setCrossState(c);
+    if (useWorkspace.getState().folhaCruz !== !!c) useWorkspace.getState().set({ folhaCruz: !!c }); // botões matemáticos do ribbon (ADENDO 06, 4.8)
+  };
   const cross = crossState;
   const [focus, setFocus] = useState<Focus>(null);
   const [drag, setDrag] = useState<{ ids: string[]; dx: number; dy: number } | null>(null);
@@ -130,6 +133,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const creating = useRef(false);
   const creatingTimer = useRef(0);
   const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; };
+  // botão matemático do ribbon com a cruz (sem edição): cria a região nela; o LaTeX entra na frente das teclas pendentes (ADENDO 06, 4.8)
+  const onRibbonInsert = useRef<(latex: string) => void>(() => {});
   const [msg, setMsg] = useState('Clique na grade e digite para criar uma região.');
 
   // B10.6: resultados e gráfico aparecem sem nenhum clique
@@ -357,6 +362,21 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
+
+  onRibbonInsert.current = (latex) => {
+    const at = crossRef.current;
+    if (!at) return;
+    pendingKeys.current = [{ key: '', latex }];
+    creating.current = true;
+    creatingTimer.current = window.setTimeout(doneCreating, 2000); // prazo, como na tecla (F03)
+    setFocus({ id: appendRegion('calc', at.x, at.y), line: 0 });
+    setCross(null);
+  };
+  useEffect(() => {
+    const on = (e: Event) => onRibbonInsert.current((e as CustomEvent<string>).detail);
+    window.addEventListener('prisma:inserir', on);
+    return () => window.removeEventListener('prisma:inserir', on); // remoção garantida ao desmontar a folha
+  }, []);
 
   const onSheetKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== sheet.current) return;

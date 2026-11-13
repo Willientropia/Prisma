@@ -4,6 +4,17 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **A6-5 (1ª parte):**
+  - As 8 guias do caderno e da folha, na ordem de 4.1. A biblioteca ganha Símbolos.
+  - A guia Matemática segue a referência, com os quatro tipos de botão, os ícones de estrutura e a dica depois de 400 ms.
+  - Os botões inserem no cursor (com seleção, envolvem a seleção) ou criam a região no cursor em cruz da folha. Sem lugar, ficam a 40 % com a dica "Clique numa região de cálculo".
+  - Cada tipo de documento lembra a última guia.
+  - **Pendente:**
+    - Fatorial, Mais ou menos, Por partes e os intervalos ficam desabilitados ("Ainda não disponível"), porque o formato ainda não lê `!`, `±`, casos e intervalos.
+    - "Todas as funções" fica para o A6-7.
+    - Matrizes, Lógica e programação e Símbolos chegam vazias e são o A6-6.
+    - No caderno sem edição, os botões não criam linha.
+
 - **F-LAYOUT 1 a 3:**
   - BUG-022: arrastar várias regiões até a borda para o grupo inteiro, e elas não se empilham mais.
   - Enter com a cruz na folha desce uma linha da grade.
