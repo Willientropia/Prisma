@@ -264,7 +264,8 @@ export function importSm(xml: string, nome: string): SmImport {
   const sig = cv('significantDigitsMode') === 'true';
   const head = [
     '---', 'tipo: folha', `titulo: ${q(nome)}`, 'bibliotecas: []',
-    `pagina: {largura: ${Math.max(1200, maxX + 200)}, altura: ${Math.max(1600, maxY + 200)}, grade: 20}`,
+    // escala: o Prisma desenha cerca de 1,8 vez maior que o SMath (10 pt); reduz o conteúdo das regiões, não as posições (F-LAYOUT 4)
+    `pagina: {largura: ${Math.max(1200, maxX + 200)}, altura: ${Math.max(1600, maxY + 200)}, grade: 20, escala: 0.55}`,
     `exibicao: {casas: ${Number(cv('precision')) || 4}, modo: ${sig ? 'significativos' : 'decimais'}, zeros_a_direita: ${cv('trailingZeros') === 'true'}, limite_exponencial: ${Number(cv('exponentialThreshold')) || 5}}`,
     `origem: ${q(`${nome}.sm`)}`, 'versao_formato: 1', '---', '',
   ].join('\n');

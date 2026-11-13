@@ -283,3 +283,13 @@ test('[E8-29] i definido pelo laço: aviso na barra de status; 𝐢 continua ima
   await expect.poll(() => resultTexts(page)).toContain('3+1⋅i');
   expect((await shownLatex(page)).join('')).toContain('ML__mathbf');
 });
+
+test('[F-LAYOUT-04] .sm importado com escala: no 08do10 as regiões quase não se sobrepõem (eram 34 pares; o próprio SMath tem 5)', async ({ page }) => {
+  await start(page);
+  await dev(page).open(`${SM}/08do10.sm`);
+  await expect.poll(async () => (await resultTexts(page)).includes('387,3')).toBe(true);
+  const rs = await page.locator('[data-region]').evaluateAll((els) => els.map((el) => { const e = el as HTMLElement; return { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight }; }));
+  let n = 0;
+  for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) { const [a, b] = [rs[i], rs[j]]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) n++; }
+  expect(n).toBeLessThanOrEqual(15);
+});

@@ -135,9 +135,11 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   // B10.6: resultados e gráfico aparecem sem nenhum clique
   useEffect(() => { const t = setTimeout(() => void recalc(doc.id), 0); return () => clearTimeout(t); }, [doc.id, doc.text, projectPath]);
 
-  const pagina = (parsed.meta.pagina ?? {}) as { largura?: number; altura?: number };
+  const pagina = (parsed.meta.pagina ?? {}) as { largura?: number; altura?: number; escala?: number };
   const pageW = Number(pagina.largura) || 1200;
   const pageH = Number(pagina.altura) || 1600;
+  // escala do conteúdo das regiões (documento importado do SMath: 0,55); as posições não mudam (F-LAYOUT 4)
+  const escala = Number(pagina.escala) > 0 ? Number(pagina.escala) : 1;
 
   // Áreas (ADENDO 05, E6): blocos area ... fim-area, na ordem do arquivo. Recolhida, as regiões de dentro
   // somem (mas continuam sendo avaliadas) e as de baixo sobem para ocupar o espaço.
@@ -450,7 +452,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDown={(e) => onRegionDown(e, r.id)} onContextMenu={(e) => regionMenu(e, r)}
         {...(locked(r.id) ? ({ inert: '' } as object) : {})} /* área travada: nada de dentro recebe foco (E6) */ title={'desativado' in b.attrs ? 'Avaliação desativada' : undefined}>
         {b.attrs.descricao && b.type !== 'smath-original' && <div className={s.regionDesc}>{b.attrs.descricao}</div>}
-        {content}
+        {escala !== 1 && b.type !== 'imagem' && b.type !== 'grafico' ? <div style={{ zoom: escala }}>{content}</div> : content /* imagem e gráfico já vêm no tamanho do SMath */}
       </div>
     );
   };

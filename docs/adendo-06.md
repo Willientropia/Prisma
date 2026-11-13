@@ -74,3 +74,9 @@ Testes: `src/engine/robustez.test.ts` (entradas travadas rodam em processo filho
 - **simplify (decisão do usuário, 12/11):** o corte em 70 caracteres (`MAX_SIMPLIFY_LEN`) fica como está. Pendente: rodar o `math.simplify` num worker separado com prazo, o que manteria o resultado simplificado em expressões longas.
 - **Leitor linear:** `a b` (nome, espaço, nome) ainda não é lido como produto (o math.js lê). Baixa prioridade.
 - **Ordem seguinte:** A6-TECLADO2, A6-ESCALA, F-LAYOUT, A6-5.
+
+## F-LAYOUT 4: escala do .sm importado (decisão do usuário, 12/11)
+
+- **Formato novo, autorizado pelo usuário:** `pagina:` aceita `escala` (opcional, padrão 1). A folha reduz por esse fator só o conteúdo das regiões de cálculo e de texto; as posições, as imagens e os gráficos não mudam. Arquivos sem `escala` abrem com os mesmos bytes e o mesmo desenho.
+- **Importação do .sm:** grava `escala: 0.55`. Medido nos 17 .sm do corpus: sem a escala, o Prisma desenhava cerca de 1,8 vez maior que o SMath (texto do SMath em 10 pt); com ela, a largura fica em cerca de 1,0 vez e a altura em 1,1 a 1,2 vez. As sobreposições caem de 34 para 13 no `08do10` (o próprio SMath tem 5).
+- **Pendente:** a moldura da região (3 px de margem e 1 px de borda) não entra na escala e explica a altura um pouco maior. "Separar regiões" (4b) não foi feito. Documentos importados antes continuam sem escala até serem importados de novo.

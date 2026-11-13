@@ -151,3 +151,12 @@ describe('[A6-3-91] índice com vírgula importado do SMath', () => {
     expect(nodeToLinear(fromRpn([op('Relação.invest.Lucro')]).node)).toBe('Relação_invest.Lucro');
   });
 });
+
+// F-LAYOUT 4: o Prisma desenha cerca de 1,8 vez maior que o SMath (texto do SMath em 10 pt); a escala da página
+// reduz só o conteúdo das regiões, e as posições continuam as do SMath (medido nos 17 .sm do corpus, 12/11)
+describe('[F-LAYOUT-04] documento importado do SMath tem escala', () => {
+  it('[F-LAYOUT-04] a página do .prsf importado sai com escala: 0.55', () => {
+    const r = importSm(read('08do10.sm'), '08do10');
+    expect(parse(r.text).meta.pagina).toMatchObject({ escala: 0.55 });
+  });
+});
