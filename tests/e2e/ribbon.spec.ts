@@ -67,6 +67,7 @@ test('[A6-5-01] cada tipo de documento lembra a última guia usada (4.8)', async
 test('[06-30] Alt e depois M abre a guia Matemática', async ({ page }) => {
   await start(page);
   await dev(page).newDoc('folha');
+  await expect(page.getByLabel('Folha')).toBeVisible(); // a folha terminou de abrir
   await page.keyboard.press('Alt');
   await page.keyboard.press('m');
   await expect(guias(page).filter({ hasText: 'Matemática' })).toHaveAttribute('aria-selected', 'true');

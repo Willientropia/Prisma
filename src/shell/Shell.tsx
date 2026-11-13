@@ -85,12 +85,12 @@ function useKeyTips(choose: (letter: string) => boolean) {
   const [on, setOn] = useState(false);
   const pick = useRef(choose);
   pick.current = choose;
-  const shown = useRef(false);
-  shown.current = on;
+  const shown = useRef(false); // atualizado junto com o estado: a letra apertada logo depois do Alt não espera o React desenhar
   useEffect(() => {
     let alone = false;
     let timer: number | undefined;
-    const hide = () => { clearTimeout(timer); setOn(false); };
+    const show = (v: boolean) => { shown.current = v; setOn(v); };
+    const hide = () => { clearTimeout(timer); show(false); };
     const down = (e: KeyboardEvent) => {
       if (e.key === 'Alt') { alone = !e.repeat; return; }
       alone = false;
@@ -103,7 +103,7 @@ function useKeyTips(choose: (letter: string) => boolean) {
       e.preventDefault();
       clearTimeout(timer);
       if (shown.current) return hide();
-      setOn(true);
+      show(true);
       timer = window.setTimeout(hide, 8000); // prazo
     };
     window.addEventListener('keydown', down, true);
@@ -123,8 +123,11 @@ export function Ribbon() {
   const tabs = doc ? RIBBON_TABS[doc.type] : [];
   const go = (id: RibbonTab) => doc && set({ ribbonTab: id, lastTabs: { ...lastTabs, [doc.type]: id } });
   const tips = useKeyTips((letter) => {
-    const hit = tabs.find(([id]) => KEYTIPS[id] === letter.toUpperCase());
-    if (hit) go(hit[0]);
+    // lê o store na hora da tecla: logo depois de abrir um documento, o último desenho ainda não o conhece
+    const st = useWorkspace.getState();
+    const d = activeDoc(st);
+    const hit = d && RIBBON_TABS[d.type].find(([id]) => KEYTIPS[id] === letter.toUpperCase());
+    if (d && hit) st.set({ ribbonTab: hit[0], lastTabs: { ...st.lastTabs, [d.type]: hit[0] } });
     return !!hit;
   });
   useWorkspace((x) => x.project); // botões que dependem do projeto mudam de estado
