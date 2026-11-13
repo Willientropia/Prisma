@@ -1,6 +1,6 @@
 // Fase 3 (o que já existe da folha livre) e ADENDO 02 B6.
 import { expect, test } from './fixtures';
-import { CALC, dev, resultTexts, start, tabs } from './helpers';
+import { CALC, DOCS, dev, resultTexts, start, tabs } from './helpers';
 
 test('[F3-01] [F3-03] string-3 mostra 3,29 V e 0,82 %; gráfico com linha de limite', async ({ page }) => {
   await start(page);
@@ -151,4 +151,38 @@ test('[FCFG-12] botão direito num resultado: formato só daquela região; "Usar
   await page.getByRole('dialog', { name: 'Formato do resultado' }).getByRole('button', { name: 'Usar o do documento' }).click();
   await expect.poll(() => dev(page).text()).toContain('```calc {#r x=40 y=80}');
   await expect.poll(() => resultTexts(page)).toEqual(['12345,678m', '0,3333']);
+});
+
+test('[F-LAYOUT-02] Enter com a cruz na folha (sem região em edição) desce uma linha da grade, como no SMath', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('a:1');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toMatch(/calc \{#\S+ x=100 y=140\}\na := 1/);
+});
+
+test('[F-LAYOUT-03] alinhar as regiões selecionadas: na vertical pelo menu (mesmo x, o mais à esquerda) e na horizontal com Ctrl+Shift+↑ (mesmo topo)', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const head = '---\ntipo: folha\ntitulo: Alinhar\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n';
+  const file = `${DOCS}/alinhar.prsf`;
+  await dev(page).write(file, `${head}${f}calc {#a x=60 y=100}\na := 1\n${f}\n\n${f}calc {#b x=200 y=60}\nb := 2\n${f}\n\n${f}calc {#c x=120 y=200}\nc := 3\n${f}\n`);
+  await dev(page).open(file);
+  const sheet = (await page.getByLabel('Folha').boundingBox())!;
+  await page.mouse.move(sheet.x + 10, sheet.y + 20); // laço em volta das três
+  await page.mouse.down();
+  await page.mouse.move(sheet.x + 500, sheet.y + 320, { steps: 5 });
+  await page.mouse.up();
+  const box = (await page.locator('[data-region="b"]').boundingBox())!;
+  await page.mouse.click(box.x + 1, box.y + 1, { button: 'right' });
+  await page.getByRole('menuitem', { name: 'Alinhar na vertical (à esquerda)' }).click();
+  await expect.poll(() => dev(page).text()).toContain(`${f}calc {#b x=60 y=60}`);
+  expect(await dev(page).text()).toContain(`${f}calc {#c x=60 y=200}`);
+  await page.getByLabel('Folha').focus();
+  await page.keyboard.press('Control+Shift+ArrowUp');
+  await expect.poll(() => dev(page).text()).toContain(`${f}calc {#a x=60 y=60}`);
+  expect(await dev(page).text()).toContain(`${f}calc {#c x=60 y=60}`);
 });

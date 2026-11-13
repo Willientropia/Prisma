@@ -181,6 +181,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         const q = await useWorkspace.getState().ask({ title: 'Descrição da região', message: 'Comentário curto mostrado acima da região (vazio tira):', input: a.descricao ?? '', buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
         if (q.id === 'ok') setAttr(r.id, 'descricao', q.value.trim() || null);
       } },
+      ...(selected.size > 1 && selected.has(r.id) ? [
+        { label: 'Alinhar na vertical (à esquerda)', run: () => alignRegions('x') },
+        { label: 'Alinhar na horizontal (pelo topo)', run: () => alignRegions('y') },
+      ] : []),
     ] });
   };
   const areaMenu = (e: React.MouseEvent, a: (typeof areas)[number]) => {
@@ -273,12 +277,22 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     return { dx: Math.max(dx, -Math.min(...rs.map((r) => num(r.seg, 'x')))), dy: Math.max(dy, -Math.min(...rs.map((r) => num(r.seg, 'y')))) };
   };
 
-  const moveRegions = (ids: string[], dx: number, dy: number) => {
+  /** Grava a posição nova de cada região. */
+  const place = (ids: string[], at: (r: Region) => [number, number]) => {
     // de trás para a frente: a linha de abertura muda de tamanho (x=60 vira x=100) e deslocaria as posições seguintes
     for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) {
       const first = lines(r.seg.raw)[0];
-      edit(doc.id, r.start, r.start + first.length, withPos(first, pos(num(r.seg, 'x') + dx), pos(num(r.seg, 'y') + dy)));
+      edit(doc.id, r.start, r.start + first.length, withPos(first, ...at(r)));
     }
+  };
+  const moveRegions = (ids: string[], dx: number, dy: number) => place(ids, (r) => [pos(num(r.seg, 'x') + dx), pos(num(r.seg, 'y') + dy)]);
+  /** Alinha as selecionadas: 'x' na vertical (mesmo x, o mais à esquerda), 'y' na horizontal (mesmo topo, o mais alto) (F-LAYOUT). */
+  const alignRegions = (axis: 'x' | 'y') => {
+    const ids = [...selected];
+    const rs = fresh().filter((r) => ids.includes(r.id));
+    if (rs.length < 2) return;
+    const v = Math.min(...rs.map((r) => num(r.seg, axis)));
+    place(ids, (r) => (axis === 'x' ? [v, num(r.seg, 'y')] : [num(r.seg, 'x'), v]));
   };
 
   const at = (e: { clientX: number; clientY: number }) => {
@@ -346,10 +360,14 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     if (e.target !== sheet.current) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size) { e.preventDefault(); removeRegions([...selected]); return; }
     if (e.key === 'Escape') { setCross(null); setSelected(new Set()); return; }
+    // Ctrl+Shift+seta esquerda alinha na vertical (à esquerda), Ctrl+Shift+seta acima na horizontal (pelo topo) (F-LAYOUT)
+    if (e.ctrlKey && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowUp') && selected.size > 1) { e.preventDefault(); alignRegions(e.key === 'ArrowLeft' ? 'x' : 'y'); return; }
     if (creating.current) { // campo ainda montando: guarda a tecla (inclusive Enter e Ctrl+G) para aplicar quando tiver foco
       if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); pendingKeys.current.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
       return;
     }
+    // Enter com a cruz (sem região em edição) desce uma linha da grade, como no SMath (F-LAYOUT)
+    if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && crossRef.current) { e.preventDefault(); setCross({ ...crossRef.current, y: crossRef.current.y + GRID }); return; }
     if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
     e.preventDefault();
     const at = crossRef.current;
