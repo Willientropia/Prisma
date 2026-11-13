@@ -4,6 +4,16 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **A6-7:**
+  - Catálogo de funções (`Ctrl+E` e o botão "Todas as funções") e de unidades (`Ctrl+W` com expressão em edição; fora dela, `Ctrl+W` continua fechando o documento).
+  - O diálogo tem 720 × 480 px, com as categorias (Todas, Recentes, por tipo, por biblioteca e por grandeza), a lista com busca e o detalhe com a fórmula. Enter ou duplo clique insere com quadradinhos (`ΔV(□; □; □)`).
+  - Na folha, a escolha reabre a linha que estava em edição ou cria a região na cruz.
+  - **Correção:** uma tecla guardada enquanto a região nova monta não dispara mais o atalho global (antes, `Ctrl+W` nesse intervalo fechava o documento).
+  - **Pendente:**
+    - As descrições das funções nativas foram escritas aqui; o ADENDO 06 não as traz.
+    - A categoria "Texto" fica de fora, porque não há função de texto.
+    - "Recentes" vale só para a sessão.
+
 - **A6-6:**
   - As guias Matrizes, Lógica e programação e Símbolos seguem a referência.
   - `Ctrl+M` insere uma matriz 2 × 2, e `Ctrl+1`, a transposta.

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AppMenu, ChoiceDialog, DocTabs, ExportDialog, FunctionSearch, Ribbon, StatusBar, TitleBar } from './shell/Shell';
+import { AppMenu, ChoiceDialog, DocTabs, ExportDialog, FunctionSearch, CatalogHost, Ribbon, StatusBar, TitleBar } from './shell/Shell';
 import { FormatDialogHost } from './shell/FormatDialogHost';
 import { Home } from './home/Home';
 import { Caderno } from './editors/caderno/Caderno';
@@ -39,6 +39,7 @@ export function App() {
       <ChoiceDialog />
       <FormatDialogHost />
       <FunctionSearch />
+      <CatalogHost />
     </div>
   );
 }

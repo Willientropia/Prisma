@@ -5,6 +5,7 @@ import { interrupt, recalc } from '../engine/run';
 import { activeTextEditor } from '../editors/TextEditor';
 import '../shell/ribbons'; // registra os rótulos do ribbon
 import { saveConfig } from '../shell/config';
+import { openCatalog } from '../shell/catalogo';
 
 const st = useWorkspace.getState;
 const say = (status: string) => st().set({ status, menuOpen: false });
@@ -71,3 +72,7 @@ register('tex.atualizarResultados', { enabled: texInProject, hint: TEX_HINT });
 register('tex.exportarPdf', { run: () => st().set({ exportOpen: true }) });
 register('tex.exportarTex', { run: () => st().set({ exportOpen: true }) });
 register('lib.exportarPacote', { run: () => st().set({ exportOpen: true }) });
+
+// catálogos (ADENDO 06, 4.9): Ctrl+E em qualquer lugar; Ctrl+W só com expressão em edição (fora dela fecha o documento)
+register('catalogo.funcoes', { label: 'Todas as funções', shortcut: 'Ctrl+E', run: () => openCatalog('funcoes') });
+register('catalogo.unidades', { label: 'Catálogo de unidades', run: () => openCatalog('unidades') });

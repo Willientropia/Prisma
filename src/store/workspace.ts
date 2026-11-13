@@ -48,6 +48,7 @@ type State = {
   ribbonTab: RibbonTab;
   lastTabs: Partial<Record<string, RibbonTab>>; // última guia usada por tipo de documento (ADENDO 06, 4.8)
   folhaCruz: boolean; // a folha ativa tem o cursor em cruz: os botões matemáticos criam região nele (4.8)
+  catalog: 'funcoes' | 'unidades' | null; // catálogo aberto (ADENDO 06, 4.9)
   menuOpen: boolean;
   exportOpen: boolean;
   fnSearchOpen: boolean; // busca de função (Ctrl+K, Inserir função)
@@ -199,6 +200,7 @@ export const useWorkspace = create<State>((set, get) => {
     ribbonTab: 'inicio',
     lastTabs: {},
     folhaCruz: false,
+    catalog: null,
     menuOpen: false,
     exportOpen: false,
     showSource: false,

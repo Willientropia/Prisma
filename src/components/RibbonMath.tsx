@@ -8,7 +8,7 @@ import s from './RibbonMath.module.css';
 type Tip = { b: MathButton; x: number; y: number };
 const FOLD_W = 90; // largura do grupo recolhido (botão de 72 px + margens), igual ao CSS de .fold
 
-export function RibbonMath(p: { groups: MathGroup[]; canInsert: boolean; onInsert: (latex: string) => void }) {
+export function RibbonMath(p: { groups: MathGroup[]; canInsert: boolean; onInsert: (latex: string) => void; onCommand: (id: string) => void }) {
   const [tip, setTip] = useState<Tip | null>(null);
   const [folded, setFolded] = useState(0); // quantos grupos, contados da direita, estão recolhidos
   const [open, setOpen] = useState<{ i: number; x: number; y: number } | null>(null);
@@ -41,14 +41,14 @@ export function RibbonMath(p: { groups: MathGroup[]; canInsert: boolean; onInser
   const leave = () => { clearTimeout(timer.current); setTip(null); };
 
   const button = (g: MathGroup, b: MathButton) => {
-    const off = !b.latex || !p.canInsert;
+    const off = !(b.latex || b.cmd) || !p.canInsert;
     const look = b.icon ? <StructIconView name={b.icon} size={g.kind === 'big' ? 26 : 16} stroke={g.kind === 'big' ? 1.5 : 1.8} />
       : <span className={g.kind === 'big' ? s.bigSym : s.smallSym}>{b.sym}</span>;
     const cls = { big: s.big, small: s.small, grid: s.grid, text: s.text }[g.kind];
     return (
       <button key={b.label} type="button" className={cls} aria-disabled={off} aria-label={b.label}
         onMouseDown={(e) => e.preventDefault() /* o foco fica no campo em edição */}
-        onClick={() => { if (!off && b.latex) { setOpen(null); p.onInsert(b.latex); } }} /* aria-disabled e não disabled: botão desabilitado também mostra a dica (4.8) */
+        onClick={() => { if (off) return; setOpen(null); if (b.cmd) p.onCommand(b.cmd); else if (b.latex) p.onInsert(b.latex); }} /* aria-disabled e não disabled: botão desabilitado também mostra a dica (4.8) */
         onMouseEnter={(e) => enter(b, e.currentTarget)} onMouseLeave={leave}>
         {g.kind === 'grid' || g.kind === 'text' ? b.sym : <>{look}<span>{b.label}</span></>}
       </button>
@@ -85,7 +85,7 @@ export function RibbonMath(p: { groups: MathGroup[]; canInsert: boolean; onInser
         <div className={s.tip} role="tooltip" style={{ left: tip.x, top: tip.y }}>
           <div className={s.tipHead}><span className={s.tipName}>{tip.b.label}</span><span className={s.tipKey}>{tip.b.key || 'sem atalho'}</span></div>
           <div className={s.tipDesc}>{tip.b.desc}</div>
-          {!tip.b.latex ? <div className={s.tipOff}>Ainda não disponível</div> : !p.canInsert && <div className={s.tipOff}>Clique numa região de cálculo</div>}
+          {!tip.b.latex && !tip.b.cmd ? <div className={s.tipOff}>Ainda não disponível</div> : !p.canInsert && <div className={s.tipOff}>Clique numa região de cálculo</div>}
         </div>
       )}
     </div>

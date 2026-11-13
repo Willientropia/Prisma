@@ -1,7 +1,7 @@
 // ADENDO 06, Parte 4 (A6-5): guias do ribbon e guia Matemática.
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { dev, start, tabs } from './helpers';
+import { CALC, dev, fieldValues, start, tabs } from './helpers';
 
 const guias = (page: Page) => page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab');
 const ORDEM = ['Início', 'Matemática', 'Matrizes', 'Lógica e programação', 'Símbolos', 'Inserir', 'Exibir', 'Saída'];
@@ -98,4 +98,38 @@ test('[A6-6-05] guia Símbolos: clicar α com a cruz cria a região com α; ∂ 
   await page.getByRole('button', { name: 'Letra grega α', exact: true }).click();
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text()).toMatch(/calc \{#\S+ x=100 y=100\}\nα\n/);
+});
+
+test('[06-33] Ctrl+E, buscar "queda", Enter: insere ΔV(□; □; □)', async ({ page }) => {
+  await start(page);
+  await dev(page).open(`${CALC}/string-3.prsf`);
+  await page.getByLabel('Folha').click({ position: { x: 600, y: 500 } }); // cruz numa área vazia
+  await page.keyboard.press('Control+e');
+  const dlg = page.getByRole('dialog', { name: 'Catálogo de funções' });
+  await expect(dlg).toBeVisible();
+  await page.keyboard.type('queda');
+  await page.keyboard.press('Enter');
+  await expect(dlg).toHaveCount(0);
+  await expect.poll(async () => (await fieldValues(page)).some((v) => v.includes('\Delta') && (v.match(/\placeholder/g) ?? []).length === 3)).toBe(true);
+});
+
+test('[A6-7-01] Ctrl+W na expressão abre o catálogo de unidades e insere a escolhida; fora dela, Ctrl+W continua fechando o documento', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('L:5');
+  await expect.poll(async () => (await fieldValues(page)).some((v) => v.endsWith('5'))).toBe(true); // a região já está em edição
+  await page.keyboard.press('Control+w');
+  const dlg = page.getByRole('dialog', { name: 'Catálogo de unidades' });
+  await expect(dlg).toBeVisible();
+  await dlg.getByRole('option', { name: 'Comprimento', exact: true }).click();
+  await page.keyboard.type('metro');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text()).toContain('L := 5 m');
+  const abertas = await tabs(page).count();
+  await page.getByLabel('Folha').click({ position: { x: 400, y: 400 } });
+  await page.keyboard.press('Control+w'); // fora da expressão: fecha o documento (com alteração, pergunta antes)
+  await page.getByRole('button', { name: 'Não salvar' }).click();
+  await expect(tabs(page)).toHaveCount(abertas - 1);
 });

@@ -135,7 +135,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   const creatingTimer = useRef(0);
   const doneCreating = () => { clearTimeout(creatingTimer.current); creating.current = false; syncCruz(!!crossRef.current); };
   // botão matemático do ribbon com a cruz (sem edição): cria a região nela; o LaTeX entra na frente das teclas pendentes (ADENDO 06, 4.8)
-  const onRibbonInsert = useRef<(latex: string) => void>(() => {});
+  const onRibbonInsert = useRef<(latex: string, at?: { region: string; line?: number }) => void>(() => {});
   const [msg, setMsg] = useState('Clique na grade e digite para criar uma região.');
 
   // B10.6: resultados e gráfico aparecem sem nenhum clique
@@ -364,8 +364,15 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     window.addEventListener('pointerup', up);
   };
 
-  onRibbonInsert.current = (latex) => {
+  onRibbonInsert.current = (latex, back) => {
     if (creating.current) { pendingKeys.current.push({ key: '', latex }); return; } // região nova ainda montando: entra depois das teclas já digitadas
+    if (back && byId(back.region)) { // catálogo: o campo saiu de edição quando o diálogo abriu; reabre a linha e insere no fim
+      pendingKeys.current = [{ key: '', latex }];
+      creating.current = true;
+      creatingTimer.current = window.setTimeout(doneCreating, 2000);
+      setFocus({ id: back.region, line: Math.max(back.line ?? 0, 0) });
+      return;
+    }
     const at = crossRef.current;
     if (!at) return;
     pendingKeys.current = [{ key: '', latex }];
@@ -375,7 +382,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     setCross(null);
   };
   useEffect(() => {
-    const on = (e: Event) => onRibbonInsert.current((e as CustomEvent<string>).detail);
+    const on = (e: Event) => { const d = (e as CustomEvent<string | { latex: string; region: string; line?: number }>).detail; if (typeof d === 'string') onRibbonInsert.current(d); else onRibbonInsert.current(d.latex, d); };
     window.addEventListener('prisma:inserir', on);
     return () => window.removeEventListener('prisma:inserir', on); // remoção garantida ao desmontar a folha
   }, []);
@@ -387,7 +394,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     // Ctrl+Shift+seta esquerda alinha na vertical (à esquerda), Ctrl+Shift+seta acima na horizontal (pelo topo) (F-LAYOUT)
     if (e.ctrlKey && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowUp') && selected.size > 1) { e.preventDefault(); alignRegions(e.key === 'ArrowLeft' ? 'x' : 'y'); return; }
     if (creating.current) { // campo ainda montando: guarda a tecla (inclusive Enter e Ctrl+G) para aplicar quando tiver foco
-      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); pendingKeys.current.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
+      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); /* a tecla guardada não dispara também o atalho global (Ctrl+W fecharia o documento) */ pendingKeys.current.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
       return;
     }
     // Enter com a cruz (sem região em edição) desce uma linha da grade, como no SMath (F-LAYOUT)

@@ -10,6 +10,7 @@ export type MathButton = {
   sym?: string; // símbolo ou nome mostrado (STIX Two Text)
   icon?: StructIcon; // ícone de estrutura com quadradinhos
   latex?: string; // o que insere no campo (#0: seleção ou quadradinho; #@: termo à esquerda); ausente = desabilitado
+  cmd?: string; // em vez de inserir, roda um comando (catálogo, 4.9)
 };
 export type MathGroup = { title: string; kind: MathKind; cols?: number; buttons: MathButton[] };
 
@@ -43,7 +44,7 @@ const MATEMATICA: MathGroup[] = [
     fn('log', 'Logaritmo na base 10, ou na base dada como 2º argumento'), fn('exp', 'Exponencial'), fn('sign', 'Sinal'),
     fn('arg', 'Argumento de complexo, em radianos (converta para deg no marcador)'), fn('re', 'Parte real'), fn('im', 'Parte imaginária'), fn('conj', 'Conjugado'),
   ] },
-  { title: 'Catálogo', kind: 'big', buttons: [B('Todas as funções', 'Ctrl+E', 'Abre o catálogo com todas as funções nativas e das bibliotecas, com busca e descrição.', { icon: 'fx' })] }, // A6-7
+  { title: 'Catálogo', kind: 'big', buttons: [{ ...B('Todas as funções', 'Ctrl+E', 'Abre o catálogo com todas as funções nativas e das bibliotecas, com busca e descrição.', { icon: 'fx' }), cmd: 'catalogo.funcoes' }] },
   { title: 'Cálculo', kind: 'big', buttons: [
     B('Somatório', 'sum(', 'Somatório com índice, início e fim.', 'Σ', '\\sum_{#0=#?}^{#?}#?'),
     B('Produtório', 'product(', 'Produtório com índice, início e fim.', 'Π', '\\operatorname{product}(#0;\\,#?;\\,#?;\\,#?)'),

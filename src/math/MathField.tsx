@@ -212,6 +212,8 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === '.') { p.current.onSymbolic?.(mf.value); return true; }
   // Ctrl+K: busca de função (F4-06); o MathLive não deixa o atalho chegar à janela
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { run('funcao.inserir'); return true; }
+  // catálogos (ADENDO 06, 4.9); fora do campo, Ctrl+W continua fechando o documento
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && ['e', 'w'].includes(e.key.toLowerCase())) { run(e.key.toLowerCase() === 'e' ? 'catalogo.funcoes' : 'catalogo.unidades'); return true; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey) {
     const key = e.key.toLowerCase();
     const sym = e.shiftKey ? ({ p: '\\pi ', z: '\\infty ' } as Record<string, string>)[key] : CTRL_SYMBOL[key]; // Ctrl+Shift+P = π, Ctrl+Shift+Z = ∞
