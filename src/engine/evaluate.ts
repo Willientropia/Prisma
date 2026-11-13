@@ -81,7 +81,13 @@ export function show(v: unknown, target: string | undefined, fmt: FormatOpts): S
   }
   if (isScale(target)) {
     if (isUnit(v)) throw cannot(prettyUnit(v.formatUnits()), target);
-    const n = Number(v) * SCALES[target];
+    // como no SMath (BUG-021): complexo sem parte imaginária é número; matriz converte elemento a elemento
+    if (math.isComplex(v)) { if (v.im !== 0) throw cannot('número complexo', target); v = v.re; }
+    if (typeof v !== 'number') {
+      const s = show(math.multiply(v as never, SCALES[target]), undefined, fmt);
+      return { ...s, text: `${s.text} ${target}`, unit: target, unitRaw: target };
+    }
+    const n = v * SCALES[target];
     return { text: `${fmtNum(n, fmt)} ${target}`, value: n, unit: target, numText: fmtNum(n, fmt), unitRaw: target };
   }
   if (typeof v === 'number' || math.isComplex(v)) {

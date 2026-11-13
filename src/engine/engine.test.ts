@@ -288,6 +288,17 @@ describe('[A6-ESCALA] ‰ e ppm valem em expressão, iguais ao %', () => {
     expect(last(['3 ppm = ?']).value).toBeCloseTo(3e-6, 20);
     expect(last(['x := 2‰', 'y := x*1000', 'y = ?']).value).toBeCloseTo(2, 12);
   });
+  it('[BUG-021] matriz em %, ‰ ou ppm converte elemento a elemento, como no SMath; complexo sem parte imaginária vira número; com parte imaginária dá erro em português (achado 12 do Fable)', () => {
+    const m = last(['M := [0.1, 0.2]', 'M = ? %']);
+    expect(m.matrix).toEqual([['10'], ['20']]);
+    expect(m.text).toContain('%');
+    expect(m.text).not.toContain('NaN');
+    expect(last(['M := [0.001, 0.002]', 'M = ? ‰']).matrix).toEqual([['1'], ['2']]);
+    expect(last(['z := complex(0.2, 0)', 'z = ? %']).text).toBe('20 %');
+    const c = last(['2+3i = ? %']);
+    expect(c.text).toBeUndefined();
+    expect(c.error).toMatch(/^Não é possível converter número complexo em %/);
+  });
 });
 
 describe('[BUG-020] número colado em nome', () => {

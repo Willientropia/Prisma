@@ -6,7 +6,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **Protocolo enxuto (12/11):** uma pasta só, testes ligados à mudança durante o trabalho, `verify:full` e `revisor` por versão. O pre-commit roda só tipos e testes de unidade (sem `robustez.test.ts`, que abre processos com prazo e fica no `verify`), e o `check-matriz` vira aviso.
 - **A6-TECLADO2:** `V.o^2` é V_o ao quadrado e `f.a(x)` é a função f_a: `^` e `(` saem do índice (achado 7 do Fable). Operador e Espaço só saem do índice se o cursor está mesmo nele: `x/a.b`, apagar o `b` e digitar `+c` dá x/(a + c), não x/a + c (achado 9). O achado 8 não se reproduz: dentro da unidade do apóstrofo a lista só tem unidades, e as 70 têm a forma interna. Não testado à parte: `state.struct` velho com `)`.
-- **A6-ESCALA:** `‰` e `ppm` valem em expressão, iguais ao `%`: `5‰ = ?` dá 0,005, `3 ppm = ?` dá 3·10⁻⁶, `x := 2‰` grava `2 ‰`. **Pendente, decisão do usuário:** o achado 12 (matriz e complexo em `%` mostram "NaN %") não virou erro, porque o SMath converte matriz elemento a elemento (`DIi_h = ? %` dá [100; 80; …] no `Prova_de_Qualidade_2.sm`, e o complexo com parte imaginária zero dá 0).
+- **A6-ESCALA:** `‰` e `ppm` valem em expressão, iguais ao `%`: `5‰ = ?` dá 0,005, `3 ppm = ?` dá 3·10⁻⁶, `x := 2‰` grava `2 ‰`. **BUG-021 (achado 12, como o SMath, decisão do usuário):** matriz em `%`, `‰` ou `ppm` converte elemento a elemento (`DIi_h = ? %` dá [100; 80; …], igual ao SMath no `Prova_de_Qualidade_2.sm`); complexo sem parte imaginária vira número; com parte imaginária dá "Não é possível converter número complexo em %".
 
 ## v0.3.0 — 2026-11-12
 
