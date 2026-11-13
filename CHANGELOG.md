@@ -4,6 +4,20 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **Revisão da versão (revisor):**
+  - O catálogo usa a linha real da região como destino. Com o cursor no campo de unidade do resultado, `Ctrl+W` não abre o catálogo, porque antes a unidade ia para outra linha.
+  - BUG-021 vale para cada elemento da matriz: unidade ou complexo dão erro, e texto em `%` dá erro em português.
+  - Depois de um `Alt` por engano, qualquer tecla fecha as letras.
+  - Ao fechar um documento, a última guia do próximo é aplicada, e a cruz da folha é zerada.
+  - O Ribbon e o catálogo saíram do `Shell.tsx` (300 linhas).
+  - Teste BUG-023 do `Ctrl+W` apertado enquanto a região monta.
+  - **Pendente (não bloqueia):**
+    - O catálogo na folha insere no fim da linha, e não no cursor.
+    - Depois de Potência ou Índice pelo ribbon, o Espaço não sai do expoente.
+    - O catálogo sem destino perde a escolha em silêncio.
+    - Testar à mão o clique dentro de regiões com escala.
+    - `1/3 ppm` e `1/3 mm` aparecem como 1/(3 ppm), mas o motor calcula (1/3)·ppm; o defeito já existia antes.
+
 - **A6-7:**
   - Catálogo de funções (`Ctrl+E` e o botão "Todas as funções") e de unidades (`Ctrl+W` com expressão em edição; fora dela, `Ctrl+W` continua fechando o documento).
   - O diálogo tem 720 × 480 px, com as categorias (Todas, Recentes, por tipo, por biblioteca e por grandeza), a lista com busca e o detalhe com a fórmula. Enter ou duplo clique insere com quadradinhos (`ΔV(□; □; □)`).

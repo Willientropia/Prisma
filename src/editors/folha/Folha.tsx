@@ -384,7 +384,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   useEffect(() => {
     const on = (e: Event) => { const d = (e as CustomEvent<string | { latex: string; region: string; line?: number }>).detail; if (typeof d === 'string') onRibbonInsert.current(d); else onRibbonInsert.current(d.latex, d); };
     window.addEventListener('prisma:inserir', on);
-    return () => window.removeEventListener('prisma:inserir', on); // remoção garantida ao desmontar a folha
+    return () => { window.removeEventListener('prisma:inserir', on); useWorkspace.getState().set({ folhaCruz: false }); }; // remoção garantida ao desmontar; a cruz some com a folha
   }, []);
 
   const onSheetKey = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -447,7 +447,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       content = (ls.length ? ls : ['']).map((raw, i) => {
         const mine = focus?.id === r.id && focus.line === i;
         return (
-          <div key={i} className={s.regionLine}>
+          <div key={i} className={s.regionLine} data-line={i}>
             <MathLine raw={raw} isCheck={b.type === 'verificar'} result={result?.blocks[r.key]?.[i]} stale={stale} ctx={{ ...ctx, before: before(r.key, i) }} theme="dark" size={20} assist={{ items: itemsFor(r.key, i), auto: assistOn }}
               focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={doneCreating}
               onWrite={(w) => writeLine(r.id, i, w)}

@@ -299,6 +299,11 @@ describe('[A6-ESCALA] ‰ e ppm valem em expressão, iguais ao %', () => {
     expect(c.text).toBeUndefined();
     expect(c.error).toMatch(/^Não é possível converter número complexo em %/);
   });
+  it('[BUG-021] cada elemento da matriz segue a regra do escalar; texto dá erro em português (revisor da v0.4.0)', () => {
+    expect(last(['M := [1 m, 2 m]', 'M = ? %']).error).toMatch(/^Não é possível converter m em %/);
+    expect(last(['[1, 2+3i] = ? %']).error).toMatch(/^Não é possível converter número complexo em %/);
+    expect(last(['s := "abc"', 's = ? %']).error).toMatch(/^Não é possível converter texto em %/);
+  });
 });
 
 describe('[BUG-020] número colado em nome', () => {

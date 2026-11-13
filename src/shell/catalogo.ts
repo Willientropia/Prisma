@@ -53,9 +53,12 @@ export const FUNCTION_CATEGORIES = [MAT, TRIG, CPX, MTZ, PROG];
 type Target = { field: ReturnType<typeof focusedField>; region?: string; line?: number };
 let catalogTarget: Target = { field: null };
 export function openCatalog(kind: 'funcoes' | 'unidades') {
+  if (useWorkspace.getState().catalog) return; // Ctrl+E dentro da busca não troca o destino guardado
   const field = focusedField();
-  const box = field?.closest<HTMLElement>('[data-region]');
-  catalogTarget = { field, region: box?.dataset.region, line: box ? [...box.querySelectorAll('math-field')].indexOf(field!) : undefined };
+  if (field?.closest('.unit-input')) return; // campo de unidade do resultado: o assistente já lista as unidades ali; reabrir a linha poria a unidade na expressão
+  const region = field?.closest<HTMLElement>('[data-region]')?.dataset.region;
+  const line = field?.closest<HTMLElement>('[data-line]')?.dataset.line; // a linha da região, não a ordem dos campos (o de unidade também é math-field)
+  catalogTarget = { field, region, line: line === undefined ? undefined : Number(line) };
   useWorkspace.getState().set({ catalog: kind });
 }
 export const takeCatalogTarget = () => { const t = catalogTarget; catalogTarget = { field: null }; return t; };

@@ -352,3 +352,15 @@ test('[A6-FIX2-01] editar y := a/2x não muda o valor (a/(2x), não (a/2)·x)', 
   await expect.poll(() => dev(page).text()).toContain('y := a/(2*x) + 0 = ?');
   await expect.poll(() => resultTexts(page)).toEqual(['1']);
 });
+
+test('[BUG-023] Ctrl+W apertado enquanto a região nova monta não fecha o documento: a tecla fica só com a região', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  const abertas = await tabs(page).count();
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('L:5'); // sem pausa: a região ainda está montando
+  await page.keyboard.press('Control+w');
+  await expect(page.getByRole('dialog', { name: 'Catálogo de unidades' })).toBeVisible(); // a tecla foi para o campo
+  await expect(page.getByRole('button', { name: 'Não salvar' })).toHaveCount(0); // o fechar do documento não foi disparado
+  expect(await tabs(page).count()).toBe(abertas);
+});

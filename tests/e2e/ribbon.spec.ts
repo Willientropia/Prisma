@@ -111,7 +111,7 @@ test('[06-33] Ctrl+E, buscar "queda", Enter: insere ΔV(□; □; □)', async (
   await page.keyboard.type('queda');
   await page.keyboard.press('Enter');
   await expect(dlg).toHaveCount(0);
-  await expect.poll(async () => (await fieldValues(page)).some((v) => v.includes('\Delta') && (v.match(/\placeholder/g) ?? []).length === 3)).toBe(true);
+  await expect.poll(async () => (await fieldValues(page)).some((v) => v.includes('\\Delta') && (v.match(/\\placeholder/g) ?? []).length === 3)).toBe(true);
 });
 
 test('[A6-7-01] Ctrl+W na expressão abre o catálogo de unidades e insere a escolhida; fora dela, Ctrl+W continua fechando o documento', async ({ page }) => {

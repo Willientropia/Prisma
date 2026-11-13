@@ -82,12 +82,18 @@ export function show(v: unknown, target: string | undefined, fmt: FormatOpts): S
   if (isScale(target)) {
     if (isUnit(v)) throw cannot(prettyUnit(v.formatUnits()), target);
     // como no SMath (BUG-021): complexo sem parte imaginária é número; matriz converte elemento a elemento
-    if (math.isComplex(v)) { if (v.im !== 0) throw cannot('número complexo', target); v = v.re; }
-    if (typeof v !== 'number') {
-      const s = show(math.multiply(v as never, SCALES[target]), undefined, fmt);
+    // a mesma regra vale para cada elemento da matriz
+    const scalar = (x: unknown): number => {
+      if (isUnit(x)) throw cannot(prettyUnit(x.formatUnits()), target);
+      if (math.isComplex(x)) { if (x.im !== 0) throw cannot('número complexo', target); return x.re; }
+      if (typeof x !== 'number') throw cannot(typeof x === 'string' ? 'texto' : 'este valor', target);
+      return x;
+    };
+    if (math.isMatrix(v) || Array.isArray(v)) {
+      const s = show(math.map(v as never, (x: unknown) => scalar(x) * SCALES[target]), undefined, fmt);
       return { ...s, text: `${s.text} ${target}`, unit: target, unitRaw: target };
     }
-    const n = v * SCALES[target];
+    const n = scalar(v) * SCALES[target];
     return { text: `${fmtNum(n, fmt)} ${target}`, value: n, unit: target, numText: fmtNum(n, fmt), unitRaw: target };
   }
   if (typeof v === 'number' || math.isComplex(v)) {

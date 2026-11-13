@@ -362,7 +362,9 @@ export const useWorkspace = create<State>((set, get) => {
       const i = docs.findIndex((d) => d.id === id);
       const rest = docs.filter((d) => d.id !== id);
       const next = get().active === id ? (rest[Math.min(i, rest.length - 1)]?.id ?? 'home') : get().active;
-      set({ openDocs: rest, active: next, menuOpen: false, status: null });
+      set({ openDocs: rest });
+      if (next !== get().active) get().activate(next); // última guia do tipo e cruz zerada, como ao trocar de aba
+      else set({ menuOpen: false, status: null });
       return true;
     },
 
