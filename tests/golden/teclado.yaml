@@ -623,3 +623,20 @@
   teclas: "V.o/T.total{Enter}"
   linear: "V_o/T_total"
   latex_contem: ['\frac{']
+- id: A6-TECLADO2-01
+  descricao: "achado 7 do Fable: ^ depois do índice sai do índice (V.o^2 é V_o ao quadrado)"
+  contexto: folha
+  definidos: [V_o]
+  teclas: "V.o^2{Enter}"
+  linear: "V_o^2"
+- id: A6-TECLADO2-02
+  descricao: "achado 7 do Fable: ( depois do índice sai do índice (f.a(x) é a função f_a)"
+  contexto: folha
+  teclas: "f.a(x){Enter}"
+  linear: "f_a(x)"
+- id: A6-TECLADO2-03
+  descricao: "achado 9 do Fable: depois de apagar o índice, + não sai do denominador (x/a.b, apaga b, +c)"
+  contexto: folha
+  definidos: [x, a, c]
+  teclas: "x/a.b{Backspace}{Backspace}+c{Enter}"
+  linear: "x/(a + c)"

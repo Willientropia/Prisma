@@ -126,6 +126,17 @@ const CTRL_SYMBOL: Record<string, string> = { '3': '\\ne ', '9': '\\le ', '0': '
 
 const GREEK_CMD =/^\\(?:var)?(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)$/;
 
+/** O LaTeX termina num índice ou expoente (`_{…}`, `^{…}`, ou `_1` sem chaves)? Conta as chaves de trás para a frente. */
+export function endsInScript(latex: string): boolean {
+  if (!latex.endsWith('}')) return /[_^](?:\\[A-Za-z]+|[^{}\\])$/.test(latex);
+  let depth = 0;
+  for (let i = latex.length - 1; i >= 0; i--) {
+    if (latex[i] === '}') depth++;
+    else if (latex[i] === '{' && --depth === 0) return latex[i - 1] === '_' || latex[i - 1] === '^';
+  }
+  return false;
+}
+
 function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current: FieldProps }): boolean {
   const before = () => beforeCaret(mf);
   // dígitos coladas numa letra ou grega (R1, ρ1) fazem parte do nome; o texto antes do cursor não basta (perde "(" e cola \coloneq no número)
@@ -150,7 +161,17 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   const afterDigit = () => /\d$/.test(before()) && !nameDigit();
   const atEnd = () => mf.position === mf.lastOffset;
   const insert = (latex: string) => mf.insert(latex, { selectionMode: latex.includes('#0') ? 'placeholder' : 'after', format: 'latex' });
-  const leaveSub = () => { if (state.script === 'sub') mf.executeCommand('moveAfterParent'); if (state.script === 'sub') state.script = null; };
+  // sai do índice ou expoente só se o cursor está mesmo nele: state.script fica velho depois de apagar a estrutura
+  // ou de um clique, e aí o moveAfterParent sairia da fração ou do parêntese (achado 9 do Fable, A6-TECLADO2)
+  const leaveScript = () => {
+    const at = mf.position;
+    mf.executeCommand('moveAfterParent');
+    const out = endsInScript(before());
+    if (!out) mf.position = at;
+    state.script = null;
+    return out;
+  };
+  const leaveSub = () => { if (state.script === 'sub') leaveScript(); };
   // ao sair de um identificador, reclassifica: variável, unidade ou não definida (B4)
   const classify = (force = false) => {
     if (!force && (!atEnd() || state.script)) return;
@@ -218,6 +239,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
   // ':' e '=' não reclassificam: o nome à esquerda está sendo definido ou avaliado
   // ';' e ')': reclassificar ali tiraria o cursor de dentro dos parênteses (f(a;b)); confirmar reclassifica
   if (OPERATOR_KEYS.has(e.key) && !(e.key === ',' && state.script === 'sub')) { leaveSub(); if (!['/', ',', ':', '=', ';', ')'].includes(e.key)) classify(); } // a vírgula dentro do índice é texto: não sai dele
+  if (e.key === '^' || e.key === '(') leaveSub(); // V.o^2 é V_o ao quadrado e f.a(x) é a função f_a (achado 7 do Fable)
   switch (e.key) {
     case 'Enter': commit(e.shiftKey ? 'shift-enter' : 'enter'); return true;
     case 'Escape': commit('escape'); return true;
@@ -291,7 +313,7 @@ function handleKey(mf: MathfieldElement, e: Key, state: FieldState, p: { current
     case '_': state.script = 'sub'; return false;
     case '^': state.script = 'sup'; return false;
     case ' ': {
-      if (state.script) { mf.executeCommand('moveAfterParent'); state.script = null; return true; }
+      if (state.script && leaveScript()) return true;
       // só um nome na região: vira texto (comportamento do SMath); com expressão, o Espaço amplia a seleção (A6-3)
       const word = p.current.onToText && lone();
       if (word) { state.edited = false; holdKeys(); p.current.onToText!(word); return true; } // edited: a saída do campo não grava a linha de volta por cima do texto

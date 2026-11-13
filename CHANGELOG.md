@@ -5,6 +5,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 ## Em andamento
 
 - **Protocolo enxuto (12/11):** uma pasta só, testes ligados à mudança durante o trabalho, `verify:full` e `revisor` por versão. O pre-commit roda só tipos e testes de unidade (sem `robustez.test.ts`, que abre processos com prazo e fica no `verify`), e o `check-matriz` vira aviso.
+- **A6-TECLADO2:** `V.o^2` é V_o ao quadrado e `f.a(x)` é a função f_a: `^` e `(` saem do índice (achado 7 do Fable). Operador e Espaço só saem do índice se o cursor está mesmo nele: `x/a.b`, apagar o `b` e digitar `+c` dá x/(a + c), não x/a + c (achado 9). O achado 8 não se reproduz: dentro da unidade do apóstrofo a lista só tem unidades, e as 70 têm a forma interna. Não testado à parte: `state.struct` velho com `)`.
 
 ## v0.3.0 — 2026-11-12
 
