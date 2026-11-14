@@ -385,3 +385,14 @@ test('[BUG-025] função longa no caderno fica na largura do bloco e rola por de
   expect(conteudo).toBeGreaterThan(campo); // a expressão continua inteira, rolando dentro do campo
   expect(curta).toBeLessThan(100); // linha curta não estica nem encolhe
 });
+
+test('[BUG-028] sin(g(t)) e diff(i_cc(t, 0), t, 1) aparecem com todos os parênteses no campo', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const file = `${DOCS}/parenteses.prsm`;
+  const head = '---\ntipo: caderno\ntitulo: P\nbibliotecas: []\nunidades: SI\nversao_formato: 1\n---\n\n';
+  await dev(page).write(file, `${head}${f}calc {#c}\ng(t) := t\ni_cc(t, a) := t\nsin(g(1)) = ?\ndiff(i_cc(t, 0), t, 1) = ?\n${f}\n`);
+  await dev(page).open(file);
+  const shown = () => page.evaluate(() => [...document.querySelectorAll('article math-field')].slice(2).map((m) => (m.shadowRoot!.querySelector('.ML__content') as HTMLElement).innerText.replace(/[\s\u200b]/g, '')));
+  await expect.poll(shown).toEqual(['sin(g(1))', 'diff(icc(t;0);t;1)']);
+});

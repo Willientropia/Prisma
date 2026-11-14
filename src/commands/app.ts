@@ -6,6 +6,7 @@ import { activeTextEditor } from '../editors/TextEditor';
 import '../shell/ribbons'; // registra os rótulos do ribbon
 import { saveConfig } from '../shell/config';
 import { openCatalog } from '../shell/catalogo';
+import { printPage } from '../shell/imprimir';
 
 const st = useWorkspace.getState;
 const say = (status: string) => st().set({ status, menuOpen: false });
@@ -19,7 +20,7 @@ register('app.novoProjeto', { label: 'Novo projeto', run: () => void st().newPro
 register('app.salvar', { label: 'Salvar', shortcut: 'Ctrl+S', run: () => { st().set({ menuOpen: false }); void st().save(); } });
 register('app.salvarComo', { label: 'Salvar como', shortcut: 'Ctrl+Shift+S', run: () => { st().set({ menuOpen: false }); void st().saveAs(); } });
 register('app.exportar', { label: 'Exportar', run: () => st().set({ exportOpen: true, menuOpen: false }) });
-register('app.imprimir', { label: 'Imprimir', shortcut: 'Ctrl+P' });
+register('app.imprimir', { label: 'Imprimir', shortcut: 'Ctrl+P', run: () => { if (printPage()) st().set({ menuOpen: false }); else say('Imprimir: por enquanto, só o caderno'); } });
 register('app.gerarSkill', { label: 'Gerar skill para IA' });
 register('app.fechar', {
   label: 'Fechar', shortcut: 'Ctrl+W',

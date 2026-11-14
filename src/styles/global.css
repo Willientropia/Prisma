@@ -61,6 +61,17 @@ math-field::part(menu-toggle), math-field::part(virtual-keyboard-toggle) { displ
 .mline:hover .unit-marker, .mline:focus-within .unit-marker, .unit-marker:focus-visible { opacity: 1; }
 .unit-input { display: inline-block; min-width: 2em; border-bottom: 1px solid var(--math-focus-frame); }
 
+/* Imprimir (src/shell/imprimir.ts): só o papel, na largura da A4 com 10 mm de margem (190 mm = 718 px) */
+html.printing article { width: 718px !important; max-width: none !important; padding: 0 !important; box-shadow: none !important; }
+@media print {
+  @page { size: A4; margin: 10mm; }
+  html, body { height: auto !important; overflow: visible !important; background: var(--paper) !important; }
+  :has(article) { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; background: var(--paper) !important; }
+  :has(article) > :not(:has(article)):not(article) { display: none !important; }
+  article > :not([data-text-start]) { break-inside: avoid; } /* bloco de cálculo ou gráfico não se parte entre páginas */
+  article h1, article h2, article h3 { break-after: avoid; }
+}
+
 /* texto editável formatado (TipTap) */
 .prose-editor .ProseMirror { outline: none; white-space: pre-wrap; }
 .prose-editor .ProseMirror p { margin: 0 0 8px; }

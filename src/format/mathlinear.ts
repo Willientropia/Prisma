@@ -338,6 +338,10 @@ function numLatex(v: string) {
   return (m ? m[1] : v).replace('.', '{,}') + (m ? `\\text{${m[2]}}${m[3]}` : '');
 }
 
+/** Há chamada de função do usuário (não nativa) em algum ponto da árvore? (BUG-028) */
+const hasUserCall = (n: unknown): boolean =>
+  !!n && typeof n === 'object' && (((n as Node).t === 'call' && !BUILTINS.has((n as { f: string }).f)) || Object.values(n).some(hasUserCall));
+
 export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
   const L = (c: Node) => nodeLatex(c, ctx);
   const strip = (c: Node) => (c.t === 'paren' ? c.a : c);
@@ -377,12 +381,14 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
         if (n.f === 'integral') return `\\int_{${L(lo)}}^{${L(hi)}}${B(body)}\\mathrm{d}${idLatex(v.name)}`;
         return `\\sum_{${idLatex(v.name)}=${L(lo)}}^{${L(hi)}}${prec(body) < 3 ? `\\left(${B(body)}\\right)` : B(body)}`;
       }
+      // BUG-028: o campo do MathLive pareia errado \operatorname{sin}( com g(t) dentro (some o "(" de g); \left( \right) ele desenha certo
+      const [o, c] = BUILTINS.has(n.f) && n.args.some(hasUserCall) ? ['\\left(', '\\right)'] : ['(', ')'];
       if (n.f === 'diff' && (n.args.length === 2 || n.args.length === 3) && v.t === 'id') { // diff(f, x[, ponto]): x é do cálculo (BUG-026)
         const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), v.name]) });
-        return `\\operatorname{diff}(${[B(body), B(v), ...(lo ? [L(lo)] : [])].join(';\\,')})`;
+        return `\\operatorname{diff}${o}${[B(body), B(v), ...(lo ? [L(lo)] : [])].join(';\\,')}${c}`;
       }
       const name = BUILTINS.has(n.f) ? `\\operatorname{${n.f}}` : idLatex(n.f);
-      return `${name}(${n.args.map(L).join(';\\,')})`; // ΔV(L; I; S): ponto e vírgula separa argumentos (B4)
+      return `${name}${o}${n.args.map(L).join(';\\,')}${c}`; // ΔV(L; I; S): ponto e vírgula separa argumentos (B4)
     }
     case 'bin': {
       if (n.op === '/') return `\\frac{${L(strip(n.a))}}{${L(strip(n.b))}}`;

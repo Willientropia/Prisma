@@ -63,6 +63,14 @@ describe('conversor: regras', () => {
     expect(toLatex('diff(g(t), t, y) = ?', ctx)).toContain('\\class{undef}{y}'); // o ponto continua conferido
   });
 
+  it('[BUG-028] função nativa com chamada de função do usuário dentro usa \\left( \\right), que o campo do MathLive desenha certo; ida e volta igual', () => {
+    for (const s of ['sin(g(t))', 'diff(i_cc(t, 0), t, 1)', 'exp(2*h(x, 1))']) {
+      expect(toLatex(s)).toMatch(/^\\operatorname\{(sin|diff|exp)\}\\left\(.*\\right\)$/);
+      expect(lineToLinear(latexToLine(toLatex(s)))).toBe(s);
+    }
+    expect(toLatex('sin(2*x + atan(r))')).toBe('\\operatorname{sin}(2\\cdot x+\\operatorname{atan}(r))'); // sem chamada do usuário: como antes
+  });
+
   it('[B10-08] unidade do math.js para a do arquivo; linha eval guarda a unidade pedida', () => {
     expect(unitFromMathjs('(ohm mm^2) / m')).toBe('Ω*mm^2/m');
     expect(unitFromMathjs('kWh')).toBe('kWh');
