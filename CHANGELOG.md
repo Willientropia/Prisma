@@ -6,6 +6,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **BUG-024** `π` digitado como símbolo não aparece mais sublinhado como variável não definida (a tela só reconhecia `pi`).
 - **BUG-025** Expressão longa no caderno não sai mais do papel: o campo fica na largura do bloco e rola por dentro, seguindo o cursor. Pendente: quebrar a linha de verdade nos operadores, que o MathLive não faz.
+- **BUG-026** Em `diff(f(t), t, t0)`, o `t` não aparece mais sublinhado como não definido; a variável da derivada é do cálculo, como a da integral.
+- **BUG-027** A legenda do gráfico 2D mostra as séries em notação matemática, como o campo, e não o texto cru com `_` e `sqrt`.
 - **A6-9** Gráfico 2D de função (ADENDO 06, 5.4 e 4.6), na folha e no caderno.
   - Criar: `@` numa área vazia da folha, Inserir → Gráfico 2D ou Início → Gráfico (no caderno). O gráfico nasce com 320 × 240 px e o campo de expressão embaixo já em edição.
   - O campo aceita expressão de uma variável livre, com qualquer nome. Vários itens separados por `;` viram várias curvas. Também aceita matriz n × 2 e vetor de matrizes. Com duas variáveis livres, aparece o erro do ADENDO.

@@ -115,6 +115,16 @@ test('[06-42] duas variáveis livres mostram o erro de 5.4', async ({ page }) =>
   await expect(page.locator('[data-grafico]')).toContainText('O gráfico 2D precisa de uma única variável livre (encontradas: x, t)');
 });
 
+test('[BUG-027] a legenda mostra as séries em notação matemática, sem _ nem sqrt crus', async ({ page }) => {
+  await start(page);
+  await dev(page).write(`${DOCS}/legenda.prsf`, folha(`${f}calc {#a x=40 y=40}\nv_a := 2\n${f}\n\n` + graph('"v_a*sin(x)", "sqrt(2)*x"', 'legenda: true\n')));
+  await dev(page).open(`${DOCS}/legenda.prsf`);
+  const items = page.locator('[data-grafico] [class*="legendItem"]');
+  await expect(items).toHaveCount(2);
+  await expect(items.first().locator('.ML__base, .ML__mathit, .ML__cmr').first()).toBeAttached(); // markup do MathLive
+  for (const t of await items.allTextContents()) expect(t).not.toMatch(/[_^]|sqrt/);
+});
+
 test('[06-29] selecionar o gráfico mostra e ativa Ferramentas de gráfico; desselecionar volta à guia anterior', async ({ page }) => {
   await start(page);
   await dev(page).open(REF);

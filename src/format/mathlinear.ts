@@ -377,6 +377,10 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
         if (n.f === 'integral') return `\\int_{${L(lo)}}^{${L(hi)}}${B(body)}\\mathrm{d}${idLatex(v.name)}`;
         return `\\sum_{${idLatex(v.name)}=${L(lo)}}^{${L(hi)}}${prec(body) < 3 ? `\\left(${B(body)}\\right)` : B(body)}`;
       }
+      if (n.f === 'diff' && (n.args.length === 2 || n.args.length === 3) && v.t === 'id') { // diff(f, x[, ponto]): x é do cálculo (BUG-026)
+        const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), v.name]) });
+        return `\\operatorname{diff}(${[B(body), B(v), ...(lo ? [L(lo)] : [])].join(';\\,')})`;
+      }
       const name = BUILTINS.has(n.f) ? `\\operatorname{${n.f}}` : idLatex(n.f);
       return `${name}(${n.args.map(L).join(';\\,')})`; // ΔV(L; I; S): ponto e vírgula separa argumentos (B4)
     }

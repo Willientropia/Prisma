@@ -56,6 +56,13 @@ describe('conversor: regras', () => {
     expect(toLatex('ω := 2*pi*f', ctx)).not.toContain('undef');
   });
 
+  it('[BUG-026] a variável da derivada é do cálculo, como a da integral: não aparece como indefinida', () => {
+    const ctx = { defined: new Set(['g', 't_0']) };
+    expect(toLatex('diff(g(t), t, t_0) = ?', ctx)).not.toContain('undef');
+    expect(toLatex('diff(g(t), t) = ?', ctx)).not.toContain('undef');
+    expect(toLatex('diff(g(t), t, y) = ?', ctx)).toContain('\\class{undef}{y}'); // o ponto continua conferido
+  });
+
   it('[B10-08] unidade do math.js para a do arquivo; linha eval guarda a unidade pedida', () => {
     expect(unitFromMathjs('(ohm mm^2) / m')).toBe('Ω*mm^2/m');
     expect(unitFromMathjs('kWh')).toBe('kWh');

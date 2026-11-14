@@ -5,7 +5,7 @@ import type { Graph2D } from '../../engine/grafico';
 import { fmtNum } from '../../engine/format';
 import { setView, type View } from '../../format/grafico';
 import { latexToLine, nodeLatex, nodeToLinear, parseLinear } from '../../format/mathlinear';
-import { MathField, type Key } from '../../math/MathField';
+import { MathField, MathMarkup, type Key } from '../../math/MathField';
 import { LIVE_MS } from '../../math/MathLine';
 import { niceTicks, pathOf, px, py, tickText, unpx, zoomView, type Frame } from './eixos';
 import s from './grafico.module.css';
@@ -30,9 +30,10 @@ function splitTop(latex: string): string[] {
   }
   return out.map((x) => x.trim()).filter(Boolean);
 }
-const seriesLatex = (list: string[]) => list.map((x) => {
+const itemLatex = (x: string) => {
   try { const l = parseLinear(x); return nodeLatex(l.kind === 'def' ? l.rhs : l.expr); } catch { return `\\text{${x.replace(/[\\{}]/g, '')}}`; }
-}).join(';\\ ');
+};
+const seriesLatex = (list: string[]) => list.map(itemLatex).join(';\\ ');
 /** Do campo para as séries do arquivo; null: algum item incompleto. */
 function fromLatex(latex: string): string[] | null {
   const out: string[] = [];
@@ -179,17 +180,17 @@ export function Grafico2D(p: Props) {
             </g>
           ))}
         </g>
-        {d?.legenda && series.length > 0 && (
-          <g className={s.legend} transform={`translate(${f.left + f.w - 8} ${f.top + 8})`}>
-            {series.map((q, i) => (
-              <g key={i} transform={`translate(0 ${i * 16})`}>
-                <line x1={-14} x2={-2} y1={6} y2={6} style={{ stroke: color(i) }} className={s.line} />
-                <text x={-18} y={10} textAnchor="end" className={s.label}>{q.expr}</text>
-              </g>
-            ))}
-          </g>
-        )}
       </svg>
+      {d?.legenda && series.length > 0 && ( // em notação matemática, como o campo: nunca o texto cru com _ (CLAUDE.md)
+        <div className={s.legend} style={{ top: f.top + 6, right: W - f.left - f.w + 6 }}>
+          {series.map((q, i) => (
+            <div key={i} className={s.legendItem}>
+              <MathMarkup latex={itemLatex(q.expr)} theme={p.theme} size={11} />
+              <span className={s.swatch} style={{ background: color(i) }} />
+            </div>
+          ))}
+        </div>
+      )}
       <div className={s.resizeE} onPointerDown={(e) => start('e', e)} {...handlers} />
       <div className={s.resizeS} onPointerDown={(e) => start('s', e)} {...handlers} />
       <div className={s.resizeSE} onPointerDown={(e) => start('se', e)} {...handlers} />
