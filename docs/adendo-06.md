@@ -80,3 +80,8 @@ Testes: `src/engine/robustez.test.ts` (entradas travadas rodam em processo filho
 - **Formato novo, autorizado pelo usuário:** `pagina:` aceita `escala` (opcional, padrão 1). A folha reduz por esse fator só o conteúdo das regiões de cálculo e de texto; as posições, as imagens e os gráficos não mudam. Arquivos sem `escala` abrem com os mesmos bytes e o mesmo desenho.
 - **Importação do .sm:** grava `escala: 0.55`. Medido nos 17 .sm do corpus: sem a escala, o Prisma desenhava cerca de 1,8 vez maior que o SMath (texto do SMath em 10 pt); com ela, a largura fica em cerca de 1,0 vez e a altura em 1,1 a 1,2 vez. As sobreposições caem de 34 para 13 no `08do10` (o próprio SMath tem 5).
 - **Pendente:** a moldura da região (3 px de margem e 1 px de borda) não entra na escala e explica a altura um pouco maior. "Separar regiões" (4b) não foi feito. Documentos importados antes continuam sem escala até serem importados de novo.
+
+## A6-9 (ADENDO 06, 5.1, 5.2, 5.4 e 4.6): gráfico 2D de função (decisão do usuário, 14/11)
+
+- **Roda do mouse:** faz zoom só com o gráfico selecionado. Sem seleção, ela rola a página, para um caderno comprido não travar a rolagem ao passar por cima de um gráfico.
+- **Textos aprovados:** o rótulo "Expressão do gráfico", a pergunta "Eixo x: mínimo; máximo; rótulo (mínimo e máximo vazios: vista automática)" e o aviso "Limites do eixo x inválidos: o máximo precisa ser maior que o mínimo". Imagens `grafico-folha.png` e `grafico-caderno.png` aprovadas.

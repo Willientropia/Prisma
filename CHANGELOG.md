@@ -10,7 +10,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - Criar: `@` numa área vazia da folha, Inserir → Gráfico 2D ou Início → Gráfico (no caderno). O gráfico nasce com 320 × 240 px e o campo de expressão embaixo já em edição.
   - O campo aceita expressão de uma variável livre, com qualquer nome. Vários itens separados por `;` viram várias curvas. Também aceita matriz n × 2 e vetor de matrizes. Com duas variáveis livres, aparece o erro do ADENDO.
   - Amostragem: 400 pontos, com refinamento até 4 000. Assíntota e ponto fora do domínio quebram a linha.
-  - Vista: roda faz zoom no ponteiro (`Shift` só x, `Ctrl` só y); Mover ou o botão do meio deslocam; duplo clique volta à vista automática. A vista ajustada vai para o arquivo.
+  - Vista: com o gráfico selecionado, a roda faz zoom no ponteiro (`Shift` só x, `Ctrl` só y; sem seleção, ela rola a página); Mover ou o botão do meio deslocam; duplo clique volta à vista automática. A vista ajustada vai para o arquivo.
   - Arrastar a borda redimensiona.
   - Guia contextual "Ferramentas de gráfico": Mover, Zoom, Restaurar, Pontos, Linhas, Grade, Legenda e Limites e rótulos.
   - O formato antigo, com `var` e `valores`, continua desenhado como antes.
@@ -18,11 +18,9 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
     - Girar fica desabilitado; é do gráfico 3D.
     - Mover e Zoom não aparecem pressionados quando ligados.
     - "Limites e rótulos" pergunta um eixo por vez, em texto ("mínimo; máximo; rótulo"), e o passo ainda não se edita.
-    - A roda só faz zoom com o gráfico selecionado; sem seleção, ela rola a página (escolha minha, a confirmar).
     - Valor com unidade é desenhado no SI, sem a unidade no eixo.
     - O gráfico usa todas as definições da folha, inclusive as que estão abaixo dele.
     - O gráfico importado do SMath ainda não é desenhado.
-    - Falta aprovar as imagens `grafico-folha.png` e `grafico-caderno.png` e os textos novos: o rótulo "Expressão do gráfico" e as mensagens do diálogo de limites.
 
 ## v0.4.0 — 2026-11-13
 
