@@ -33,6 +33,7 @@
 .fnLabel { color: var(--paper-accent); }
 .blockLabel { color: var(--paper-text-2); }
 .blockBody { margin: 0; padding: 16px 22px 14px; font: 13px/1.75 'JetBrains Mono', monospace; color: var(--paper-text); white-space: pre-wrap; }
+.graphCell { padding: 16px 22px 14px; } /* gráfico 2D no caderno (ADENDO 06, 5.4) */
 .selectedBlock { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 
 /* folha livre (ADENDO 02, B6) */

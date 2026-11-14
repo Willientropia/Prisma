@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon';
 import { all, run } from '../commands/registry';
 import { useWorkspace, activeDoc } from '../store/workspace';
 import { RIBBONS, RIBBON_TABS, isMathTab, type RibbonTab } from './ribbons';
-import { MATH_RIBBON } from './ribbonMath';
+import { GRAPH_RIBBON, MATH_RIBBON } from './ribbonMath';
 import { RibbonMath } from '../components/RibbonMath';
 import { focusedField, insertInFocused } from '../math/insert';
 import s from './shell.module.css';
@@ -63,10 +63,18 @@ export function Ribbon() {
   const wanted = useWorkspace((x) => x.ribbonTab);
   const lastTabs = useWorkspace((x) => x.lastTabs);
   const cruz = useWorkspace((x) => x.folhaCruz);
+  const grafico = useWorkspace((x) => x.graficoSel);
+  // guia contextual (ADENDO 06, 4.6): ativa ao selecionar o gráfico; ao desselecionar, volta à guia anterior
+  const back = useRef<RibbonTab>('inicio');
+  useEffect(() => {
+    const st = useWorkspace.getState();
+    if (grafico) { if (st.ribbonTab !== 'grafico') back.current = st.ribbonTab; st.set({ ribbonTab: 'grafico' }); }
+    else if (st.ribbonTab === 'grafico') st.set({ ribbonTab: back.current });
+  }, [grafico]);
   const set = useWorkspace((x) => x.set);
   const editing = useEditingMath();
-  const tabs = doc ? RIBBON_TABS[doc.type] : [];
-  const go = (id: RibbonTab) => doc && set({ ribbonTab: id, lastTabs: { ...lastTabs, [doc.type]: id } });
+  const tabs: [RibbonTab, string][] = doc ? [...RIBBON_TABS[doc.type], ...(grafico ? [['grafico', 'Ferramentas de gráfico'] as [RibbonTab, string]] : [])] : [];
+  const go = (id: RibbonTab) => doc && set({ ribbonTab: id, ...(id === 'grafico' ? {} : { lastTabs: { ...lastTabs, [doc.type]: id } }) });
   const tips = useKeyTips((letter) => {
     // lê o store na hora da tecla: logo depois de abrir um documento, o último desenho ainda não o conhece
     const st = useWorkspace.getState();
@@ -85,13 +93,13 @@ export function Ribbon() {
     <div className={s.ribbon}>
       <div role="tablist" aria-label="Guias da faixa de opções" className={s.rtabs}>
         {tabs.map(([id, text]) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? s.rtOn : s.rt}
+          <button key={id} type="button" role="tab" aria-selected={tab === id} className={id === 'grafico' ? (tab === id ? s.rtCtxOn : s.rtCtx) : tab === id ? s.rtOn : s.rt}
             onMouseDown={(e) => e.preventDefault() /* trocar de guia não tira o foco da expressão */}
             onClick={() => go(id)}>{text}{tips && KEYTIPS[id] && <span className={s.keytip} aria-hidden="true">{KEYTIPS[id]}</span>}</button>
         ))}
       </div>
       <div className={s.rbody}>
-        {isMathTab(tab) ? <RibbonMath key={tab} groups={MATH_RIBBON[tab]} canInsert={editing || (doc.type === 'folha' && cruz)} onInsert={insert} onCommand={run} /> : RIBBONS[doc.type][tab].map((g) => (
+        {tab === 'grafico' ? <RibbonMath key={tab} groups={GRAPH_RIBBON} canInsert onInsert={() => {}} onCommand={run} /> : isMathTab(tab) ? <RibbonMath key={tab} groups={MATH_RIBBON[tab]} canInsert={editing || (doc.type === 'folha' && cruz)} onInsert={insert} onCommand={run} /> : RIBBONS[doc.type][tab].map((g) => (
           <div key={g.title} className={s.group}>
             <div className={s.groupBtns}>
               {g.buttons.map((b) => {

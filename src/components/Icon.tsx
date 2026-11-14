@@ -71,6 +71,16 @@ export const STRUCT_ICONS = {
   vector: { f: 'M5 12h12v8H5z', s: 'M4 7h15M15 3l4 4-4 4' },
   elem: { f: 'M3 4h10v12H3z', s: 'M15 13h2v8h-2M21 13h-2v8h2' },
   prog: { f: 'M6 8h12v3H6zM6 14h12v3H6z', s: 'M3 4v16' },
+  // Ferramentas de gráfico (ADENDO 06, 4.6), da referência
+  rotate: { f: '', s: 'M4 12a8 8 0 0114-5M20 12a8 8 0 01-14 5M18 3v4h-4M6 21v-4h4' },
+  move: { f: '', s: 'M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3' },
+  zoom: { f: '', s: 'M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4M8 11h6M11 8v6' },
+  reset: { f: '', s: 'M4 12a8 8 0 108-8M4 4v5h5' },
+  points: { f: 'M5 15h3v3H5zM11 9h3v3h-3zM17 5h3v3h-3z', s: 'M3 21h18M3 3v18' },
+  lines: { f: '', s: 'M3 21h18M3 3v18M6 16l5-6 4 3 5-8' },
+  grid: { f: '', s: 'M4 4h16v16H4zM4 12h16M12 4v16M4 8h16M4 16h16M8 4v16M16 4v16' },
+  legend: { f: 'M4 6h4v3H4zM4 14h4v3H4z', s: 'M11 7.5h9M11 15.5h9' },
+  axes: { f: '', s: 'M4 20h17M4 20V3M4 20l-1-1M8 20v2M12 20v2M16 20v2M4 16H2M4 12H2M4 8H2' },
 } as const;
 
 export type StructIcon = keyof typeof STRUCT_ICONS;

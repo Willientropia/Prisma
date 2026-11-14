@@ -19,6 +19,10 @@ import { TextEditor } from '../TextEditor';
 import { SourceView } from '../SourceView';
 import { blockProps } from '../caderno/Caderno';
 import { Plot } from './Plot';
+import { Grafico2D } from '../grafico/Grafico2D';
+import { useGraphTools } from '../grafico/ferramentas';
+import { isGraph2DBody, NEW_GRAPH, seriesOf, setSeries } from '../../format/grafico';
+import type { Graph2D } from '../../engine/grafico';
 import { sheetItems, type LibFn } from './assistente';
 import { baseItems, sortItems } from '../../math/assistente';
 import { allFunctions } from '../../commands/library';
@@ -237,10 +241,11 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     return `${prefix}-${n}`;
   };
   const appendRegion = (type: string, x: number, y: number) => {
-    const id = nextId(type === 'texto' ? 'texto' : 'calc');
+    const id = nextId(type === 'texto' || type === 'grafico' ? type : 'calc');
     const t = textNow();
     const sep = t.endsWith('\n\n') ? '' : t.endsWith('\n') ? '\n' : '\n\n';
-    edit(doc.id, t.length, t.length, `${sep}\`\`\`${type} {#${id} x=${x} y=${y}}\n\n\`\`\`\n`);
+    const [attrs, body] = type === 'grafico' ? [' largura=320 altura=240', NEW_GRAPH] : ['', '\n']; // gráfico 2D: 320 × 240 (ADENDO 06, 5.4)
+    edit(doc.id, t.length, t.length, `${sep}\`\`\`${type} {#${id} x=${x} y=${y}${attrs}}\n${body}\`\`\`\n`);
     return id;
   };
   const removeRegions = (ids: string[]) => {
@@ -405,6 +410,9 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     if (!at) return;
     if (e.key === '"') { // " numa área vazia cria região de texto (B4)
       setFocus({ id: appendRegion('texto', at.x, at.y), line: -1 });
+    } else if (e.key === '@') { // @ numa área vazia cria o gráfico 2D com o campo em edição (ADENDO 06, 5.4)
+      newGraph(at);
+      return;
     } else {
       pendingKeys.current = [{ key: e.key }];
       creating.current = true;
@@ -413,6 +421,25 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     }
     setCross(null);
   };
+
+  /** Gráfico 2D novo, com o campo das séries em edição; o que se digitar até ele montar vai para o campo. */
+  const newGraph = (at: { x: number; y: number }) => {
+    pendingKeys.current = [];
+    creating.current = true;
+    creatingTimer.current = window.setTimeout(doneCreating, 2000); // prazo, como na tecla (F03)
+    const id = appendRegion('grafico', at.x, at.y);
+    setFocus({ id, line: 0 });
+    setSelected(new Set([id]));
+    setCross(null);
+  };
+  useEffect(() => {
+    register('folha.grafico', { run: () => {
+      const rs = fresh();
+      newGraph(crossRef.current ?? { x: 40, y: rs.length ? snap(Math.max(...rs.map((r) => num(r.seg, 'y'))) + 60) : 40 }); // sem cruz: abaixo da última região
+    } });
+    return () => register('folha.grafico', { run: undefined });
+  });
+  const writeBody = (id: string, body: string) => { const r = byId(id); if (r) edit(doc.id, r.bodyStart, r.bodyStart + r.seg.body.length, body); };
 
   /** Enter: confirma e põe a cruz logo abaixo da região, como no SMath; o que se digitar cria a próxima (ADENDO 05). */
   const crossBelow = (id: string) => {
@@ -467,8 +494,20 @@ export function Folha({ doc }: { doc: OpenDoc }) {
             if (cur) edit(doc.id, cur.bodyStart, cur.bodyStart + cur.seg.body.length, md ? `${md}\n` : '');
           }} />
       );
+    } else if (b.type === 'grafico' && isGraph2DBody(b.body)) {
+      const mine = focus?.id === r.id;
+      const select = () => { setSelected(new Set([r.id])); setCross(null); };
+      content = (
+        <Grafico2D data={result?.plots?.[r.key] as Graph2D | undefined} body={b.body} list={seriesOf(b.body)} width={num(b, 'largura', 320)} height={num(b, 'altura', 240)} theme="dark"
+          tool={graphTool} active={selected.size === 1 && selected.has(r.id)} focused={mine} initialKeys={mine ? pendingKeys.current : undefined} onReady={doneCreating}
+          onBody={(nb) => writeBody(r.id, nb)} onSeries={(l) => { const cur = byId(r.id); if (cur) writeBody(r.id, setSeries(cur.seg.body, l)); }}
+          onResize={(w, h) => { setAttr(r.id, 'largura', String(w)); setAttr(r.id, 'altura', String(h)); }}
+          onSelect={select} onFieldFocus={select} onExit={() => setFocus((f) => (f?.id === r.id ? null : f))}
+          onEnter={() => { (document.activeElement as HTMLElement | null)?.blur?.(); crossBelow(r.id); }} />
+      );
     } else if (b.type === 'grafico') {
-      content = <Plot data={result?.plots?.[r.key]} width={num(b, 'largura', 400)} height={num(b, 'altura', 200)} />;
+      const pr = result?.plots?.[r.key];
+      content = <Plot data={pr && !('tipo' in pr) ? pr : undefined} width={num(b, 'largura', 400)} height={num(b, 'altura', 200)} />;
     } else if (b.type === 'smath-original') {
       // região do SMath sem equivalente (E7.1): fica no lugar, com o aviso; o XML original está no bloco
       content = <div className={s.regionUnsupported}>{b.attrs.descricao ?? 'Não suportado (região do SMath)'}</div>;
@@ -487,6 +526,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   };
 
   const sel = regions.find((r) => selected.has(r.id));
+  const graphSel = sel && selected.size === 1 && sel.seg.type === 'grafico' && isGraph2DBody(sel.seg.body) ? sel : null;
+  const graphTool = useGraphTools(graphSel ? { body: graphSel.seg.body, write: (nb) => writeBody(graphSel.id, nb) } : null);
   const fns = regions.filter((r) => r.seg.type === 'funcao');
   const lhsLatex = (body: string) => { try { const l = parseLinear(body.trim().split('\n')[0]); return l.kind === 'def' ? nodeLatex(l.lhs) : ''; } catch { return ''; } };
   const unitMarkup = (u: string) => { try { return unitLatex(parseUnit(u)); } catch { return `\\mathrm{${u}}`; } };

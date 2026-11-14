@@ -1,0 +1,20 @@
+/* Gráfico 2D (ADENDO 06, 5.4): cores da folha (escuro) e da página branca (caderno). */
+.graph { position: relative; margin: 0; }
+.svg { display: block; touch-action: none; user-select: none; }
+.dark { --g-bg: var(--bg-panel); --g-border: var(--border); --g-grid: var(--border); --g-num: var(--text-muted); --g-label: var(--text-2); }
+.paper { --g-bg: var(--paper); --g-border: var(--paper-border); --g-grid: var(--paper-border); --g-num: var(--paper-text-2); --g-label: var(--paper-text); }
+.bg { fill: var(--g-bg); stroke: var(--g-border); stroke-width: 1; }
+.area { fill: none; stroke: var(--g-border); stroke-width: 1; }
+.grid line { stroke: var(--g-grid); stroke-width: 1; stroke-dasharray: 4 2; }
+.num { font: 11px Inter, sans-serif; fill: var(--g-num); }
+.label { font: 12px Inter, sans-serif; fill: var(--g-label); stroke: none; }
+.line { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.legend .label { font-size: 11px; }
+.error { padding: 4px 0 0; font: 11px Inter, sans-serif; color: var(--error-text); }
+.paper .error { color: var(--paper-error); }
+.field { padding: 6px 2px 0; min-height: 28px; }
+.box { position: relative; }
+.resizeE, .resizeS, .resizeSE { position: absolute; }
+.resizeE { top: 0; right: -4px; width: 8px; height: 100%; cursor: ew-resize; }
+.resizeS { left: 0; bottom: -4px; width: 100%; height: 8px; cursor: ns-resize; }
+.resizeSE { right: -6px; bottom: -6px; width: 12px; height: 12px; cursor: nwse-resize; }

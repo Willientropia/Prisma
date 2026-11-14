@@ -1,10 +1,11 @@
+// Mais de 300 linhas: o caderno reúne texto, blocos de cálculo e gráfico num componente e já passava do limite antes do A6-9.
 // Caderno (SPEC 7.1 + ADENDO 02, B7): texto formatado (TipTap) e blocos com uma linha MathLive por linha de cálculo.
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Icon } from '../../components/Icon';
 import { fnName, resolveLibraries, sameDef } from '../../format/library';
 import { readLibraryFiles } from '../../engine/run';
 import { PanelHeader, PropGrid, Row, Tag } from '../../components/ui';
-import { blocks, lines, parse, type BlockSegment } from '../../format/doc';
+import { blocks, lines, parse, withAttr, type BlockSegment } from '../../format/doc';
 import { definedBefore, definedNames, outline, type OutlineItem } from '../../format/views';
 import { dirname, displayPath } from '../../format/display';
 import { recalc } from '../../engine/run';
@@ -16,6 +17,10 @@ import { MathLine, isKnownUnit } from '../../math/MathLine';
 import { holdKeys } from '../../math/MathField';
 import { TextEditor } from '../TextEditor';
 import { SourceView } from '../SourceView';
+import { Grafico2D } from '../grafico/Grafico2D';
+import { useGraphTools } from '../grafico/ferramentas';
+import { isGraph2DBody, NEW_GRAPH, seriesOf, setSeries } from '../../format/grafico';
+import type { Graph2D } from '../../engine/grafico';
 import s from '../editors.module.css';
 
 export const BLOCK_LABEL: Record<string, string> = {
@@ -108,6 +113,9 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
   }, [items, result]);
   const sel = items.find((i) => i.start === selStart) ?? items.find((i) => i.kind === 'block') ?? items[0];
   const libIds = Array.isArray(parsed.meta.bibliotecas) ? parsed.meta.bibliotecas.map(String) : [];
+  // guia contextual do gráfico (ADENDO 06, 4.6): o bloco selecionado é um gráfico 2D
+  const graphSel = sel?.kind === 'block' && selStart !== null && sel.block.type === 'grafico' && isGraph2DBody(sel.block.body) ? sel : null;
+  const graphTool = useGraphTools(graphSel ? { body: graphSel.block.body, write: (nb) => writeBody(graphSel.key, nb) } : null);
 
   // Fase 4: salvar= só grava no clique; o rótulo avisa quando a função do caderno difere da biblioteca
   const libsVersion = useWorkspace((x) => x.libsVersion);
@@ -158,6 +166,14 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     edit(doc.id, sp.start, sp.end + sp.nl, '');
     setFocus({ key, line: Math.max(0, i - 1) });
   };
+  /** Corpo inteiro do bloco (gráfico 2D: o YAML) e atributos da linha de abertura (largura, altura). */
+  const writeBody = (key: string, body: string) => { const it = blockByKey(key); if (it) edit(doc.id, it.bodyStart, it.bodyStart + it.block.body.length, body); };
+  const setSize = (key: string, w: number, h: number) => {
+    const it = blockByKey(key);
+    if (!it) return;
+    const head = lines(useWorkspace.getState().openDocs.find((x) => x.id === doc.id)!.text.slice(it.start))[0];
+    edit(doc.id, it.start, it.start + head.length, withAttr(withAttr(head, 'largura', String(w)), 'altura', String(h)));
+  };
   const addLine = (it: BlockItem) => {
     const at = it.bodyStart + it.block.body.length;
     holdKeys();
@@ -176,7 +192,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     const it = items.find((i) => i.start === pending);
     if (!it) return;
     setSelStart(it.start);
-    if (it.kind === 'block' && EVALUATED.has(it.block.type)) setFocus({ key: it.key, line: 0 });
+    if (it.kind === 'block' && (EVALUATED.has(it.block.type) || it.block.type === 'grafico')) setFocus({ key: it.key, line: 0 });
     setPending(null);
     document.querySelector(`[data-start="${it.start}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [items, pending]);
@@ -193,7 +209,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     register('caderno.calculo', { run: () => insertAfter(fence('calc', 'calc', '')) });
     register('caderno.funcao', { run: () => insertAfter(fence('funcao', 'funcao', '')) });
     register('caderno.verificacao', { run: () => insertAfter(fence('verificar', 'verificacao', '')) });
-    register('caderno.grafico', { run: () => insertAfter(fence('grafico', 'grafico', 'titulo: Novo gráfico\nx: {var: x, valores: [1, 2, 3]}\ny: {expr: "f(x)"}')) });
+    register('caderno.grafico', { run: () => insertAfter(fence('grafico', 'grafico', NEW_GRAPH.trimEnd())) }); // gráfico 2D de função (ADENDO 06, 5.4)
   });
   useEffect(() => () => CELL_CMDS.forEach((id) => register(id, { run: undefined })), []);
 
@@ -226,7 +242,17 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
     const ls = lines(b.body).map((l) => l.replace(/\r?\n$/, ''));
     const selected = it === sel;
     let body: ReactNode;
-    if (!EVALUATED.has(b.type)) body = <pre className={s.blockBody}>{b.body}</pre>;
+    if (b.type === 'grafico' && isGraph2DBody(b.body)) {
+      body = (
+        <div className={s.graphCell}>
+          <Grafico2D data={result?.plots?.[it.key] as Graph2D | undefined} body={b.body} list={seriesOf(b.body)} width={Number(b.attrs.largura) || 320} height={Number(b.attrs.altura) || 240} theme="paper"
+            tool={graphTool} active={selected} focused={focus?.key === it.key}
+            onBody={(nb) => writeBody(it.key, nb)} onSeries={(l) => { const cur = blockByKey(it.key); if (cur) writeBody(it.key, setSeries(cur.block.body, l)); }}
+            onResize={(w, h) => setSize(it.key, w, h)} onSelect={() => setSelStart(it.start)} onFieldFocus={() => { setSelStart(it.start); setFocus({ key: it.key, line: 0 }); }}
+            onExit={() => setFocus((f) => (f?.key === it.key ? null : f))} onEnter={() => { (document.activeElement as HTMLElement | null)?.blur?.(); setFocus(null); }} />
+        </div>
+      );
+    } else if (!EVALUATED.has(b.type)) body = <pre className={s.blockBody}>{b.body}</pre>;
     else if (ls.length === 0) body = <div className={s.calcLines}>{lineEl(it, '', 0, fn ? 24 : 19)}</div>;
     else if (fn) body = <div className={`${s.fnMath}`}>{ls.map((raw, i) => lineEl(it, raw, i, 24))}</div>;
     else {

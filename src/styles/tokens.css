@@ -60,6 +60,9 @@
   --error-text: #f19a9a;
   --limit-line: #e58a57;
   --plot-line: #a78bfa;
+  /* séries do gráfico 2D, em ordem (ADENDO 06, 5.4): folha e página branca */
+  --plot-s1: #a78bfa; --plot-s2: #8fb4ff; --plot-s3: #7fd6a4; --plot-s4: #f3cf7a; --plot-s5: #f19a9a;
+  --plot-paper-s1: #6d28d9; --plot-paper-s2: #1d4ed8; --plot-paper-s3: #0f766e; --plot-paper-s4: #b45309; --plot-paper-s5: #9b1c1c;
 
   /* LaTeX */
   --tex-keyword: #c4b5fd;

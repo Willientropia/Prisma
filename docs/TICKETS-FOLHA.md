@@ -43,7 +43,7 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | A6-6 | **Feito (13/11), pendências no CHANGELOG.** Parte 4.3 a 4.5: Matrizes, Lógica e programação, Símbolos (letras gregas) | Sonnet | |
 | A6-7 | **Feito (13/11), pendências no CHANGELOG.** Parte 4.9: catálogo de funções (`Ctrl+E`) e de unidades (`Ctrl+W`) | Sonnet | |
 | A6-8 | Parte 5.3: integral (Gauss-Kronrod) e derivada no motor | Sonnet [R] | critérios 06-35, 06-36, 06-24 |
-| A6-9 | Parte 5.1, 5.2, 5.4 e 4.6: gráfico 2D com `@` e ferramentas de gráfico | opusplan [R] | critérios 06-37 a 06-44 |
+| A6-9 | **Feito (14/11), pendências no CHANGELOG.** Parte 5.1, 5.2, 5.4 e 4.6: gráfico 2D com `@` e ferramentas de gráfico | opusplan [R] | critérios 06-37 a 06-44 |
 
 (O tamanho de `mathlinear.ts` e `evaluate.ts`, acima de 300 linhas, fica para a MANUTENCAO-01, decisão do usuário em 12/11.)
 

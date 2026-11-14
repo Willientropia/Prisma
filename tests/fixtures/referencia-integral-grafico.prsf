@@ -1,0 +1,24 @@
+---
+tipo: folha
+titulo: Integral e gráfico
+bibliotecas: []
+pagina: {largura: 1200, altura: 1600, grade: 20}
+criado: 2026-11-14
+versao_formato: 1
+---
+
+```calc {#F x=40 y=40}
+F(x) := abs(1 + e^(5*(x - 2)))
+```
+
+```calc {#int x=40 y=100}
+integral(F(x), x, 0, 2) = ?
+```
+
+```grafico {#g1 x=40 y=180 largura=320 altura=240}
+tipo: 2d
+series: ["F(x)"]
+x: {min: 0, max: 3, rotulo: x}
+y: {min: 0, max: 3, rotulo: y}
+grade: true
+```

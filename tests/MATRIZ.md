@@ -375,6 +375,15 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-4-45 | 06-15: variável definida mais abaixo não aparece | tests/e2e/assistente.spec.ts | e2e | ok |
 | A6-4-46 | 06-16: Exibir → Assistente dinâmico desliga a lista (gravado na config); Ctrl+Espaço ainda abre | tests/e2e/assistente.spec.ts | e2e | ok |
 | A6-4-47 | 06-43 (parte do assistente): imagens aprovadas do assistente aberto (06-10 e 06-11) | tests/visual/telas.spec.ts | visual | ok |
+| A6-9-37 | 06-37: `@` numa área vazia cria o gráfico com o campo em edição; `F(x)` desenha a curva; `;` acrescenta outra curva | tests/e2e/grafico.spec.ts | e2e | ok |
+| A6-9-38 | 06-38: vista 0 a 3 × 0 a 3, a curva passa por (0; 1) e (2; 2) com erro menor que 1 px e sai pelo topo em x ≈ 2,14 | tests/e2e/grafico.spec.ts, src/engine/grafico.test.ts | e2e, unit | ok |
+| A6-9-39 | 06-39: `1/(x-1)` não liga os lados da assíntota | tests/e2e/grafico.spec.ts, src/engine/grafico.test.ts | e2e, unit | ok |
+| A6-9-40 | 06-40: redefinir F(x) acima atualiza a curva e a integral em até 150 ms | tests/e2e/grafico.spec.ts | e2e | ok |
+| A6-9-41 | 06-41: vista ajustada (roda) é gravada e reaberta igual; duplo clique volta à automática | tests/e2e/grafico.spec.ts, src/format/grafico.test.ts | e2e, unit | ok |
+| A6-9-42 | 06-42: duas variáveis livres mostram "O gráfico 2D precisa de uma única variável livre (encontradas: x, t)" | tests/e2e/grafico.spec.ts, src/engine/grafico.test.ts | e2e, unit | ok |
+| A6-9-29 | 06-29: selecionar o gráfico mostra e ativa Ferramentas de gráfico; desselecionar volta à guia anterior | tests/e2e/grafico.spec.ts | e2e | ok |
+| A6-9-43 | 06-43 (parte do gráfico): caso 5.1 na folha com a guia contextual, e no caderno; imagens a aprovar pelo usuário | tests/visual/telas.spec.ts | visual | ok |
+| A6-9-44 | 06-44: fixture `tests/fixtures/referencia-integral-grafico.prsf` com o caso 5.1, no teste de ida e volta | src/format/doc.test.ts | unit | ok |
 | BUG-018 | Teste manual do lote F-A6: `/` depois de nome com índice monta a fração na hora (`V.o/T.total`), sem precisar sair da região e voltar; `a/b`, `x^2/3` e `a+b`, Espaço, `/2` continuam montando a fração | tests/golden/teclado.yaml, tests/regressao/bugs.spec.ts | browser, e2e | ok |
 | BUG-020 | Teste manual do lote F-A6 (leitor, decisão do usuário 12/11): número colado em nome lê como produto, como o digitado (`I_o:=5A` abre como I_o ≔ 5·A, `9j` = 9·j; arquivos que já abriam ficam com os mesmos bytes). Linha que mesmo assim não puder ser lida aparece marcada como erro ("Não foi possível ler esta linha"), nunca com `:=` ou texto cru | src/format/mathlinear.test.ts, src/engine/engine.test.ts, tests/regressao/bugs.spec.ts | unit, e2e | ok |
 | BUG-019 | Teste manual do lote F-A6: `V_o/T_total = 0,2` com `%` no campo de unidade do resultado (Tab ou Enter) mostra 20 % e grava `= ? %`. `‰` mostra 200 ‰ e `ppm` mostra 2e5 ppm (0,2 em ppm = 200000, acima do limite exponencial 5); autorizados pelo usuário em 12/11, gravam `= ? ‰` e `= ? ppm` | tests/regressao/bugs.spec.ts, src/engine/engine.test.ts, src/format/mathlinear.test.ts, src/math/assistente.test.ts | e2e, unit | ok |

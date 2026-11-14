@@ -115,3 +115,17 @@ const SIMBOLOS: MathGroup[] = [
 ];
 
 export const MATH_RIBBON: Record<string, MathGroup[]> = { matematica: MATEMATICA, matrizes: MATRIZES, logica: LOGICA, simbolos: SIMBOLOS };
+
+/** Guia contextual Ferramentas de gráfico (ADENDO 06, 4.6): textos e ícones da referência; Girar é do gráfico 3D. */
+const T = (label: string, key: string, desc: string, icon: StructIcon, cmd?: string): MathButton => ({ label, key, desc, icon, cmd });
+export const GRAPH_RIBBON: MathGroup[] = [
+  { title: 'Navegar', kind: 'big', buttons: [
+    T('Girar', '', 'Gira gráfico 3D arrastando.', 'rotate'), T('Mover', '', 'Arrasta a área visível.', 'move', 'grafico.mover'),
+    T('Zoom', 'roda do mouse', 'Aproxima ou afasta.', 'zoom', 'grafico.zoom'), T('Restaurar', 'duplo clique', 'Volta à vista original.', 'reset', 'grafico.restaurar'),
+  ] },
+  { title: 'Exibição', kind: 'big', buttons: [
+    T('Pontos', '', 'Mostra os pontos.', 'points', 'grafico.pontos'), T('Linhas', '', 'Liga os pontos.', 'lines', 'grafico.linhas'),
+    T('Grade', '', 'Liga ou desliga a grade.', 'grid', 'grafico.grade'), T('Legenda', '', 'Mostra a legenda das séries.', 'legend', 'grafico.legenda'),
+  ] },
+  { title: 'Eixos', kind: 'big', buttons: [T('Limites e rótulos', '', 'Mínimo, máximo, passo e nome de cada eixo.', 'axes', 'grafico.eixos')] },
+];

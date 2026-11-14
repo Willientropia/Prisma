@@ -127,3 +127,24 @@ test('[A6-4-47] 06-43: assistente aberto com f e a função do usuário acima (0
   await assistOpen(page, '```calc {#a x=40 y=40}\nf(x) := x + 2\n```\n', 'f');
   await shot(page, 'assistente-f.png');
 });
+
+// A6-9 (ADENDO 06, 06-43): caso 5.1 com o gráfico selecionado (guia contextual) na folha, e no caderno. Imagens a aprovar pelo usuário.
+test('[A6-9-43] 06-43: caso 5.1 na folha, gráfico selecionado com Ferramentas de gráfico', async ({ page }) => {
+  await start(page);
+  await dev(page).open('C:/Users/voce/Documents/referencia-integral-grafico.prsf');
+  await expect.poll(() => resultTexts(page)).toEqual(['2,2']);
+  await page.locator('[data-grafico] svg[data-view]').click({ position: { x: 150, y: 100 } });
+  await expect(page.getByRole('tab', { name: 'Ferramentas de gráfico' })).toHaveAttribute('aria-selected', 'true');
+  await shot(page, 'grafico-folha.png');
+});
+
+test('[A6-9-43] 06-43: caso 5.1 no caderno', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const doc = 'C:/Users/voce/Documents/grafico.prsm';
+  await dev(page).write(doc, `---\ntipo: caderno\ntitulo: Integral e gráfico\nbibliotecas: []\nunidades: SI\nversao_formato: 1\n---\n\n${f}calc {#c}\nF(x) := abs(1 + e^(5*(x - 2)))\nintegral(F(x), x, 0, 2) = ?\n${f}\n\n${f}grafico {#g1}\ntipo: 2d\nseries: ["F(x)"]\nx: {min: 0, max: 3, rotulo: x}\ny: {min: 0, max: 3, rotulo: y}\ngrade: true\n${f}\n`);
+  await dev(page).open(doc);
+  await expect.poll(() => resultTexts(page)).toEqual(['2,2']);
+  await expect(page.locator('[data-grafico] [data-series="0"] path')).toHaveAttribute('d', /^M.+L/);
+  await shot(page, 'grafico-caderno.png');
+});

@@ -3,6 +3,7 @@ import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
 import { mapFree } from './bound';
 import { withWarning } from './calculus';
+import { graph2d, isGraph2D, type Graph2D, type GraphCtx, type Spec2D } from './grafico';
 import { math, smath } from './math';
 import { classify, fromMath, isScale, markVars, SCALES, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
 import { DEFAULT_FORMAT, DEFAULT_MARGIN, fmtComplex, fmtNum, prettyUnit, type FormatOpts } from './format';
@@ -39,7 +40,7 @@ export type LineResult = {
 export type LibInfo = { id: string; nome: string; versao: string; origem: 'projeto' | 'usuário' | 'fábrica'; path: string; duplicate?: string; readOnly?: boolean; extension?: { path: string; versao: string } };
 /** Gráfico (bloco grafico): pontos já convertidos para as unidades pedidas. */
 export type PlotResult = { titulo: string; xs: number[]; ys: (number | null)[]; xUnit: string; yUnit: string; limite?: { valor: number; rotulo: string }; error?: string };
-export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[]; shadow?: { name: string; value: string } };
+export type EvalResult = { blocks: Record<string, LineResult[]>; plots?: Record<string, PlotResult | Graph2D>; libErrors: string[]; defined: string[]; ms: number; libs?: LibInfo[]; shadow?: { name: string; value: string } };
 
 /** Maior expressão (em caracteres) que vai ao math.simplify na folha; acima disso aparece sem simplificar. */
 const MAX_SIMPLIFY_LEN = 70;
@@ -305,8 +306,9 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
       }
     }));
   }
-  const plots: Record<string, PlotResult> = {};
-  for (const b of input.blocks) if (b.type === 'grafico') plots[b.key] = plot(b.lines.join(''), scope, fmt);
+  const plots: Record<string, PlotResult | Graph2D> = {};
+  const g2: GraphCtx = { prep: P, missing: missingOf, scope, message: (e, src) => message(e, src, scope) };
+  for (const b of input.blocks) if (b.type === 'grafico') plots[b.key] = plot(b.lines.join(''), scope, fmt, g2);
   // i ou e definidos pelo usuário (inclusive como variável de laço): a tela avisa uma vez (E8-29)
   const sh = ['i', 'e'].find((n) => defined.has(n) && !fromLibs.has(n) && scope.has(n) && typeof scope.get(n) !== 'function');
   const shadow = sh ? { name: sh, value: math.format(scope.get(sh) as never, { precision: 6 }).replace(/\./g, fmt.sep === ',' ? ',' : '.') } : undefined;
@@ -316,12 +318,13 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
 type PlotSpec = { titulo?: unknown; x?: { var?: unknown; valores?: unknown; unidade?: unknown }; y?: { expr?: unknown; unidade?: unknown }; limite?: { valor?: unknown; rotulo?: unknown } };
 
 /** Bloco grafico (SPEC 3.6): varia x.var pelos valores e avalia y.expr em cada um. */
-export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts): PlotResult {
+export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts, g2?: GraphCtx): PlotResult | Graph2D {
   let spec: PlotSpec;
   try { spec = (parseYaml(body) ?? {}) as PlotSpec; } catch (e) { return { titulo: 'Gráfico', xs: [], ys: [], xUnit: '', yUnit: '', error: `YAML inválido: ${e instanceof Error ? e.message : e}` }; }
   const titulo = String(spec.titulo ?? 'Gráfico');
   // importado do SMath (E7.1): eixos e rótulos estão no bloco, as séries ainda não são desenhadas
   if ((spec as { origem?: unknown }).origem === 'smath') return { titulo: titulo || 'Gráfico do SMath', xs: [], ys: [], xUnit: '', yUnit: '', error: 'Gráfico importado do SMath: as séries ainda não são desenhadas nesta versão' };
+  if (g2 && isGraph2D(spec as Spec2D)) return graph2d(spec as Spec2D, g2); // gráfico de função (ADENDO 06, 5.4); o formato com var e valores continua abaixo
   const xVar = String(spec.x?.var ?? '');
   const xUnit = String(spec.x?.unidade ?? '');
   const yUnit = String(spec.y?.unidade ?? '');

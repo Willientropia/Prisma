@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { evaluate, type BlockInput, type EvalInput, type LibInput } from './evaluate';
+import { evaluate, type BlockInput, type EvalInput, type LibInput, type PlotResult } from './evaluate';
 import { classify, greek } from './syntax';
 import { DEFAULT_FORMAT, fmtNum, parseMargin, prettyUnit } from './format';
 import { math } from './math';
@@ -172,7 +172,7 @@ describe('exemplos da seção 3', () => {
 describe('ADENDO 02: gráfico e partes do resultado', () => {
   it('[F3-03] [B10-06] string-3: ΔV % × seção, com limite, avaliado com todas as definições da folha', () => {
     const r = evaluate(inputFrom('calculos/string-3.prsf', byPosition));
-    const p = Object.values(r.plots ?? {})[0];
+    const p = Object.values(r.plots ?? {})[0] as PlotResult; // formato por valores (var e valores)
     expect(p.error).toBeUndefined();
     expect(p.xs).toEqual([2.5, 4, 6, 10]);
     expect(p.ys.map((y) => Number(y!.toFixed(2)))).toEqual([1.32, 0.82, 0.55, 0.33]);

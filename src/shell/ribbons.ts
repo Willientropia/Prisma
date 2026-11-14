@@ -5,7 +5,7 @@ import { register } from '../commands/registry';
 // Ribbon como dados (SPEC seção 6). Cada botão é um comando registrado.
 export type CommandTab = 'inicio' | 'inserir' | 'exibir' | 'saida';
 export type MathTab = 'matematica' | 'matrizes' | 'logica' | 'simbolos'; // ADENDO 06, Parte 4 (ribbonMath.ts)
-export type RibbonTab = CommandTab | MathTab;
+export type RibbonTab = CommandTab | MathTab | 'grafico'; // grafico: guia contextual (ADENDO 06, 4.6)
 export type RibbonButton = { cmd: string; label: string; icon: IconName };
 export type RibbonGroup = { title: string; buttons: RibbonButton[] };
 
@@ -55,7 +55,7 @@ export const RIBBONS: Record<DocType, Record<CommandTab, RibbonGroup[]>> = {
       ['Cálculo', [['calc.tudo', 'Calcular', 'run'], ['calc.interromper', 'Interromper', 'stop']]],
     ]),
     inserir: g([
-      ['Conteúdo', [['inserir.tabela', 'Tabela', 'table'], ['inserir.imagem', 'Imagem', 'image'], ['inserir.link', 'Link', 'link']]],
+      ['Conteúdo', [['inserir.tabela', 'Tabela', 'table'], ['inserir.imagem', 'Imagem', 'image'], ['inserir.link', 'Link', 'link'], ['folha.grafico', 'Gráfico 2D', 'plot']]], // Gráfico 2D: ADENDO 06, 5.4
       ['Organizar', [['folha.area', 'Área', 'section']]], // ADENDO 05, E6
     ]),
     exibir: g([['Exibição', [['folha.grade', 'Grade', 'grid'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom'], ['exibir.codigo', 'Código-fonte', 'code'], ['exibir.assistente', 'Assistente dinâmico', 'fn']]]]),
