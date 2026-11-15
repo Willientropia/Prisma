@@ -264,3 +264,15 @@ describe('[A6-FIX2-05] o leitor linear lê tudo o que o motor lê (A6-LEITOR)', 
     expect(n).toBeGreaterThan(10);
   });
 });
+
+describe('[BUG-031] expressão funda demais tem limite explícito, não estouro de pilha (A6-ROBUSTEZ-04 dependia do JIT)', () => {
+  const sum = (n: number) => Array.from({ length: n }, () => '1').join('+');
+  it('soma de 3000 termos: erro de leitura na hora, nos dois sentidos', () => {
+    expect(() => parseLinear(sum(3000))).toThrow('Expressão longa demais');
+    expect(() => latexToLine(sum(3000))).toThrow('Expressão longa demais');
+  });
+  it('soma de 300 termos continua lendo e desenhando', () => {
+    expect(toLatex(sum(300))).toContain('1+1');
+    expect(lineToLinear(latexToLine(sum(300)))).toBe(sum(300).replaceAll('+', ' + ')); // forma canônica, com espaços
+  });
+});

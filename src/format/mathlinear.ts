@@ -255,7 +255,19 @@ class LinearParser {
   }
 }
 
-export const parseLinear = (s: string): Line => new LinearParser(lex(s)).line();
+// Escrita, LaTeX e motor descem a árvore por recursão: árvore funda demais (soma de milhares de termos) estouraria a pilha,
+// e onde estoura muda com o JIT. O limite explícito garante a mensagem de linha ilegível sempre (A6-ROBUSTEZ-04).
+const MAX_DEPTH = 600; // níveis da árvore (uns 600 termos numa soma); no Node o estouro começava entre 1000 e 2000 termos
+function limitDepth<T>(root: T): T {
+  const stack: [unknown, number][] = [[root, 0]];
+  while (stack.length) { // sem recursão: a própria verificação não estoura
+    const [n, d] = stack.pop()!;
+    if (d > MAX_DEPTH) fail('Expressão longa demais');
+    for (const v of Object.values(n as object)) if (v && typeof v === 'object') stack.push([v, d + 1]);
+  }
+  return root;
+}
+export const parseLinear = (s: string): Line => limitDepth(new LinearParser(lex(s)).line());
 export const parseUnit = (s: string): Unit => { const p = new LinearParser(lex(s)); const u = p.unit(); if (!p.atEnd()) fail('Unidade inválida'); return u; };
 
 // ---------- linear: escrita (forma canônica) ----------
@@ -883,7 +895,7 @@ function elToIndex(n: Node): Node {
   }
 }
 export const latexToLine = (latex: string): Line => {
-  const l = new LatexParser(llex(indexToEl(latex))).line();
+  const l = limitDepth(new LatexParser(llex(indexToEl(latex))).line());
   if (l.kind === 'def') return { ...l, lhs: elToIndex(l.lhs), rhs: elToIndex(l.rhs), ...(l.conv ? { conv: elToIndex(l.conv) } : {}) };
   return { ...l, expr: elToIndex(l.expr), ...('conv' in l && l.conv ? { conv: elToIndex(l.conv) } : {}) } as Line;
 };

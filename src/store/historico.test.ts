@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { forget, record, redo, rename, undo } from './historico';
 
+/** Outro evento do usuário (clique, tecla): outra tarefa do JavaScript. */
+const nextEvent = () => new Promise((r) => setTimeout(r));
+
 describe('desfazer do documento', () => {
   it('volta na ordem, junta edições rápidas num passo e refaz', () => {
     forget('d');
@@ -15,10 +18,12 @@ describe('desfazer do documento', () => {
     expect(redo('d', 'abcd')).toBeNull();
   });
 
-  it('ações em lugares diferentes do texto são passos separados mesmo seguidas (zoom e depois mover)', () => {
+  it('ações em lugares diferentes do texto são passos separados mesmo seguidas (zoom e depois mover)', async () => {
     forget('f');
     record('f', 'v0', 300, 1000); // vista do gráfico
+    await nextEvent();
     record('f', 'v1', 300, 1200); // a mesma vista gravada de novo: mesmo passo
+    await nextEvent();
     record('f', 'v2', 10, 1500); // mover região: outro lugar, passo novo
     expect(undo('f', 'v3')).toBe('v2');
     expect(undo('f', 'v2')).toBe('v0');
@@ -30,6 +35,17 @@ describe('desfazer do documento', () => {
     record('g', 's1', 80, 2001);
     record('g', 's2', 150, 2002);
     expect(undo('g', 's3')).toBe('s0');
+  });
+
+  it('[BUG-030] dois cliques seguidos em Moldura, a 1 ms um do outro, são dois passos: o Ctrl+Z volta só o último', async () => {
+    forget('m');
+    record('m', 'sem', 209, 1000); // clique 1: duas regiões, de trás para a frente
+    record('m', 'sem+1', 150, 1001);
+    await nextEvent();
+    record('m', 'com', 217, 1002); // clique 2, logo depois
+    record('m', 'com-1', 150, 1003);
+    expect(undo('m', 'sem2')).toBe('com');
+    expect(undo('m', 'com')).toBe('sem');
   });
 
   it('Salvar como leva o histórico para o id novo e não deixa nada no antigo (revisão da v0.6.0)', () => {

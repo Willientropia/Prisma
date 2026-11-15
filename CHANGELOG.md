@@ -16,6 +16,9 @@ Janela mais limpa, desfazer do documento, moldura em lote e F05 (docs/TICKETS-FO
 - **Revisão da versão** O desfazer continua depois de Salvar como e de renomear, e não traz de volta o texto de antes de recarregar um arquivo mudado fora do Prisma. Edição que não muda nada não vira passo. Zoom ainda não gravado não passa por cima de um Ctrl+Z. Erro ao gravar os painéis aparece na barra de status, e as gravações seguidas não se atropelam. Duplo clique numa guia com a faixa recolhida abre e deixa aberta. A atribuição dentro de argumento vale só no corpo do `for`.
 - **Moldura em lote** (pedido do usuário, 14/11): Início → Organizar → Moldura, ou o menu de contexto numa região selecionada, põe moldura em todas as selecionadas; se todas já têm, tira de todas. Um Ctrl+Z desfaz o lote. O teste F0-02 passou a esperar o botão.
 - **Desfazer do documento** (pedido do usuário, 14/11): `Ctrl+Z` e `Ctrl+Y` fora de um campo desfazem e refazem zoom e vista do gráfico, regiões movidas e linhas digitadas, na ordem. Dentro de um campo, continua o desfazer do campo.
+- **Correções achadas na verificação do envio**
+  - BUG-030: dois cliques seguidos em Moldura (a menos de 30 ms) viravam um passo só no desfazer. Agora uma ação é o que acontece num mesmo evento, sem prazo de tempo.
+  - BUG-031: linha longa demais (soma de milhares de termos) às vezes abria em vez de aparecer como "Não foi possível ler esta linha", conforme a pilha do navegador aguentava. Agora há limite explícito de profundidade (uns 600 termos numa soma).
 
 ## v0.5.0 — 2026-11-14
 

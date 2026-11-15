@@ -5,19 +5,28 @@
 
 const MAX = 200; // passos guardados por documento
 const GROUP_MS = 800; // edições no mesmo lugar mais próximas que isso entram no mesmo passo
-const ACTION_MS = 30; // edições quase simultâneas são uma ação só (mover várias regiões edita uma por uma)
 
-type H = { undo: string[]; redo: string[]; last: number; at: number };
+// Uma ação (mover várias regiões, moldura em lote) edita uma região por vez, no mesmo laço síncrono: as edições da mesma
+// tarefa do JavaScript são uma ação só. Por tarefa, não por tempo: dois cliques a 1 ms um do outro são duas ações (BUG-030).
+let action = 0;
+let actionOpen = false;
+const currentAction = () => {
+  if (!actionOpen) { actionOpen = true; queueMicrotask(() => { actionOpen = false; action++; }); }
+  return action;
+};
+
+type H = { undo: string[]; redo: string[]; last: number; at: number; action: number };
 const hist = new Map<string, H>();
-const of = (id: string) => { let h = hist.get(id); if (!h) hist.set(id, (h = { undo: [], redo: [], last: 0, at: -1 })); return h; };
+const of = (id: string) => { let h = hist.get(id); if (!h) hist.set(id, (h = { undo: [], redo: [], last: 0, at: -1, action: -1 })); return h; };
 
-/** Antes de uma edição do usuário em `at` (posição no texto): guarda o texto anterior, ou junta com o passo anterior (mesmo lugar, há pouco). */
+/** Antes de uma edição do usuário em `at` (posição no texto): guarda o texto anterior, ou junta com o passo anterior (mesma ação, ou mesmo lugar há pouco). */
 export function record(id: string, before: string, at: number, now = performance.now()): void { // relógio monotônico: intervalo, não data
   const h = of(id);
-  const sameAction = now - h.last < ACTION_MS;
-  if (!h.undo.length || now - h.last > GROUP_MS || (at !== h.at && !sameAction)) { h.undo.push(before); if (h.undo.length > MAX) h.undo.shift(); }
+  const act = currentAction();
+  if (!h.undo.length || now - h.last > GROUP_MS || (at !== h.at && act !== h.action)) { h.undo.push(before); if (h.undo.length > MAX) h.undo.shift(); }
   h.last = now;
   h.at = at;
+  h.action = act;
   h.redo = [];
 }
 
