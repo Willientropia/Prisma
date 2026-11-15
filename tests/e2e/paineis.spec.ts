@@ -52,4 +52,11 @@ test('Ctrl+F1 recolhe a faixa até as guias; clicar numa guia abre de novo', asy
   expect(await width(page, 'article')).toBe(h0);
   await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Início' }).click();
   await expect(faixa).toBeVisible();
+  await page.keyboard.press('Control+F1');
+  await expect(faixa).toBeHidden();
+  await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Início' }).dblclick(); // recolhida: duplo clique abre e fica aberta
+  await page.waitForTimeout(300);
+  await expect(faixa).toBeVisible();
+  await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Início' }).dblclick(); // aberta: duplo clique recolhe
+  await expect(faixa).toBeHidden();
 });

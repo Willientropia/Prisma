@@ -69,6 +69,7 @@ describe('conversor: regras', () => {
     const lx = toLatex('for(i, range(1, 8), v[i] := i^2)');
     expect(lx).not.toContain('\\mathbf{i}'); // i é a variável do laço, não a unidade imaginária
     expect(lx).toContain('\\coloneq');
+    expect(() => toLinear('g(a\\coloneq 1)')).toThrow(); // atribuição só no corpo do for (revisão da v0.6.0)
     expect(toLatex('for(i, range(1, 8), v[i] := g(i))')).toMatch(/^\\operatorname\{for\}\\left\(/); // parênteses que o campo desenha certo (BUG-028)
   });
 

@@ -34,12 +34,12 @@ register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z', run: () => { i
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y', run: () => { if (!st().undo(true)) say('Nada para refazer'); } });
 
 // Painéis (pedido do usuário, 14/11): mostrar e esconder, gravado no config.yaml
-const painel = (k: Painel) => () => void togglePainel(k).catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));
+const painel = (k: Painel) => () => void togglePainel(k); // o erro de gravação já vai para a barra de status (paineis.tsx)
 register('exibir.painelEsquerdo', { run: painel('esquerdo') });
 register('exibir.painelDireito', { run: painel('direito') });
 register('exibir.linhaComando', { run: painel('comando') });
 register('exibir.faixa', { label: 'Recolher faixa', shortcut: 'Ctrl+F1', run: painel('faixa') });
-register('exibir.foco', { label: 'Modo foco', shortcut: 'Ctrl+Shift+F', run: () => void toggleFoco().catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`)) });
+register('exibir.foco', { label: 'Modo foco', shortcut: 'Ctrl+Shift+F', run: () => void toggleFoco() });
 
 register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }) });
 // Exibir > Assistente dinâmico (ADENDO 06, 3.1): ligado por padrão, salvo na configuração

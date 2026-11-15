@@ -27,22 +27,30 @@ export function applyPaineis(p: Paineis): void {
   root.toggleAttribute('data-foco', p.foco);
 }
 
-const save = (patch: Partial<Paineis>) => {
-  const cur = paineisOf(useWorkspace.getState().config);
-  const next = { ...cur, ...patch };
+// Gravações em fila: cada uma lê o config já gravado pela anterior (duas seguidas não perdem chave) e parte do último valor aplicado
+let last: Paineis | null = null;
+let queue: Promise<void> = Promise.resolve();
+const save = (patch: Partial<Paineis>): Promise<void> => {
+  const next = { ...(last ?? paineisOf(useWorkspace.getState().config)), ...patch };
+  last = next;
   applyPaineis(next); // na hora, sem esperar o arquivo
-  return saveConfig({ paineis: next });
+  queue = queue.then(() => saveConfig({ paineis: next })).catch((e: unknown) => {
+    last = null;
+    useWorkspace.getState().set({ status: `Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}` });
+  });
+  return queue;
 };
 
 /** Mostra ou esconde um painel; no modo foco, mostrar um painel sai do modo foco. */
 export function togglePainel(k: Painel): Promise<void> {
-  const cur = paineisOf(useWorkspace.getState().config);
+  const cur = last ?? paineisOf(useWorkspace.getState().config);
   if (cur.foco) return save({ foco: false, ocultos: cur.ocultos.filter((x) => x !== k) });
   return save({ ocultos: cur.ocultos.includes(k) ? cur.ocultos.filter((x) => x !== k) : [...cur.ocultos, k] });
 }
-export const toggleFoco = () => save({ foco: !paineisOf(useWorkspace.getState().config).foco });
-export const isFoco = () => paineisOf(useWorkspace.getState().config).foco;
-export const isOculto = (k: Painel) => paineisOf(useWorkspace.getState().config).ocultos.includes(k);
+const now = () => last ?? paineisOf(useWorkspace.getState().config);
+export const toggleFoco = () => save({ foco: !now().foco });
+export const isFoco = () => now().foco;
+export const isOculto = (k: Painel) => now().ocultos.includes(k);
 /** A faixa recolhida volta ao clicar numa guia (como no Office). */
 export const showFaixa = () => (isOculto('faixa') ? togglePainel('faixa') : undefined);
 

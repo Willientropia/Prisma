@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { forget, record, redo, undo } from './historico';
+import { forget, record, redo, rename, undo } from './historico';
 
 describe('desfazer do documento', () => {
   it('volta na ordem, junta edições rápidas num passo e refaz', () => {
@@ -30,6 +30,14 @@ describe('desfazer do documento', () => {
     record('g', 's1', 80, 2001);
     record('g', 's2', 150, 2002);
     expect(undo('g', 's3')).toBe('s0');
+  });
+
+  it('Salvar como leva o histórico para o id novo e não deixa nada no antigo (revisão da v0.6.0)', () => {
+    forget('novo:C1'); forget('C:/x.prsm');
+    record('novo:C1', 'a', 0, 0);
+    rename('novo:C1', 'C:/x.prsm');
+    expect(undo('novo:C1', 'ab')).toBeNull();
+    expect(undo('C:/x.prsm', 'ab')).toBe('a');
   });
 
   it('edição nova depois de desfazer apaga o refazer', () => {

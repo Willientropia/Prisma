@@ -41,3 +41,9 @@ export function redo(id: string, current: string): string | null {
 }
 
 export const forget = (id: string) => void hist.delete(id);
+/** O documento mudou de id (Salvar como, renomear): o histórico vai junto, e nada fica órfão no id antigo. */
+export function rename(from: string, to: string): void {
+  const h = hist.get(from);
+  hist.delete(from);
+  if (h) hist.set(to, h); else hist.delete(to);
+}

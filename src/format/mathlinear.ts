@@ -1,4 +1,5 @@
 // Conversor entre a sintaxe linear do arquivo (SPEC 3.4) e o LaTeX do MathLive (ADENDO 02, B2 e B9).
+// Mais de 300 linhas: os dois leitores (linear e LaTeX) e os dois escritores dividem a mesma árvore e precisam mudar juntos (MANUTENCAO-01, decisão do usuário em 12/11).
 // O arquivo guarda "S := 4 mm^2"; a tela mostra S ≔ 4 mm². toLinear(toLatex(x)) === x para a forma canônica.
 
 // ---------- árvore comum ----------
@@ -203,7 +204,7 @@ class LinearParser {
       if (this.toks[this.i]?.k === 'op' && this.toks[this.i].v === '(') {
         this.i++;
         const args: Node[] = [];
-        if (!this.isOp(')')) { do { args.push(this.arg()); } while (this.isOp(',') && ++this.i); }
+        if (!this.isOp(')')) { do { args.push(t.v === 'for' ? this.arg() : this.expr()); } while (this.isOp(',') && ++this.i); }
         this.eat(')');
         return { t: 'call', f: t.v, args };
       }
@@ -825,7 +826,7 @@ class LatexParser {
       const sepComma = x.v === ',' && !(isDigit(toks[k - 1]) && isDigit(toks[k + 1]));
       if (d === 0 && x.k === 'ch' && (x.v === ';' || sepComma)) args.push([]); else args[args.length - 1].push(x);
     });
-    return { t: 'call', f, args: args.filter((a) => a.length).map((a) => this.sub(a).argAll()) };
+    return { t: 'call', f, args: args.filter((a) => a.length).map((a) => (f === 'for' ? this.sub(a).argAll() : this.sub(a).exprAll())) }; // atribuição só no corpo do for
   }
   private fence(): Node {
     this.i++; // \left

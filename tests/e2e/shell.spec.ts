@@ -15,25 +15,25 @@ const RIBBON: Record<keyof typeof FILES, Record<string, string[]>> = {
   caderno: {
     Início: ['Células: Texto, Cálculo, Função, Gráfico, Verificação', 'Texto: Negrito, Itálico, Título, Lista, Link', 'Biblioteca: Inserir função, Salvar na biblioteca', 'Cálculo: Calcular tudo, Interromper', 'Unidades: Sistema, Converter'],
     Inserir: ['Conteúdo: Tabela, Imagem, Link para nota', 'Matemática: Matriz, Somatório'],
-    Exibir: ['Exibição: Justificativas, Só resultados, Código-fonte', 'Navegação: Estrutura, Dependências, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11 (aceite automático da etapa)
+    Exibir: ['Exibição: Justificativas, Só resultados, Código-fonte', 'Navegação: Estrutura, Dependências, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11)
     Saída: ['Saída: Exportar, Imprimir, Enviar ao LaTeX', 'Integração: Gerar SKILL.md'],
   },
   folha: {
     Início: ['Regiões: Cálculo, Texto, Gráfico, Matriz, Imagem', 'Funções: Inserir função, Definir função', 'Organizar: Alinhar, Grade, Moldura', 'Cálculo: Calcular, Interromper'],
     Inserir: ['Conteúdo: Tabela, Imagem, Link, Gráfico 2D', 'Organizar: Área'], // grupo Organizar: ADENDO 05, E6; Gráfico 2D: ADENDO 06, 5.4 (A6-9, autorizado pelo usuário em 14/11)
-    Exibir: ['Exibição: Grade, Dependências, Zoom, Código-fonte, Assistente dinâmico', 'Painéis: Painel esquerdo, Painel direito, Linha de comando, Recolher faixa, Modo foco'], // ADENDO 06, 3.1 (A6-4, autorizado pelo usuário em 12/11); Painéis: pedido do usuário em 14/11 (aceite automático da etapa)
+    Exibir: ['Exibição: Grade, Dependências, Zoom, Código-fonte, Assistente dinâmico', 'Painéis: Painel esquerdo, Painel direito, Linha de comando, Recolher faixa, Modo foco'], // ADENDO 06, 3.1 (A6-4, autorizado pelo usuário em 12/11); Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11)
     Saída: ['Saída: Exportar, Imprimir, Promover a caderno'],
   },
   tex: {
     Início: ['Estrutura: Seção, Equação, Tabela, Figura, Referência', 'Resultados: Inserir resultado, Atualizar resultados', 'Compilar: Compilar, Limpar auxiliares', 'Modelo: Trocar modelo, Bibliografia'],
     Inserir: ['Pacotes: Pacotes, Comandos'],
-    Exibir: ['Exibição: Código, PDF, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11 (aceite automático da etapa)
+    Exibir: ['Exibição: Código, PDF, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11)
     Saída: ['Saída: Exportar PDF, Exportar .tex, Imprimir'],
   },
   lib: {
     Início: ['Funções: Nova função, Importar, Exportar', 'Testes: Testar, Verificar unidades', 'Documentar: Gerar referência, Gerar SKILL.md'],
     Inserir: ['Conteúdo: Tabela de norma, Constante'],
-    Exibir: ['Exibição: Árvore, Código', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11 (aceite automático da etapa)
+    Exibir: ['Exibição: Árvore, Código', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11)
     Saída: ['Saída: Publicar versão, Exportar pacote'],
   },
 };

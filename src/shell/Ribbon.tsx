@@ -8,7 +8,7 @@ import { GRAPH_RIBBON, MATH_RIBBON } from './ribbonMath';
 import { RibbonMath } from '../components/RibbonMath';
 import { focusedField, insertInFocused } from '../math/insert';
 import s from './shell.module.css';
-import { showFaixa, togglePainel } from './paineis';
+import { isOculto, showFaixa, togglePainel } from './paineis';
 /** Há um campo de matemática em edição? Acompanha o foco (os botões matemáticos inserem nele, ADENDO 06 4.8). */
 function useEditingMath() {
   const [on, setOn] = useState(false);
@@ -75,6 +75,7 @@ export function Ribbon() {
   const set = useWorkspace((x) => x.set);
   const editing = useEditingMath();
   const tabs: [RibbonTab, string][] = doc ? [...RIBBON_TABS[doc.type], ...(grafico ? [['grafico', 'Ferramentas de gráfico'] as [RibbonTab, string]] : [])] : [];
+  const wasHidden = useRef(false); // faixa recolhida no primeiro clique de um duplo clique
   const go = (id: RibbonTab) => doc && set({ ribbonTab: id, ...(id === 'grafico' ? {} : { lastTabs: { ...lastTabs, [doc.type]: id } }) });
   const tips = useKeyTips((letter) => {
     // lê o store na hora da tecla: logo depois de abrir um documento, o último desenho ainda não o conhece
@@ -96,7 +97,8 @@ export function Ribbon() {
         {tabs.map(([id, text]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={id === 'grafico' ? (tab === id ? s.rtCtxOn : s.rtCtx) : tab === id ? s.rtOn : s.rt}
             onMouseDown={(e) => e.preventDefault() /* trocar de guia não tira o foco da expressão */}
-            onClick={() => { go(id); void showFaixa(); }} onDoubleClick={() => void togglePainel('faixa')}>{text}{tips && KEYTIPS[id] && <span className={s.keytip} aria-hidden="true">{KEYTIPS[id]}</span>}</button>
+            onClick={(e) => { go(id); if (e.detail === 1) { wasHidden.current = isOculto('faixa'); void showFaixa(); } }}
+            onDoubleClick={() => { if (!wasHidden.current) void togglePainel('faixa'); } /* recolhida: o primeiro clique já abriu */}>{text}{tips && KEYTIPS[id] && <span className={s.keytip} aria-hidden="true">{KEYTIPS[id]}</span>}</button>
         ))}
       </div>
       <div className={s.rbody}>

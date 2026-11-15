@@ -1,4 +1,5 @@
 // Workspace: abas, documento ativo, projeto ativo (opcional). Comportamento de programa CAD (ADENDO 01, A4).
+// Mais de 300 linhas: é o estado único do app (abas, arquivos, projeto, salvar, desfazer); dividir espalharia as transições entre arquivos (MANUTENCAO-01).
 import { create } from 'zustand';
 import { parse as parseYaml, parseDocument } from 'yaml';
 import { APP_NAME, type DocType } from '../constants';
@@ -287,6 +288,7 @@ export const useWorkspace = create<State>((set, get) => {
       const doc = get().openDocs.find((d) => d.id === id);
       if (!doc) return;
       if (doc.readOnly) return say(doc.factory ? FACTORY_MSG : 'Arquivo em somente leitura (formato mais novo que esta versão do Prisma)');
+      if (doc.text.slice(start, end) === insert) return; // nada muda: sem passo morto no desfazer
       historico.record(id, doc.text, start); // desfazer do documento (pedido do usuário, 14/11)
       updateDoc(id, { text: doc.text.slice(0, start) + insert + doc.text.slice(end), dirty: true });
       clearTimeout(autosave.get(id));
@@ -348,6 +350,7 @@ export const useWorkspace = create<State>((set, get) => {
         return false;
       }
       if (doc.recovery) void platform.recoveryDelete(doc.recovery);
+      historico.rename(doc.id, path); // o desfazer continua depois de Salvar como
       const fresh: OpenDoc = { ...doc, id: path, path, name: basename(path), text, dirty: false, recovery: undefined, addToProject: undefined, factory: false, readOnly: doc.factory ? false : doc.readOnly };
       const { [doc.id]: res, ...results } = get().results;
       set({
@@ -412,6 +415,7 @@ export const useWorkspace = create<State>((set, get) => {
         if (r.id !== 'reload') return;
       }
       clearTimeout(autosave.get(doc.id));
+      historico.forget(doc.id); // desfazer não pode trazer de volta o texto de antes da mudança externa
       updateDoc(doc.id, { text, dirty: false });
       say(`${doc.name} atualizado: mudou fora do ${APP_NAME}`);
     },
@@ -555,6 +559,7 @@ export const useWorkspace = create<State>((set, get) => {
       await writeProject((lists) => { for (const k of Object.keys(lists) as ProjectList[]) lists[k] = lists[k].map((x) => (x === rel ? nextRel : x)); });
       const open = get().openDocs.find((d) => d.path && samePath(d.path, from));
       if (open) {
+        historico.rename(open.id, to);
         set({ openDocs: get().openDocs.map((d) => (d === open ? { ...d, id: to, path: to, name: finalName } : d)), active: get().active === open.id ? to : get().active });
       }
     },

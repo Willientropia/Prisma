@@ -91,6 +91,8 @@ export function Grafico2D(p: Props) {
   useEffect(() => { if (!save.current) setOver(null); }, [d]); // a vista gravada voltou do cálculo
   useEffect(() => setSize(null), [p.width, p.height]);
   useEffect(() => () => clearTimeout(save.current), []);
+  // o corpo mudou por fora (Ctrl+Z, outra edição) com a vista ainda por gravar: a gravação atrasada não passa por cima
+  useEffect(() => { if (save.current) { clearTimeout(save.current); save.current = 0; setOver(null); } }, [p.body]);
   const showView = (v: View) => {
     setOver(v);
     clearTimeout(save.current);
