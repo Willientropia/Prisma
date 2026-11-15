@@ -28,6 +28,9 @@
 
 /* ribbon: altura fixa de 124 px = guias 32 + corpo 92 (ADENDO 04, D4) */
 .ribbon { flex: none; height: 124px; overflow: hidden; background: var(--bg-ribbon); }
+:global(html[data-sem-faixa]) .ribbon { height: 32px; box-shadow: inset 0 -1px 0 var(--border); } /* faixa recolhida: só as guias (Ctrl+F1, como no Office) */
+:global(html[data-sem-faixa]) .rbody { display: none; }
+:global(html[data-foco]) .ribbon { display: none; }
 .rtabs { display: flex; height: 32px; padding: 0 6px; background: var(--bg-ribbon); }
 .rt, .rtOn {
   position: relative; height: 32px; padding: 0 14px; border: none; border-bottom: 2px solid transparent;

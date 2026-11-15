@@ -35,6 +35,8 @@
   --hover-btn: #2a2535;
   --selection: #3b2a63;
   --focus-ring: #a78bfa;
+  --scrollbar-thumb: #3f394d;      /* barras de rolagem finas, no tom da interface (pedido do usuário, 14/11) */
+  --scrollbar-thumb-hover: #5a5370;
 
   /* destaque (vem do logo) */
   --accent: #6d28d9;

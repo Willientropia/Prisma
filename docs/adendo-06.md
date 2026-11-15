@@ -85,3 +85,9 @@ Testes: `src/engine/robustez.test.ts` (entradas travadas rodam em processo filho
 
 - **Roda do mouse:** faz zoom só com o gráfico selecionado. Sem seleção, ela rola a página, para um caderno comprido não travar a rolagem ao passar por cima de um gráfico.
 - **Textos aprovados:** o rótulo "Expressão do gráfico", a pergunta "Eixo x: mínimo; máximo; rótulo (mínimo e máximo vazios: vista automática)" e o aviso "Limites do eixo x inválidos: o máximo precisa ser maior que o mínimo". Imagens `grafico-folha.png` e `grafico-caderno.png` aprovadas.
+
+## Janela: barras de rolagem e painéis (pedido do usuário, 14/11)
+
+- **Barras de rolagem:** finas (10 px), polegar arredondado em `--scrollbar-thumb` (`--scrollbar-thumb-hover` ao passar o ponteiro), trilho transparente, sem setas. Valem para a janela inteira.
+- **Painéis laterais:** divisória na borda de dentro; arrastar muda a largura (160 a 560 px), as setas mudam de 16 em 16 px, duplo clique volta ao padrão (250 e 275 px). A largura vai para o `config.yaml` (`paineis`).
+- **Exibir → Painéis**, em todos os tipos de documento: Painel esquerdo, Painel direito, Linha de comando (só na folha), Recolher faixa (`Ctrl+F1`, como no Office; clicar numa guia abre de novo, duplo clique numa guia recolhe) e Modo foco (`Ctrl+Shift+F`: esconde faixa, painéis e linha de comando; a barra de status mostra "Modo foco · Ctrl+Shift+F para sair"). O que está escondido também vai para o `config.yaml`.

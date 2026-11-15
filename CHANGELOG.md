@@ -4,6 +4,11 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **Janela** (pedido do usuário, 14/11)
+  - Barras de rolagem finas, no tom da interface, sem o trilho branco nem setas.
+  - Painéis laterais com largura arrastável (duplo clique volta ao padrão) e Exibir → Painéis: mostrar e esconder painel esquerdo, direito e linha de comando, Recolher faixa (`Ctrl+F1`) e Modo foco (`Ctrl+Shift+F`). Tudo gravado no `config.yaml`.
+  - Os testes F0-01 a F0-04 passaram a esperar o grupo Painéis na guia Exibir (aceite do usuário para esta etapa).
+
 ## v0.5.0 — 2026-11-14
 
 Gráfico 2D, impressão do caderno e correções da tela (ADENDO 06, docs/TICKETS-FOLHA.md). verify:full aprovado: 725 testes, nenhuma falha.

@@ -84,6 +84,14 @@ export const RIBBONS: Record<DocType, Record<CommandTab, RibbonGroup[]>> = {
   },
 };
 
+// Painéis (pedido do usuário, 14/11): grupo no fim de toda guia Exibir; a linha de comando só existe na folha
+for (const [type, tabs] of Object.entries(RIBBONS))
+  tabs.exibir.push(...g([['Painéis', [
+    ['exibir.painelEsquerdo', 'Painel esquerdo', 'panelLeft'], ['exibir.painelDireito', 'Painel direito', 'panelRight'],
+    ...(type === 'folha' ? [['exibir.linhaComando', 'Linha de comando', 'panelBottom'] as [string, string, IconName]] : []),
+    ['exibir.faixa', 'Recolher faixa', 'ribbonUp'], ['exibir.foco', 'Modo foco', 'focus'],
+  ]]]));
+
 // Registra o rótulo de cada botão (o primeiro rótulo visto vence; handlers vêm depois).
 const seen = new Set<string>();
 for (const tabs of Object.values(RIBBONS))

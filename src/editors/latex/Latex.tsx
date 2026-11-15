@@ -6,6 +6,7 @@ import { dirname } from '../../format/display';
 import { LeftPanel } from '../../shell/ProjectPanel';
 import { useWorkspace, type OpenDoc } from '../../store/workspace';
 import s from '../editors.module.css';
+import { PanelSplitter } from '../../shell/paineis';
 
 /** Realce mínimo: comandos \x e comentários %. CodeMirror chega na fase 5. */
 function highlight(line: string) {
@@ -59,6 +60,7 @@ export function Latex({ doc }: { doc: OpenDoc }) {
       </main>
 
       <aside className={s.right}>
+        <PanelSplitter side="direito" />
         <PanelHeader title="Resultados disponíveis" />
         <div className={s.note}>Escolha o que inserir no documento. Nada é sincronizado sem você pedir.</div>
         <div className={s.note}>{inProject ? 'Nenhum resultado calculado no projeto ainda.' : 'Adicione este documento a um projeto para inserir resultados.'}</div>

@@ -22,6 +22,7 @@ import { useGraphTools } from '../grafico/ferramentas';
 import { isGraph2DBody, NEW_GRAPH, seriesOf, setSeries } from '../../format/grafico';
 import type { Graph2D } from '../../engine/grafico';
 import s from '../editors.module.css';
+import { PanelSplitter } from '../../shell/paineis';
 
 export const BLOCK_LABEL: Record<string, string> = {
   funcao: 'Função', calc: 'Cálculo', verificar: 'Verificação', grafico: 'Gráfico', tabela: 'Tabela', texto: 'Texto', teste: 'Teste',
@@ -340,6 +341,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
       </main>
 
       <aside className={s.right}>
+        <PanelSplitter side="direito" />
         <PanelHeader title="Propriedades" aside={sel?.tag} />
         {sel && <PropGrid rows={props(sel, sel.kind === 'block' ? result?.blocks[sel.key] : undefined)} />}
         {result && <div className={s.note}>Calculado em {result.ms.toFixed(1).replace('.', ',')} ms</div>}

@@ -27,6 +27,7 @@ import { sheetItems, type LibFn } from './assistente';
 import { baseItems, sortItems } from '../../math/assistente';
 import { allFunctions } from '../../commands/library';
 import s from '../editors.module.css';
+import { PanelSplitter } from '../../shell/paineis';
 
 const GRID = 20;
 /** Imagem extraída de um .sm, ao lado da folha (<nome>_arquivos/...). */
@@ -605,6 +606,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       </main>
 
       <aside className={s.right}>
+        <PanelSplitter side="direito" />
         <PanelHeader title="Propriedades da região" />
         {sel ? <PropGrid rows={[['Região', sel.id], ...blockProps(sel.seg).filter(([k]) => !['Id', 'x', 'y', 'largura', 'altura'].includes(k)), ['Posição X', `${num(sel.seg, 'x')} px`], ['Posição Y', `${num(sel.seg, 'y')} px`], ['Selecionadas', String(selected.size)]]} />
           : <div className={s.note}>Clique numa região para editar. Arraste pela moldura para mover; arraste na área vazia para selecionar várias; Delete apaga.</div>}

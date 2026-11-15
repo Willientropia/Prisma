@@ -43,6 +43,11 @@ export const ICONS = {
   varbox: 'M4 4h16v16H4zM10 9l4.5 6M15.5 9l-6.5 6', // assistente (ADENDO 06, 3.2): x itálico no quadrado
   fnbox: 'M4 4h16v16H4zM15.5 8c-2 0-2.6 1-3 3l-1.4 6M9.5 11.5h5', // f itálico no quadrado
   fnboxup: 'M4 4h16v16H4zM14.5 8c-1.8 0-2.5.8-2.5 3v6M9.5 11.5h5', // f reto no quadrado
+  panelLeft: 'M3 5h18v14H3zM9 5v14', // painéis (pedido do usuário, 14/11)
+  panelRight: 'M3 5h18v14H3zM15 5v14',
+  panelBottom: 'M3 5h18v14H3zM3 15h18',
+  ribbonUp: 'M3 5h18v6H3zM8 17l4-3 4 3',
+  focus: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
 } as const;
 
 export type IconName = keyof typeof ICONS;

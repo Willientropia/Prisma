@@ -7,6 +7,7 @@ import '../shell/ribbons'; // registra os rótulos do ribbon
 import { saveConfig } from '../shell/config';
 import { openCatalog } from '../shell/catalogo';
 import { printPage } from '../shell/imprimir';
+import { toggleFoco, togglePainel, type Painel } from '../shell/paineis';
 
 const st = useWorkspace.getState;
 const say = (status: string) => st().set({ status, menuOpen: false });
@@ -30,6 +31,14 @@ register('app.configuracoes', { label: 'Configurações', run: () => st().set({ 
 register('home.modelos', { label: 'Modelos' });
 register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
 register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });
+
+// Painéis (pedido do usuário, 14/11): mostrar e esconder, gravado no config.yaml
+const painel = (k: Painel) => () => void togglePainel(k).catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));
+register('exibir.painelEsquerdo', { run: painel('esquerdo') });
+register('exibir.painelDireito', { run: painel('direito') });
+register('exibir.linhaComando', { run: painel('comando') });
+register('exibir.faixa', { label: 'Recolher faixa', shortcut: 'Ctrl+F1', run: painel('faixa') });
+register('exibir.foco', { label: 'Modo foco', shortcut: 'Ctrl+Shift+F', run: () => void toggleFoco().catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`)) });
 
 register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }) });
 // Exibir > Assistente dinâmico (ADENDO 06, 3.1): ligado por padrão, salvo na configuração

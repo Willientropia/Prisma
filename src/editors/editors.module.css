@@ -1,7 +1,11 @@
 /* moldura comum: painel esquerdo, centro, painel direito */
-.left { flex: 0 0 250px; display: flex; flex-direction: column; overflow: auto; background: var(--bg-panel); border-right: 1px solid var(--border); }
-.right { flex: 0 0 275px; display: flex; flex-direction: column; overflow: auto; background: var(--bg-panel); border-left: 1px solid var(--border); }
+.left { flex: 0 0 var(--panel-left, 250px); position: relative; display: flex; flex-direction: column; overflow: auto; background: var(--bg-panel); border-right: 1px solid var(--border); }
+.right { flex: 0 0 var(--panel-right, 275px); position: relative; display: flex; flex-direction: column; overflow: auto; background: var(--bg-panel); border-left: 1px solid var(--border); }
 .center { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: auto; }
+/* painéis escondidos e modo foco (pedido do usuário, 14/11; src/shell/paineis.tsx) */
+:global(html[data-sem-esquerdo]) .left, :global(html[data-foco]) .left,
+:global(html[data-sem-direito]) .right, :global(html[data-foco]) .right,
+:global(html[data-sem-comando]) .cmdline, :global(html[data-foco]) .cmdline { display: none; }
 .list { padding: 4px 0; }
 .gap { margin-top: 10px; }
 .mono { font-family: 'JetBrains Mono', monospace; }

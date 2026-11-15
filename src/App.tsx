@@ -11,6 +11,7 @@ import { Biblioteca } from './editors/biblioteca/Biblioteca';
 import { byShortcut, shortcutOf } from './commands/registry';
 import { useWorkspace, activeDoc } from './store/workspace';
 import s from './App.module.css';
+import { applyPaineis, paineisOf } from './shell/paineis';
 
 const EDITORS = { caderno: Caderno, folha: Folha, tex: Latex, lib: Biblioteca };
 
@@ -26,6 +27,9 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  const config = useWorkspace((x) => x.config);
+  useEffect(() => applyPaineis(paineisOf(config)), [config]); // larguras e painéis escondidos (pedido do usuário, 14/11)
 
   const Editor = doc && EDITORS[doc.type];
   return (

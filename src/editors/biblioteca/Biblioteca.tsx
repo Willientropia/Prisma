@@ -13,6 +13,7 @@ import { evaluateAsync } from '../../engine/client';
 import { readLibraryFiles } from '../../engine/run';
 import { register } from '../../commands/registry';
 import s from '../editors.module.css';
+import { PanelSplitter } from '../../shell/paineis';
 
 /** Linear do arquivo -> matemática na tela; se não der para ler, mostra o texto. */
 const tex = (linear: string) => { try { return toLatex(linear); } catch { return `\\text{${linear.replace(/[{}\\]/g, '')}}`; } };
@@ -132,6 +133,7 @@ export function Biblioteca({ doc }: { doc: OpenDoc }) {
       </main>
 
       <aside className={s.right}>
+        <PanelSplitter side="direito" />
         <PanelHeader title="Metadados" />
         <PropGrid rows={[
           ['Biblioteca', nome], ['Versão', String(parsed.meta.versao ?? '')],

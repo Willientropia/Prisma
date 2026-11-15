@@ -7,6 +7,7 @@ import { basename, displayPath, joinPath } from '../format/display';
 import { platform } from '../platform';
 import { useWorkspace, activeDoc, type ProjectList, type OpenDoc } from '../store/workspace';
 import s from './project.module.css';
+import { PanelSplitter } from './paineis';
 
 export type MenuItem = { label: string; run: () => void };
 export type MenuState = { x: number; y: number; items: MenuItem[] } | null;
@@ -95,7 +96,7 @@ export function LeftPanel({ doc, className, children }: { doc: OpenDoc; classNam
   const inProject = useWorkspace((x) => !!x.projectPathOf(doc.path));
   const isActive = useWorkspace((x) => activeDoc(x)?.id === doc.id);
   const [tab, setTab] = useState<'estrutura' | 'projeto'>('estrutura');
-  if (!inProject || !isActive) return <aside className={className}>{children}</aside>;
+  if (!inProject || !isActive) return <aside className={className}>{children}<PanelSplitter side="esquerdo" /></aside>;
   return (
     <aside className={className}>
       <div role="tablist" aria-label="Painel esquerdo" className={s.tabs}>
@@ -106,6 +107,7 @@ export function LeftPanel({ doc, className, children }: { doc: OpenDoc; classNam
         ))}
       </div>
       {tab === 'estrutura' ? children : <ProjectTree />}
+      <PanelSplitter side="esquerdo" />
     </aside>
   );
 }

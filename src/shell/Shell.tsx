@@ -10,6 +10,7 @@ import { MathMarkup, lastMathField } from '../math/MathField';
 import { toLatex } from '../format/mathlinear';
 import { allFunctions } from '../commands/library';
 import s from './shell.module.css';
+import { paineisOf } from './paineis';
 
 const QUICK: [string, IconName][] = [['app.novo', 'file'], ['app.abrir', 'open'], ['app.salvar', 'save'], ['app.desfazer', 'undo'], ['app.refazer', 'redo']];
 
@@ -82,6 +83,7 @@ export function StatusBar() {
   const result = useWorkspace((x) => x.results[x.active]);
   const calculating = useWorkspace((x) => x.calculating);
   const doc = useWorkspace(activeDoc);
+  const foco = useWorkspace((x) => paineisOf(x.config).foco);
   let summary = 'Pronto';
   if (calculating) summary = 'Calculando';
   else if (result) {
@@ -96,6 +98,7 @@ export function StatusBar() {
     <footer className={s.statusbar}>
       <span className={s.statusMsg}>{status ?? summary}</span>
       <span className={s.spacer} />
+      {foco && <span>Modo foco · Ctrl+Shift+F para sair</span>}
       {doc && <span title={doc.path ? displayPath(doc.path) : undefined}>{doc.path ? shortenPath(doc.path) : 'Não salvo'}</span>}
       <span>Unidades: {typeof units === 'string' ? units : 'SI'}</span><span>Cálculo: automático</span><span>Zoom 100 %</span>
     </footer>

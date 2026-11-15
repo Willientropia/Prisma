@@ -1,0 +1,6 @@
+/* Divisória dos painéis: invisível em repouso, linha de destaque ao passar o ponteiro ou com foco do teclado */
+.atRight, .atLeft { position: absolute; top: 0; bottom: 0; width: 7px; z-index: 3; cursor: col-resize; outline: none; }
+.atRight { right: 0; } /* rente à borda de dentro: fora dela o painel (overflow: auto) ganharia rolagem horizontal */
+.atLeft { left: 0; }
+.atRight::after, .atLeft::after { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: transparent; transition: background-color 120ms; }
+.atRight:hover::after, .atLeft:hover::after, .atRight:focus-visible::after, .atLeft:focus-visible::after, .atRight:active::after, .atLeft:active::after { background: var(--focus-ring); width: 2px; left: 2px; }
