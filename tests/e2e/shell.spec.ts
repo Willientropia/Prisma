@@ -19,7 +19,7 @@ const RIBBON: Record<keyof typeof FILES, Record<string, string[]>> = {
     Saída: ['Saída: Exportar, Imprimir, Enviar ao LaTeX', 'Integração: Gerar SKILL.md'],
   },
   folha: {
-    Início: ['Regiões: Cálculo, Texto, Gráfico, Matriz, Imagem', 'Funções: Inserir função, Definir função', 'Organizar: Alinhar, Grade', 'Cálculo: Calcular, Interromper'],
+    Início: ['Regiões: Cálculo, Texto, Gráfico, Matriz, Imagem', 'Funções: Inserir função, Definir função', 'Organizar: Alinhar, Grade, Moldura', 'Cálculo: Calcular, Interromper'],
     Inserir: ['Conteúdo: Tabela, Imagem, Link, Gráfico 2D', 'Organizar: Área'], // grupo Organizar: ADENDO 05, E6; Gráfico 2D: ADENDO 06, 5.4 (A6-9, autorizado pelo usuário em 14/11)
     Exibir: ['Exibição: Grade, Dependências, Zoom, Código-fonte, Assistente dinâmico', 'Painéis: Painel esquerdo, Painel direito, Linha de comando, Recolher faixa, Modo foco'], // ADENDO 06, 3.1 (A6-4, autorizado pelo usuário em 12/11); Painéis: pedido do usuário em 14/11 (aceite automático da etapa)
     Saída: ['Saída: Exportar, Imprimir, Promover a caderno'],

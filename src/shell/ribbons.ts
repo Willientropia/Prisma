@@ -51,7 +51,7 @@ export const RIBBONS: Record<DocType, Record<CommandTab, RibbonGroup[]>> = {
     inicio: g([
       ['Regiões', [['folha.calculo', 'Cálculo', 'calc'], ['folha.texto', 'Texto', 'text'], ['folha.grafico', 'Gráfico', 'plot'], ['inserir.matriz', 'Matriz', 'grid'], ['inserir.imagem', 'Imagem', 'image']]],
       ['Funções', [['funcao.inserir', 'Inserir função', 'lib'], ['folha.definirFuncao', 'Definir função', 'fn']]],
-      ['Organizar', [['folha.alinhar', 'Alinhar', 'align'], ['folha.grade', 'Grade', 'grid']]],
+      ['Organizar', [['folha.alinhar', 'Alinhar', 'align'], ['folha.grade', 'Grade', 'grid'], ['folha.moldura', 'Moldura', 'frame']]], // Moldura: pedido do usuário, 14/11
       ['Cálculo', [['calc.tudo', 'Calcular', 'run'], ['calc.interromper', 'Interromper', 'stop']]],
     ]),
     inserir: g([

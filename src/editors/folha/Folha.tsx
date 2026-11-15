@@ -188,7 +188,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const a = r.seg.attrs;
     setMenu({ x: e.clientX, y: e.clientY, items: [
       { label: 'desativado' in a ? 'Ativar avaliação' : 'Desativar avaliação', run: () => setAttr(r.id, 'desativado', 'desativado' in a ? null : true) },
-      { label: 'moldura' in a ? 'Tirar moldura' : 'Moldura', run: () => setAttr(r.id, 'moldura', 'moldura' in a ? null : true) },
+      { label: frameOn(menuIds(r.id)) ? 'Tirar moldura' : 'Moldura', run: () => toggleFrame(menuIds(r.id)) },
       ...(EVALUATED.has(r.seg.type) ? [{ label: 'Formato do resultado...', run: () => set({ formatDialog: { scope: 'region', docId: doc.id, regionId: r.id } }) }] : []),
       { label: 'Descrição...', run: async () => {
         const q = await useWorkspace.getState().ask({ title: 'Descrição da região', message: 'Comentário curto mostrado acima da região (vazio tira):', input: a.descricao ?? '', buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
@@ -230,6 +230,17 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     edit(doc.id, 0, t.length, rest.slice(0, before) + block + rest.slice(before));
   };
   useEffect(() => { register('folha.area', { label: 'Área', run: wrapInArea }); return () => register('folha.area', { run: undefined }); });
+  /** Moldura (ADENDO 05, E5) em todas as selecionadas de uma vez: se todas já têm, tira de todas (pedido do usuário, 14/11). */
+  const menuIds = (id: string) => (selected.has(id) ? [...selected] : [id]); // menu numa região da seleção vale para a seleção toda
+  const frameOn = (ids: string[]) => { const rs = fresh().filter((r) => ids.includes(r.id)); return rs.length > 0 && rs.every((r) => 'moldura' in r.seg.attrs); };
+  const toggleFrame = (ids: string[]) => {
+    const off = frameOn(ids);
+    for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) setAttr(r.id, 'moldura', off ? null : true); // de trás para a frente
+  };
+  useEffect(() => {
+    register('folha.moldura', { label: 'Moldura', run: () => (selected.size ? toggleFrame([...selected]) : set({ status: 'Moldura: selecione uma ou mais regiões' })) });
+    return () => register('folha.moldura', { run: undefined });
+  });
 
   const textNow = () => useWorkspace.getState().openDocs.find((x) => x.id === doc.id)?.text ?? '';
   const fresh = () => regionsOf(textNow());

@@ -8,6 +8,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - Barras de rolagem finas, no tom da interface, sem o trilho branco nem setas.
   - Painéis laterais com largura arrastável (duplo clique volta ao padrão) e Exibir → Painéis: mostrar e esconder painel esquerdo, direito e linha de comando, Recolher faixa (`Ctrl+F1`) e Modo foco (`Ctrl+Shift+F`). Tudo gravado no `config.yaml`.
   - Os testes F0-01 a F0-04 passaram a esperar o grupo Painéis na guia Exibir (aceite do usuário para esta etapa).
+- **Moldura em lote** (pedido do usuário, 14/11): Início → Organizar → Moldura, ou o menu de contexto numa região selecionada, põe moldura em todas as selecionadas; se todas já têm, tira de todas. Um Ctrl+Z desfaz o lote. O teste F0-02 passou a esperar o botão.
 - **Desfazer do documento** (pedido do usuário, 14/11): `Ctrl+Z` e `Ctrl+Y` fora de um campo desfazem e refazem zoom e vista do gráfico, regiões movidas e linhas digitadas, na ordem. Dentro de um campo, continua o desfazer do campo.
 
 ## v0.5.0 — 2026-11-14
