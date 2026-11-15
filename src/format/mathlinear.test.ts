@@ -63,6 +63,15 @@ describe('conversor: regras', () => {
     expect(toLatex('diff(g(t), t, y) = ?', ctx)).toContain('\\class{undef}{y}'); // o ponto continua conferido
   });
 
+  it('[F05] for com atribuição no corpo e nome com % abrem na tela e fazem ida e volta (B4 da auditoria)', () => {
+    for (const l of ['for(i, range(1, 8), v[i] := i^2)', 'for(i, range(1, 8), L_Vmag[i] := row(L_Vmag[i], 1))', 'Z%_modulo := 0.15', 'Xt_impar := N*Z%_modulo', 'Z% := 0.15*i', 'Z%_modulo = ?'])
+      expect(toLinear(toLatex(l)), l).toBe(l);
+    const lx = toLatex('for(i, range(1, 8), v[i] := i^2)');
+    expect(lx).not.toContain('\\mathbf{i}'); // i é a variável do laço, não a unidade imaginária
+    expect(lx).toContain('\\coloneq');
+    expect(toLatex('for(i, range(1, 8), v[i] := g(i))')).toMatch(/^\\operatorname\{for\}\\left\(/); // parênteses que o campo desenha certo (BUG-028)
+  });
+
   it('[BUG-028] função nativa com chamada de função do usuário dentro usa \\left( \\right), que o campo do MathLive desenha certo; ida e volta igual', () => {
     for (const s of ['sin(g(t))', 'diff(i_cc(t, 0), t, 1)', 'exp(2*h(x, 1))']) {
       expect(toLatex(s)).toMatch(/^\\operatorname\{(sin|diff|exp)\}\\left\(.*\\right\)$/);

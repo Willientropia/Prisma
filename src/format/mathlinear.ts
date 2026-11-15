@@ -15,7 +15,8 @@ export type Node =
   | { t: 'call'; f: string; args: Node[] }
   | { t: 'mat'; rows: Node[][] }
   | { t: 'str'; v: string } // texto entre aspas (ADENDO 05, E4.1)
-  | { t: 'idx'; a: Node; i: Node[] }; // elemento de vetor ou matriz: v[2], M[2, 3] (ADENDO 05, E2.3)
+  | { t: 'idx'; a: Node; i: Node[] } // elemento de vetor ou matriz: v[2], M[2, 3] (ADENDO 05, E2.3)
+  | { t: 'set'; a: Node; b: Node }; // atribuição dentro de argumento: for(i, range(1, 8), v[i] := i^2) (F05)
 export type Line =
   | { kind: 'def'; lhs: Node; rhs: Node; show?: boolean; unit?: Unit; conv?: Node } // show: "x := expr = ?" (ADENDO 05, E2.1)
   | { kind: 'eval'; expr: Node; unit?: Unit; conv?: Node } // conv: conversão por expressão, "= ? 10^-6" (E4.3)
@@ -26,7 +27,7 @@ const fail = (msg: string): never => { throw new MathSyntaxError(msg); };
 
 const REL = ['<', '<=', '>', '>=', '==', '!='];
 const PREC: Record<string, number> = { '||': 0, '<': 1, '<=': 1, '>': 1, '>=': 1, '==': 1, '!=': 1, '+': 2, '-': 2, '*': 3, '/': 3, '^': 5 };
-const prec = (n: Node): number => (n.t === 'bin' ? PREC[n.op] : n.t === 'neg' ? 4 : 6);
+const prec = (n: Node): number => (n.t === 'bin' ? PREC[n.op] : n.t === 'neg' ? 4 : n.t === 'set' ? -1 : 6);
 
 /** Funções nativas: nome reto na tela (SPEC 8.6). */
 export const BUILTINS = new Set(['sqrt', 'abs', 'exp', 'ln', 'log', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'min', 'max', 'round', 'ceil', 'floor', 'sum', 'mean', 'root', 'integral', 'deriv', 'interp', 'polyroots', 'solve', 'det', 'inv', 'transpose', 'diff', 'nthroot']);
@@ -89,6 +90,14 @@ class LinearParser {
     return { kind: 'expr', expr: e };
   }
   private end() { if (!this.atEnd()) fail(`Sobrou: ${this.toks.slice(this.i).map((t) => t.v).join('')}`); }
+
+  /** Argumento de função: expressão ou atribuição ("v[i] := i^2" no corpo do for, F05). */
+  private arg(): Node {
+    const a = this.expr();
+    if (!this.isOp(':=')) return a;
+    this.i++;
+    return { t: 'set', a, b: this.expr() };
+  }
 
   expr(): Node {
     let a = this.rel();
@@ -194,7 +203,7 @@ class LinearParser {
       if (this.toks[this.i]?.k === 'op' && this.toks[this.i].v === '(') {
         this.i++;
         const args: Node[] = [];
-        if (!this.isOp(')')) { do { args.push(this.expr()); } while (this.isOp(',') && ++this.i); }
+        if (!this.isOp(')')) { do { args.push(this.arg()); } while (this.isOp(',') && ++this.i); }
         this.eat(')');
         return { t: 'call', f: t.v, args };
       }
@@ -283,6 +292,7 @@ export function nodeToLinear(n: Node): string {
     case 'call': return `${n.f}(${n.args.map(nodeToLinear).join(', ')})`;
     case 'idx': return `${prec(n.a) < 6 ? `(${nodeToLinear(n.a)})` : nodeToLinear(n.a)}[${n.i.map(nodeToLinear).join(', ')}]`;
     case 'mat': return `[${n.rows.map((r) => r.map(nodeToLinear).join(', ')).join('; ')}]`;
+    case 'set': return `${nodeToLinear(n.a)} := ${nodeToLinear(n.b)}`;
     case 'bin': {
       const a = wrap(n.a, n.op, false), b = wrap(n.b, n.op, true);
       return n.op === '*' || n.op === '/' || n.op === '^' ? `${a}${n.op}${b}` : `${a} ${n.op} ${b}`;
@@ -369,6 +379,7 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
     case 'paren': return `\\left(${L(n.a)}\\right)`;
     case 'mat': return `\\begin{bmatrix}${n.rows.map((r) => r.map(L).join('&')).join('\\\\')}\\end{bmatrix}`;
     case 'idx': return `{${L(n.a)}}_{\\lbrack ${n.i.map(L).join(';\\,')}\\rbrack}`; // índice de elemento: colchetes finos (E5)
+    case 'set': return `${L(n.a)}\\;\\coloneq\\;${L(n.b)}`; // no corpo do for: v[i] ≔ i² (F05)
     case 'call': {
       if (n.f === 'sqrt' && n.args.length === 1) return `\\sqrt{${L(strip(n.args[0]))}}`;
       if (n.f === 'abs' && n.args.length === 1) return `\\left\\lvert ${L(n.args[0])}\\right\\rvert`;
@@ -382,10 +393,14 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
         return `\\sum_{${idLatex(v.name)}=${L(lo)}}^{${L(hi)}}${prec(body) < 3 ? `\\left(${B(body)}\\right)` : B(body)}`;
       }
       // BUG-028: o campo do MathLive pareia errado \operatorname{sin}( com g(t) dentro (some o "(" de g); \left( \right) ele desenha certo
-      const [o, c] = BUILTINS.has(n.f) && n.args.some(hasUserCall) ? ['\\left(', '\\right)'] : ['(', ')'];
+      const [o, c] = (BUILTINS.has(n.f) || n.f === 'for') && n.args.some(hasUserCall) ? ['\\left(', '\\right)'] : ['(', ')']; // for: \operatorname{for}, como as nativas
       if (n.f === 'diff' && (n.args.length === 2 || n.args.length === 3) && v.t === 'id') { // diff(f, x[, ponto]): x é do cálculo (BUG-026)
         const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), v.name]) });
         return `\\operatorname{diff}${o}${[B(body), B(v), ...(lo ? [L(lo)] : [])].join(';\\,')}${c}`;
+      }
+      if (n.f === 'for' && n.args.length === 3 && body.t === 'id') { // for(i, range, corpo): i é a variável do laço, não a unidade imaginária (F05)
+        const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), body.name]) });
+        return `\\operatorname{for}${o}${n.args.map(B).join(';\\,')}${c}`;
       }
       const name = BUILTINS.has(n.f) ? `\\operatorname{${n.f}}` : idLatex(n.f);
       return `${name}${o}${n.args.map(L).join(';\\,')}${c}`; // ΔV(L; I; S): ponto e vírgula separa argumentos (B4)
@@ -550,6 +565,20 @@ class LatexParser {
     return a;
   }
   exprAll(): Node { const e = this.expr(); return this.done(e); }
+  /** Argumento de função: expressão ou atribuição com ≔ fora de chaves e parênteses (corpo do for, F05). */
+  argAll(): Node {
+    let d = 0;
+    for (let k = 0; k < this.t.length; k++) {
+      const x = this.t[k];
+      if (x.k === 'open' || (x.k === 'ch' && (x.v === '(' || x.v === '[')) || (x.k === 'cmd' && x.v === 'left')) d++;
+      else if (x.k === 'close' || (x.k === 'ch' && (x.v === ')' || x.v === ']')) || (x.k === 'cmd' && x.v === 'right')) d--;
+      else if (d === 0 && isColoneq(x)) {
+        const skip = x.v === ':' && this.t[k + 1]?.v === '=' ? 2 : 1;
+        return { t: 'set', a: this.sub(this.t.slice(0, k)).exprAll(), b: this.sub(this.t.slice(k + skip)).exprAll() };
+      }
+    }
+    return this.exprAll();
+  }
 
   /** Nome: letras seguidas (ΔV, HSP), com índice opcional (_{mp}). */
   private name(): string {
@@ -558,6 +587,7 @@ class LatexParser {
       const t = this.peek();
       if (isLetter(t)) { s += letterOf(this.next()); continue; }
       if (s && isDigit(t)) { s += this.next().v; continue; } // R1, xy2pol, log10: dígito depois de letra faz parte do nome (T02)
+      if (s && t?.k === 'cmd' && t.v === '%') { this.i++; s += '%'; continue; } // Z%_modulo: % depois de letra é parte do nome, como no arquivo (F05)
       if (t?.k === 'cmd' && (t.v === 'mathrm' || t.v === 'operatorname' || t.v === 'text' || t.v === 'mathit' || t.v === 'mathbf')) { this.i++; s += this.sub(this.group()).plain(); continue; }
       break;
     }
@@ -795,7 +825,7 @@ class LatexParser {
       const sepComma = x.v === ',' && !(isDigit(toks[k - 1]) && isDigit(toks[k + 1]));
       if (d === 0 && x.k === 'ch' && (x.v === ';' || sepComma)) args.push([]); else args[args.length - 1].push(x);
     });
-    return { t: 'call', f, args: args.filter((a) => a.length).map((a) => this.sub(a).exprAll()) };
+    return { t: 'call', f, args: args.filter((a) => a.length).map((a) => this.sub(a).argAll()) };
   }
   private fence(): Node {
     this.i++; // \left
@@ -843,7 +873,7 @@ function elToIndex(n: Node): Node {
   const r = (x: Node): Node => elToIndex(x);
   switch (n.t) {
     case 'call': return n.f === 'el' && n.args.length >= 2 ? { t: 'idx', a: r(n.args[0]), i: n.args.slice(1).map(r) } : { ...n, args: n.args.map(r) };
-    case 'bin': return { ...n, a: r(n.a), b: r(n.b) };
+    case 'bin': case 'set': return { ...n, a: r(n.a), b: r(n.b) };
     case 'neg': case 'paren': return { ...n, a: r(n.a) };
     case 'qty': return { ...n, n: r(n.n) };
     case 'idx': return { ...n, a: r(n.a), i: n.i.map(r) };

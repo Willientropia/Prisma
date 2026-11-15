@@ -8,6 +8,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - Barras de rolagem finas, no tom da interface, sem o trilho branco nem setas.
   - Painéis laterais com largura arrastável (duplo clique volta ao padrão) e Exibir → Painéis: mostrar e esconder painel esquerdo, direito e linha de comando, Recolher faixa (`Ctrl+F1`) e Modo foco (`Ctrl+Shift+F`). Tudo gravado no `config.yaml`.
   - Os testes F0-01 a F0-04 passaram a esperar o grupo Painéis na guia Exibir (aceite do usuário para esta etapa).
+- **F05** Linhas do SMath que só apareciam como "Não foi possível ler esta linha" agora abrem na tela e voltam iguais ao arquivo: `for(i, range(1, 8), v[i] := ...)` (54 linhas do corpus; o `i` do laço não vira unidade imaginária) e nomes com `%` como `Z%_modulo` (20 linhas). Pendente: o `#` solto do SMath (1 linha) e 5 linhas com parênteses ou índice composto que voltam diferentes (`Zpu_A1(...)`, `a1 := (0.0236*e^(...))`, caminho com `\` entre aspas).
 - **Moldura em lote** (pedido do usuário, 14/11): Início → Organizar → Moldura, ou o menu de contexto numa região selecionada, põe moldura em todas as selecionadas; se todas já têm, tira de todas. Um Ctrl+Z desfaz o lote. O teste F0-02 passou a esperar o botão.
 - **Desfazer do documento** (pedido do usuário, 14/11): `Ctrl+Z` e `Ctrl+Y` fora de um campo desfazem e refazem zoom e vista do gráfico, regiões movidas e linhas digitadas, na ordem. Dentro de um campo, continua o desfazer do campo.
 

@@ -3,9 +3,9 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { blocks, parse } from './doc';
+import { blocks, lines, parse } from './doc';
 import { fromRpn, importSm } from './smath';
-import { nodeToLinear } from './mathlinear';
+import { nodeToLinear, toLatex, toLinear } from './mathlinear';
 import { definedBefore, definedNames } from './views';
 import { evaluate } from '../engine/evaluate';
 import { DEFAULT_FORMAT, shadowNotice } from '../engine/format';
@@ -35,6 +35,20 @@ describe('ADENDO 05: importação do SMath e corpus do usuário', () => {
       expect(r.regions, f).toBe((xml.match(/<region\b/g) ?? []).length);
       expect(blocks(parse(r.text)).length, f).toBe(r.regions + r.synthetic);
     }
+  });
+
+  it('[F05] todas as linhas do corpus com for ou com % no nome (78; 74 não abriam) abrem na tela e voltam iguais (B4 da auditoria)', () => {
+    let n = 0;
+    for (const f of FILES) {
+      for (const b of blocks(parse(importSm(read(f), f.replace(/\.sm$/, '')).text))) {
+        if (!['calc', 'funcao', 'verificar'].includes(b.type)) continue;
+        for (const l of lines(b.body).map((x) => x.trim()).filter((x) => /\bfor\(|\p{L}%/u.test(x))) {
+          n++;
+          expect(toLinear(toLatex(l)), `${f}: ${l}`).toBe(l);
+        }
+      }
+    }
+    expect(n).toBe(78);
   });
 
   it('[E8-23] importar não altera o original: o .sm é só lido', () => {

@@ -186,3 +186,22 @@ test('[F-LAYOUT-03] alinhar as regiões selecionadas: na vertical pelo menu (mes
   await expect.poll(() => dev(page).text()).toContain(`${f}calc {#a x=60 y=60}`);
   expect(await dev(page).text()).toContain(`${f}calc {#c x=60 y=60}`);
 });
+
+test('[F05] linha com for(..., v[i] := ...) e nome com % abrem como campo editável e saem iguais', async ({ page }) => {
+  await start(page);
+  const f = '```';
+  const head = '---\ntipo: folha\ntitulo: F05\nbibliotecas: []\npagina: {largura: 1200, altura: 1600, grade: 20}\nversao_formato: 1\n---\n\n';
+  const body = `${f}calc {#a x=40 y=40}\nv := [0, 0, 0]\nfor(i, range(1, 3), v[i] := i^2)\nZ%_modulo := 0.15\nv = ?\n${f}\n`;
+  await dev(page).write(`${DOCS}/f05.prsf`, head + body);
+  await dev(page).open(`${DOCS}/f05.prsf`);
+  await expect(page.locator('[data-region="a"] math-field')).toHaveCount(4);
+  await expect(page.locator('.mline-unreadable')).toHaveCount(0);
+  await page.locator('[data-region="a"] math-field').nth(1).click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Escape');
+  await page.locator('[data-region="a"] math-field').nth(2).click();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  expect(await dev(page).text()).toBe(head + body);
+  await expect(page.locator('[data-region="a"] .mresult-value')).toContainText('9');
+});
