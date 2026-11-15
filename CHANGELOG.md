@@ -4,36 +4,33 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
-- **BUG-024** `π` digitado como símbolo não aparece mais sublinhado como variável não definida (a tela só reconhecia `pi`).
-- **BUG-025** Expressão longa no caderno não sai mais do papel: o campo fica na largura do bloco e rola por dentro, seguindo o cursor. Pendente: quebrar a linha de verdade nos operadores, que o MathLive não faz.
-- **BUG-026** Em `diff(f(t), t, t0)`, o `t` não aparece mais sublinhado como não definido; a variável da derivada é do cálculo, como a da integral.
-- **BUG-027** A legenda do gráfico 2D mostra as séries em notação matemática, como o campo, e não o texto cru com `_` e `sqrt`.
-- **BUG-028** `sin(g(t))` e `diff(i_cc(t, 0), t, 1)` aparecem com todos os parênteses no campo; o MathLive perdia o `(` da função do usuário dentro de uma função nativa.
-- **Imprimir** (`Ctrl+P`, Saída → Imprimir) funciona no caderno: sai só o papel, em A4, e no diálogo do sistema "Salvar como PDF" gera o arquivo. Expressão mais larga que a folha diminui até caber, sem barra de rolagem no papel. Pendente: imprimir a folha (avisa "Imprimir: ainda não disponível nesta versão", o aviso dos comandos sem handler) e o diálogo Exportar da Fase 6.
-- **Revisão da v0.5.0**
-  - As marcas dos eixos não travam mais a tela com zoom extremo, e o zoom para no limite de precisão do número.
-  - No caderno, a roda só dá zoom no gráfico selecionado, mesmo quando ele é o primeiro bloco.
-  - O nome da variável no eixo e no erro de duas variáveis aparece em notação matemática, sem `_` cru.
-  - O refinamento da curva tem prazo de 60 ms, para uma série pesada (com integral) não atrasar o documento.
-  - Tela e motor reconhecem o gráfico 2D pela mesma regra, em qualquer forma do YAML.
-  - A rolagem só horizontal não dá zoom, e o zoom acompanha o tamanho do giro (touchpad).
-  - A série longa rola dentro da largura do gráfico; a fonte reduzida na impressão tem piso de 8 px.
-  - Os testes de navegador carregam a cobertura mesmo com `node_modules` em atalho (worktree).
+## v0.5.0 — 2026-11-14
+
+Gráfico 2D, impressão do caderno e correções da tela (ADENDO 06, docs/TICKETS-FOLHA.md). verify:full aprovado: 725 testes, nenhuma falha.
+
 - **A6-9** Gráfico 2D de função (ADENDO 06, 5.4 e 4.6), na folha e no caderno.
   - Criar: `@` numa área vazia da folha, Inserir → Gráfico 2D ou Início → Gráfico (no caderno). O gráfico nasce com 320 × 240 px e o campo de expressão embaixo já em edição.
   - O campo aceita expressão de uma variável livre, com qualquer nome. Vários itens separados por `;` viram várias curvas. Também aceita matriz n × 2 e vetor de matrizes. Com duas variáveis livres, aparece o erro do ADENDO.
-  - Amostragem: 400 pontos, com refinamento até 4 000. Assíntota e ponto fora do domínio quebram a linha.
+  - Amostragem: 400 pontos, com refinamento até 4 000 e prazo de 60 ms. Assíntota e ponto fora do domínio quebram a linha.
   - Vista: com o gráfico selecionado, a roda faz zoom no ponteiro (`Shift` só x, `Ctrl` só y; sem seleção, ela rola a página); Mover ou o botão do meio deslocam; duplo clique volta à vista automática. A vista ajustada vai para o arquivo.
-  - Arrastar a borda redimensiona.
+  - Arrastar a borda redimensiona. Legenda, nome da variável no eixo e erro aparecem em notação matemática.
   - Guia contextual "Ferramentas de gráfico": Mover, Zoom, Restaurar, Pontos, Linhas, Grade, Legenda e Limites e rótulos.
   - O formato antigo, com `var` e `valores`, continua desenhado como antes.
-  - Pendente:
-    - Girar fica desabilitado; é do gráfico 3D.
-    - Mover e Zoom não aparecem pressionados quando ligados.
-    - "Limites e rótulos" pergunta um eixo por vez, em texto ("mínimo; máximo; rótulo"), e o passo ainda não se edita.
-    - Valor com unidade é desenhado no SI, sem a unidade no eixo.
-    - O gráfico usa todas as definições da folha, inclusive as que estão abaixo dele.
-    - O gráfico importado do SMath ainda não é desenhado.
+- **Imprimir** (`Ctrl+P`, Saída → Imprimir) funciona no caderno: sai só o papel, em A4, e no diálogo do sistema "Salvar como PDF" gera o arquivo. Expressão mais larga que a folha diminui até caber (piso de 8 px), sem barra de rolagem no papel.
+- **Correções da tela**
+  - BUG-024: `π` digitado como símbolo não aparece mais sublinhado como não definido.
+  - BUG-025: expressão longa no caderno fica na largura do bloco e rola por dentro, seguindo o cursor.
+  - BUG-026: em `diff(f(t), t, t0)`, o `t` não aparece mais como não definido.
+  - BUG-027: a legenda do gráfico mostra as séries em notação matemática.
+  - BUG-028: `sin(g(t))` e `diff(i_cc(t, 0), t, 1)` aparecem com todos os parênteses no campo.
+- **Revisão da versão** As marcas dos eixos não travam a tela com zoom extremo. A roda do caderno só dá zoom no gráfico selecionado. Tela e motor reconhecem o gráfico pela mesma regra. A rolagem lateral do touchpad não dá zoom. O teste F0-02 passou a esperar "Gráfico 2D" no grupo Conteúdo da folha (ADENDO 06, 5.4; autorizado pelo usuário).
+- **Testes** Os testes de navegador e o servidor dos testes carregam a cobertura e as fontes do MathLive mesmo com `node_modules` em atalho (worktree).
+
+Pendente:
+- **Gráfico:** Girar desabilitado (é do 3D); Mover e Zoom sem estado pressionado; "Limites e rótulos" pergunta um eixo por vez, em texto, e o passo não se edita; valor com unidade desenhado no SI, sem unidade no eixo; o gráfico usa todas as definições da folha, inclusive as de baixo; gráfico importado do SMath ainda não é desenhado.
+- **Expressão longa:** quebrar a linha nos operadores, que o MathLive não faz.
+- **Imprimir:** a folha avisa "Imprimir: ainda não disponível nesta versão". O diálogo Exportar (Fase 6) continua sem exportar.
+- **Não testado no app instalado:** se o WebView2 dispara o fim da impressão; se não disparar, a tela volta ao normal em até 2 minutos.
 
 ## v0.4.0 — 2026-11-13
 
