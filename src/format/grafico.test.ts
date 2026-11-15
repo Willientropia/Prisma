@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { NEW_GRAPH, seriesOf, setAxis, setFlag, setSeries, setView } from './grafico';
+import { isGraph2DBody, NEW_GRAPH, seriesOf, setAxis, setFlag, setSeries, setView } from './grafico';
 
 const REF = 'tipo: 2d\nseries: ["F(x)"]\nx: {min: 0, max: 3, rotulo: x}\ny: {min: 0, max: 3, rotulo: y}\ngrade: true\n';
 
 describe('corpo do gráfico 2D (ADENDO 06, 5.4)', () => {
+  it('a tela reconhece o gráfico de função pela mesma regra do motor, em qualquer forma do YAML', () => {
+    for (const b of [NEW_GRAPH, 'tipo: "2d"\n', 'series:\n  - F(x)\n', 'series: ["x"]\n']) expect(isGraph2DBody(b)).toBe(true);
+    for (const b of ['x: {var: t, valores: [0, 1]}\ny: {expr: "t"}\n', 'tipo: 3d\n', '', ': [']) expect(isGraph2DBody(b)).toBe(false);
+  });
+
   it('séries entre aspas, na forma do ADENDO', () => {
     expect(setSeries(NEW_GRAPH, ['F(x)', 'f(a, b)'])).toBe('tipo: 2d\nseries: ["F(x)", "f(a, b)"]\ngrade: true\n');
     expect(seriesOf(REF)).toEqual(['F(x)']);

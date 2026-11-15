@@ -12,6 +12,8 @@ export type Graph2D = {
   y: [number, number];
   auto: { x: boolean; y: boolean }; // eixo sem limites no arquivo: vista automática
   rotulos: { x: string; y: string };
+  rotuloVar: boolean; // rótulo x é o nome da variável livre (a tela desenha em notação matemática), não texto do arquivo
+  livres: string[]; // nomes livres das séries, no formato linear
   grade: boolean; pontos: boolean; linhas: boolean; legenda: boolean;
   error?: string;
 };
@@ -23,7 +25,9 @@ export type GraphCtx = { prep: (src: string) => MathNode; missing: (node: MathNo
 const COARSE = 400; // pontos iniciais
 const MAX_POINTS = 4000; // com o refinamento
 const MAX_DEPTH = 8; // cada trecho inicial divide no máximo 2^8 vezes
+const REFINE_MS = 60; // prazo do refinamento de todas as séries: série pesada (integral) fica com os 400 pontos
 export const AUTO_X: [number, number] = [-5, 5];
+export const MANY_FREE = 'O gráfico 2D precisa de uma única variável livre';
 
 export const isGraph2D = (spec: Spec2D) => spec.tipo === '2d' || Array.isArray(spec.series);
 
@@ -67,12 +71,12 @@ function padded(e: [number, number] | null): [number, number] {
  * 400 pontos e refinamento adaptativo (até 4 000): divide o trecho enquanto o meio foge da reta.
  * No fim da divisão, um salto maior que a altura da vista com o meio fora dos extremos é assíntota: quebra a linha.
  */
-export function refine(f: (x: number) => number | null, xs0: number[], ys0: (number | null)[], span: number) {
+export function refine(f: (x: number) => number | null, xs0: number[], ys0: (number | null)[], span: number, until = Infinity) {
   const tol = span / 1000;
   const xs = [xs0[0]], ys = [ys0[0]];
   let budget = MAX_POINTS - xs0.length;
   const seg = (xa: number, ya: number | null, xb: number, yb: number | null, depth: number) => {
-    if (budget <= 0 || (ya === null && yb === null)) return;
+    if (budget <= 0 || (ya === null && yb === null) || performance.now() > until) return;
     const xm = (xa + xb) / 2, ym = f(xm);
     const fin = ya !== null && yb !== null && ym !== null;
     if (fin && Math.abs(ym - (ya + yb) / 2) <= tol) return; // já é reta
@@ -107,13 +111,15 @@ export function graph2d(spec: Spec2D, ctx: GraphCtx): Graph2D {
     try { const node = ctx.prep(markVars(toMath(expr))); return { expr, node, free: ctx.missing(node) }; } catch (e) { return { expr, error: ctx.message(e, expr) }; }
   });
   const free = [...new Set(parsed.flatMap((p) => p.free ?? []))];
+  const livres = free.map(fromMath);
+  const userX = label(spec.x, '');
   const out = (series: Series2D[], x: [number, number], y: [number, number], error?: string): Graph2D => ({
     tipo: '2d', series, x, y, auto: { x: !xv, y: !yv },
-    rotulos: { x: label(spec.x, free.length === 1 ? fromMath(free[0]) : 'x'), y: label(spec.y, 'y') },
+    rotulos: { x: userX || (livres.length === 1 ? livres[0] : 'x'), y: label(spec.y, 'y') }, rotuloVar: !userX && livres.length === 1, livres,
     grade: flag(spec.grade, true), pontos: flag(spec.pontos, false), linhas: flag(spec.linhas, true), legenda: flag(spec.legenda, false),
     ...(error ? { error } : {}),
   });
-  if (free.length > 1) return out([], xv ?? AUTO_X, yv ?? [-5, 5], `O gráfico 2D precisa de uma única variável livre (encontradas: ${free.map(fromMath).join(', ')})`);
+  if (free.length > 1) return out([], xv ?? AUTO_X, yv ?? [-5, 5], `${MANY_FREE} (encontradas: ${livres.join(', ')})`);
 
   const v = free[0];
   const local = new Map(ctx.scope);
@@ -145,8 +151,9 @@ export function graph2d(spec: Spec2D, ctx: GraphCtx): Graph2D {
     return { c, xs, ys: xs.map(c.f) };
   });
   const y = yv ?? padded(extent([...coarse.flatMap((k) => k.ys), ...data.flatMap((s) => s.ys)]));
+  const until = performance.now() + REFINE_MS;
   for (const k of coarse) {
-    const r = refine(k.c.f, k.xs, k.ys, y[1] - y[0]);
+    const r = refine(k.c.f, k.xs, k.ys, y[1] - y[0], until);
     const s = series[k.c.at];
     s.xs = r.xs; s.ys = r.ys;
     if (s.ys.some((q) => q !== null)) delete s.error; // erro em parte do domínio (raiz de negativo) só quebra a linha

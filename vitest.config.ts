@@ -1,11 +1,16 @@
 // Vitest (ADENDO 03, C1): projeto "unit" em Node e projeto "browser" no Edge do Windows (Chromium),
 // para os componentes com MathLive e TipTap, que não funcionam em jsdom.
+import { realpathSync } from 'node:fs';
+import { searchForWorkspaceRoot } from 'vite';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  // node_modules pode ser um atalho (junction) para outra pasta, como numa worktree: sem isto o Vite recusa servir
+  // a cobertura e as fontes do MathLive aos testes de navegador, e a cobertura geral cai sem nenhum teste falhar
+  server: { fs: { allow: [searchForWorkspaceRoot(process.cwd()), realpathSync('node_modules')] } },
   test: {
     coverage: {
       provider: 'v8',

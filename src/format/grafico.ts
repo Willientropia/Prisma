@@ -1,12 +1,14 @@
 // Corpo YAML do bloco grafico 2D (ADENDO 06, 5.4): troca só a chave mexida e mantém o resto como está no arquivo.
-import { isMap, parseDocument, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
+import { isMap, parse, parseDocument, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
 
 export type View = { x: [number, number]; y: [number, number] };
 export type AxisEdit = { min?: number; max?: number; rotulo?: string };
 
 export const NEW_GRAPH = 'tipo: 2d\nseries: []\ngrade: true\n';
-/** Gráfico de função (tipo: 2d ou séries em lista); o formato antigo com var e valores não entra. */
-export const isGraph2DBody = (body: string) => /^(tipo:\s*2d\b|series:\s*\[)/m.test(body);
+/** Gráfico de função (tipo: 2d ou séries em lista); o formato antigo com var e valores não entra. Mesma regra do motor (isGraph2D). */
+export const isGraph2DBody = (body: string) => {
+  try { const v = parse(body) as { tipo?: unknown; series?: unknown } | null; return !!v && typeof v === 'object' && (v.tipo === '2d' || Array.isArray(v.series)); } catch { return false; }
+};
 const out = (d: ReturnType<typeof parseDocument>) => d.toString({ lineWidth: 0, flowCollectionPadding: false });
 
 export function seriesOf(body: string): string[] {

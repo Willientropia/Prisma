@@ -11,10 +11,11 @@
 .line { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
 .legend { position: absolute; pointer-events: none; padding: 2px 4px; background: var(--g-bg); display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
 .legendItem { display: flex; align-items: center; gap: 6px; }
+.axisVar { position: absolute; display: flex; justify-content: center; height: 18px; align-items: center; pointer-events: none; color: var(--g-label); }
 .swatch { width: 14px; height: 2px; }
 .error { padding: 4px 0 0; font: 11px Inter, sans-serif; color: var(--error-text); }
 .paper .error { color: var(--paper-error); }
-.field { padding: 6px 2px 0; min-height: 28px; }
+.field { padding: 6px 2px 0; min-height: 28px; container-type: inline-size; } /* série longa rola dentro da largura do gráfico (BUG-025) */
 .box { position: relative; }
 .resizeE, .resizeS, .resizeSE { position: absolute; }
 .resizeE { top: 0; right: -4px; width: 8px; height: 100%; cursor: ew-resize; }

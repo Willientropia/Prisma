@@ -3,6 +3,7 @@
 // sumiria. Por isso, antes de imprimir, cada expressão mais larga que o bloco diminui de fonte até caber.
 // O layout de impressão (classe "printing" + @media print em global.css) já vale na medição, para a largura ser a do papel.
 
+const MIN_FONT = 8; // px: menor que isso não se lê no papel
 const RESTORE_MS = 120_000; // prazo: se o afterprint não vier, a tela volta sozinha
 
 /** Devolve false quando não há papel para imprimir (por enquanto, só o caderno tem). */
@@ -16,7 +17,7 @@ export function printPage(): boolean {
     const room = mf.clientWidth, need = content?.scrollWidth ?? 0;
     if (!room || need <= room + 1) continue;
     const size = parseFloat(getComputedStyle(mf).fontSize);
-    mf.style.fontSize = `${Math.floor(((size * room) / need) * 0.97 * 10) / 10}px`;
+    mf.style.fontSize = `${Math.max(MIN_FONT, Math.floor(((size * room) / need) * 0.97 * 10) / 10)}px`; // abaixo do piso, aceita o corte
     shrunk.push(mf);
   }
   let timer = 0;

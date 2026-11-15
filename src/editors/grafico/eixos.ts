@@ -8,7 +8,8 @@ export function niceTicks(lo: number, hi: number, count: number): { step: number
   const p = 10 ** Math.floor(Math.log10(raw));
   const step = [1, 2, 5, 10].map((m) => m * p).find((s) => s >= raw * (1 - 1e-9))!;
   const ticks: number[] = [];
-  for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9; k++) ticks.push(Number((k * step).toPrecision(12)) || 0);
+  // guarda de progresso: com lo/step perto de 2^53, k++ não muda k e o laço não acabaria (zoom extremo)
+  for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9 && ticks.length < 2 * count + 2; k++) ticks.push(Number((k * step).toPrecision(12)) || 0);
   return { step, ticks };
 }
 
@@ -37,8 +38,13 @@ export function pathOf(f: Frame, xs: number[], ys: (number | null)[]): string {
 
 /** Zoom em torno de (cx, cy): fator > 1 afasta. */
 export function zoomView(v: View, cx: number, cy: number, fx: number, fy: number): View {
-  return { x: [cx + (v.x[0] - cx) * fx, cx + (v.x[1] - cx) * fx], y: [cy + (v.y[0] - cy) * fy, cy + (v.y[1] - cy) * fy] };
+  const axis = (a: [number, number], c: number, k: number): [number, number] => {
+    const b: [number, number] = [c + (a[0] - c) * k, c + (a[1] - c) * k];
+    return b[1] - b[0] < MIN_SPAN * Math.max(1, Math.abs(b[0]), Math.abs(b[1])) ? a : b; // mais perto que isso a precisão do número acaba
+  };
+  return { x: axis(v.x, cx, fx), y: axis(v.y, cy, fy) };
 }
+const MIN_SPAN = 1e-9;
 
 const SUP: Record<string, string> = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
 /** "3e6" do formato numérico vira 3·10⁶ no eixo. */

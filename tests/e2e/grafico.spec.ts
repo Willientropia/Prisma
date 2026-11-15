@@ -140,6 +140,23 @@ test('[06-29] selecionar o gráfico mostra e ativa Ferramentas de gráfico; dess
   await expect(page.getByRole('tab', { name: 'Exibir' })).toHaveAttribute('aria-selected', 'true');
 });
 
+test('caderno: com o gráfico no primeiro bloco e nada selecionado, a roda rola a página e não dá zoom (decisão do A6-9)', async ({ page }) => {
+  await start(page);
+  const head = '---\ntipo: caderno\ntitulo: G\nbibliotecas: []\nunidades: SI\nversao_formato: 1\n---\n\n';
+  const texto = Array.from({ length: 40 }, (_, i) => `Parágrafo ${i} para a página ter rolagem.`).join('\n\n');
+  await dev(page).write(`${DOCS}/primeiro.prsm`, `${head}${graph('"sin(t_c)"')}\n${texto}\n`);
+  await dev(page).open(`${DOCS}/primeiro.prsm`);
+  const el = page.locator('article svg[data-view]');
+  await expect(el).toHaveAttribute('data-view', /"x":\[-5,5\]/);
+  const box = (await el.boundingBox())!;
+  await page.mouse.move(box.x + 150, box.y + 100);
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => page.evaluate(() => document.querySelector('article')!.closest('main')!.scrollTop)).toBeGreaterThan(0);
+  await expect(el).toHaveAttribute('data-view', /"x":\[-5,5\]/);
+  await expect(page.locator('article [data-grafico] .ML__base, article [data-grafico] [class*="axisVar"]').first()).toBeAttached(); // t_c no eixo em notação matemática
+  expect(await page.locator('article [data-grafico] svg text').allTextContents()).not.toContain('t_c');
+});
+
 test('caderno: o gráfico 2D aparece na página branca e Gráfico (Células) cria um vazio em edição', async ({ page }) => {
   await start(page);
   const head = '---\ntipo: caderno\ntitulo: G\nbibliotecas: []\nunidades: SI\nversao_formato: 1\n---\n\n';

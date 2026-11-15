@@ -1,7 +1,7 @@
 // Gráfico 2D de função (ADENDO 06, 5.4) na folha e no caderno: desenho em SVG, campo das séries embaixo,
 // roda para zoom no ponteiro, mover com a ferramenta ou o botão do meio, duplo clique volta à vista automática.
 import { useEffect, useId, useMemo, useRef, useState, type PointerEvent } from 'react';
-import type { Graph2D } from '../../engine/grafico';
+import { MANY_FREE, type Graph2D } from '../../engine/grafico';
 import { fmtNum } from '../../engine/format';
 import { setView, type View } from '../../format/grafico';
 import { latexToLine, nodeLatex, nodeToLinear, parseLinear } from '../../format/mathlinear';
@@ -12,7 +12,7 @@ import s from './grafico.module.css';
 
 export type GraphTool = 'mover' | 'zoom' | null;
 const M = { left: 46, right: 12, top: 10, bottom: 36 }; // margens da área de desenho (números e rótulos dos eixos)
-const WHEEL = 1.15; // fator por passo da roda
+const WHEEL = 1.15; // fator por passo da roda (deltaY de 100)
 const SAVE_MS = 250; // a vista vai para o arquivo quando o zoom ou o movimento param
 const MIN_W = 160, MIN_H = 120, SNAP = 10;
 const AUTO: View = { x: [-5, 5], y: [-5, 5] };
@@ -102,11 +102,11 @@ export function Grafico2D(p: Props) {
     if (!el) return;
     const wheel = (e: WheelEvent) => {
       const { p: q, f: fr } = now.current;
-      if (!q.active) return;
+      if (!q.active || !e.deltaY) return; // rolagem só horizontal: segue para a página
       e.preventDefault();
       const r = el.getBoundingClientRect();
       const c = unpx(fr, e.clientX - r.left, e.clientY - r.top);
-      const k = e.deltaY > 0 ? WHEEL : 1 / WHEEL;
+      const k = WHEEL ** (e.deltaY / 100); // proporcional ao giro: o touchpad manda muitos passos pequenos
       showView(zoomView(fr.view, c.x, c.y, e.ctrlKey ? 1 : k, e.shiftKey ? 1 : k)); // Shift só x, Ctrl só y
     };
     el.addEventListener('wheel', wheel, { passive: false });
@@ -170,7 +170,7 @@ export function Grafico2D(p: Props) {
         <rect className={s.area} x={f.left} y={f.top} width={f.w} height={f.h} />
         {xt.ticks.map((t) => <text key={`nx${t}`} className={s.num} x={px(f, t)} y={f.top + f.h + 14} textAnchor="middle">{tick(t)}</text>)}
         {yt.ticks.map((t) => <text key={`ny${t}`} className={s.num} x={f.left - 5} y={py(f, t) + 4} textAnchor="end">{tick(t)}</text>)}
-        <text className={s.label} x={f.left + f.w / 2} y={H - 5} textAnchor="middle">{d?.rotulos.x ?? 'x'}</text>
+        {!d?.rotuloVar && <text className={s.label} x={f.left + f.w / 2} y={H - 5} textAnchor="middle">{d?.rotulos.x ?? 'x'}</text>}
         <text className={s.label} transform={`translate(13 ${f.top + f.h / 2}) rotate(-90)`} textAnchor="middle">{d?.rotulos.y ?? 'y'}</text>
         <g clipPath={`url(#${clip})`}>
           {series.map((q, i) => (
@@ -191,11 +191,20 @@ export function Grafico2D(p: Props) {
           ))}
         </div>
       )}
+      {d?.rotuloVar && ( // nome da variável livre (t_c): em notação matemática, nunca o _ cru
+        <div className={s.axisVar} style={{ left: f.left, width: f.w, bottom: 0 }}><MathMarkup latex={itemLatex(d.rotulos.x)} theme={p.theme} size={12} /></div>
+      )}
       <div className={s.resizeE} onPointerDown={(e) => start('e', e)} {...handlers} />
       <div className={s.resizeS} onPointerDown={(e) => start('s', e)} {...handlers} />
       <div className={s.resizeSE} onPointerDown={(e) => start('se', e)} {...handlers} />
       </div>
-      {d?.error && <div className={s.error}>{d.error}</div>}
+      {d?.error && (
+        <div className={s.error}>
+          {d.livres.length > 1 && d.error.startsWith(MANY_FREE) // os nomes em notação matemática (x_1 aparece como x com índice)
+            ? <>{MANY_FREE} (encontradas: {d.livres.map((n, i) => <span key={n}>{i ? ', ' : ''}<MathMarkup latex={itemLatex(n)} theme={p.theme} size={11} /></span>)})</>
+            : d.error}
+        </div>
+      )}
       <SeriesField list={p.list} theme={p.theme} focused={p.focused} initialKeys={p.initialKeys} onReady={p.onReady} onWrite={p.onSeries} onFocus={p.onFieldFocus} onExit={p.onExit} onEnter={p.onEnter} />
     </figure>
   );

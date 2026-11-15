@@ -246,7 +246,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
       body = (
         <div className={s.graphCell}>
           <Grafico2D data={result?.plots?.[it.key] as Graph2D | undefined} body={b.body} list={seriesOf(b.body)} width={Number(b.attrs.largura) || 320} height={Number(b.attrs.altura) || 240} theme="paper"
-            tool={graphTool} active={selected} focused={focus?.key === it.key}
+            tool={graphTool} active={graphSel?.key === it.key} focused={focus?.key === it.key}
             onBody={(nb) => writeBody(it.key, nb)} onSeries={(l) => { const cur = blockByKey(it.key); if (cur) writeBody(it.key, setSeries(cur.block.body, l)); }}
             onResize={(w, h) => setSize(it.key, w, h)} onSelect={() => setSelStart(it.start)} onFieldFocus={() => { setSelStart(it.start); setFocus({ key: it.key, line: 0 }); }}
             onExit={() => setFocus((f) => (f?.key === it.key ? null : f))} onEnter={() => { (document.activeElement as HTMLElement | null)?.blur?.(); setFocus(null); }} />

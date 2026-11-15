@@ -20,7 +20,7 @@ register('app.novoProjeto', { label: 'Novo projeto', run: () => void st().newPro
 register('app.salvar', { label: 'Salvar', shortcut: 'Ctrl+S', run: () => { st().set({ menuOpen: false }); void st().save(); } });
 register('app.salvarComo', { label: 'Salvar como', shortcut: 'Ctrl+Shift+S', run: () => { st().set({ menuOpen: false }); void st().saveAs(); } });
 register('app.exportar', { label: 'Exportar', run: () => st().set({ exportOpen: true, menuOpen: false }) });
-register('app.imprimir', { label: 'Imprimir', shortcut: 'Ctrl+P', run: () => { if (printPage()) st().set({ menuOpen: false }); else say('Imprimir: por enquanto, só o caderno'); } });
+register('app.imprimir', { label: 'Imprimir', shortcut: 'Ctrl+P', run: () => { if (printPage()) st().set({ menuOpen: false }); else say('Imprimir: ainda não disponível nesta versão'); } }); // na folha: o mesmo aviso dos comandos sem handler
 register('app.gerarSkill', { label: 'Gerar skill para IA' });
 register('app.fechar', {
   label: 'Fechar', shortcut: 'Ctrl+W',

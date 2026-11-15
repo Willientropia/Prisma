@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { evaluate } from './evaluate';
-import type { Graph2D } from './grafico';
+import { refine, type Graph2D } from './grafico';
 
 const graph = (defs: string[], body: string) =>
   evaluate({ libs: [], blocks: [{ key: 'c', type: 'calc', lines: defs }, { key: 'g', type: 'grafico', lines: [body] }] }).plots!.g as Graph2D;
@@ -28,6 +28,8 @@ describe('gráfico 2D de função (ADENDO 06, 5.4)', () => {
   it('a variável livre pode ter qualquer nome e vira o rótulo do eixo', () => {
     const g = graph([], 'series: ["sin(t)"]\n');
     expect(g.rotulos.x).toBe('t');
+    expect(g.rotuloVar).toBe(true); // a tela desenha o nome em notação matemática
+    expect(graph([], 'series: ["sin(t)"]\nx: {rotulo: tempo}\n').rotuloVar).toBe(false);
     expect(g.x).toEqual([-5, 5]); // sem informação: −5 a 5
     expect(g.auto).toEqual({ x: true, y: true });
     expect(g.y[0]).toBeCloseTo(-1.1, 2); // y ajustado com 5 % de folga
@@ -68,5 +70,14 @@ describe('gráfico 2D de função (ADENDO 06, 5.4)', () => {
     const old = evaluate({ libs: [], blocks: [{ key: 'g', type: 'grafico', lines: ['x: {var: x, valores: [1, 2]}\ny: {expr: "x^2"}\n'] }] }).plots!.g;
     expect('tipo' in old).toBe(false);
     expect((old as { ys: number[] }).ys).toEqual([1, 4]);
+  });
+
+  it('o refinamento para no prazo: série pesada fica com os pontos iniciais (revisão da v0.5.0)', () => {
+    const slow = (x: number) => { const t = performance.now(); while (performance.now() - t < 0.5); return Math.sin(50 * x); };
+    const xs = Array.from({ length: 41 }, (_, i) => i / 4), ys = xs.map(Math.sin);
+    const t0 = performance.now();
+    const r = refine(slow, xs, ys, 2, performance.now() + 20);
+    expect(performance.now() - t0).toBeLessThan(200);
+    expect(r.xs.length).toBeGreaterThanOrEqual(xs.length);
   });
 });

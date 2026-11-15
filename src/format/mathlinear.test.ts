@@ -69,6 +69,8 @@ describe('conversor: regras', () => {
       expect(lineToLinear(latexToLine(toLatex(s)))).toBe(s);
     }
     expect(toLatex('sin(2*x + atan(r))')).toBe('\\operatorname{sin}(2\\cdot x+\\operatorname{atan}(r))'); // sem chamada do usuário: como antes
+    expect(toLatex('g(h(t))')).toBe('g(h(t))'); // função do usuário dentro de outra do usuário: o campo já desenha certo
+    expect(lineToLinear(latexToLine(toLatex('g(h(t))')))).toBe('g(h(t))');
   });
 
   it('[B10-08] unidade do math.js para a do arquivo; linha eval guarda a unidade pedida', () => {

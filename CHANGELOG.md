@@ -9,7 +9,16 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 - **BUG-026** Em `diff(f(t), t, t0)`, o `t` não aparece mais sublinhado como não definido; a variável da derivada é do cálculo, como a da integral.
 - **BUG-027** A legenda do gráfico 2D mostra as séries em notação matemática, como o campo, e não o texto cru com `_` e `sqrt`.
 - **BUG-028** `sin(g(t))` e `diff(i_cc(t, 0), t, 1)` aparecem com todos os parênteses no campo; o MathLive perdia o `(` da função do usuário dentro de uma função nativa.
-- **Imprimir** (`Ctrl+P`, Saída → Imprimir) funciona no caderno: sai só o papel, em A4, e no diálogo do sistema "Salvar como PDF" gera o arquivo. Expressão mais larga que a folha diminui até caber, sem barra de rolagem no papel. Pendente: imprimir a folha (avisa "Imprimir: por enquanto, só o caderno", texto novo a aprovar) e o diálogo Exportar da Fase 6.
+- **Imprimir** (`Ctrl+P`, Saída → Imprimir) funciona no caderno: sai só o papel, em A4, e no diálogo do sistema "Salvar como PDF" gera o arquivo. Expressão mais larga que a folha diminui até caber, sem barra de rolagem no papel. Pendente: imprimir a folha (avisa "Imprimir: ainda não disponível nesta versão", o aviso dos comandos sem handler) e o diálogo Exportar da Fase 6.
+- **Revisão da v0.5.0**
+  - As marcas dos eixos não travam mais a tela com zoom extremo, e o zoom para no limite de precisão do número.
+  - No caderno, a roda só dá zoom no gráfico selecionado, mesmo quando ele é o primeiro bloco.
+  - O nome da variável no eixo e no erro de duas variáveis aparece em notação matemática, sem `_` cru.
+  - O refinamento da curva tem prazo de 60 ms, para uma série pesada (com integral) não atrasar o documento.
+  - Tela e motor reconhecem o gráfico 2D pela mesma regra, em qualquer forma do YAML.
+  - A rolagem só horizontal não dá zoom, e o zoom acompanha o tamanho do giro (touchpad).
+  - A série longa rola dentro da largura do gráfico; a fonte reduzida na impressão tem piso de 8 px.
+  - Os testes de navegador carregam a cobertura mesmo com `node_modules` em atalho (worktree).
 - **A6-9** Gráfico 2D de função (ADENDO 06, 5.4 e 4.6), na folha e no caderno.
   - Criar: `@` numa área vazia da folha, Inserir → Gráfico 2D ou Início → Gráfico (no caderno). O gráfico nasce com 320 × 240 px e o campo de expressão embaixo já em edição.
   - O campo aceita expressão de uma variável livre, com qualquer nome. Vários itens separados por `;` viram várias curvas. Também aceita matriz n × 2 e vetor de matrizes. Com duas variáveis livres, aparece o erro do ADENDO.
