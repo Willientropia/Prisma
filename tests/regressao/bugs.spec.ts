@@ -375,6 +375,8 @@ test('[BUG-025] função longa no caderno fica na largura do bloco e rola por de
   await dev(page).open(file);
   const fields = page.locator('article math-field');
   await expect(fields).toHaveCount(2);
+  // mede depois de o MathLive desenhar a expressão (antes disso o conteúdo tem poucos px)
+  await expect.poll(() => page.evaluate(() => ([...document.querySelectorAll('article math-field')][1] as HTMLElement).shadowRoot?.querySelector('.ML__content')?.scrollWidth ?? 0)).toBeGreaterThan(200);
   const [curta, bloco, campo, conteudo] = await page.evaluate(() => {
     const [a, g] = [...document.querySelectorAll('article math-field')] as HTMLElement[];
     const body = g.closest('.mline')!.parentElement!;
