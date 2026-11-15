@@ -398,3 +398,18 @@ test('[BUG-028] sin(g(t)) e diff(i_cc(t, 0), t, 1) aparecem com todos os parênt
   const shown = () => page.evaluate(() => [...document.querySelectorAll('article math-field')].slice(2).map((m) => (m.shadowRoot!.querySelector('.ML__content') as HTMLElement).innerText.replace(/[\s\u200b]/g, '')));
   await expect.poll(shown).toEqual(['sin(g(1))', 'diff(icc(t;0);t;1)']);
 });
+
+test('[BUG-029] botão do ribbon clicado enquanto a região nova monta entra depois das teclas já digitadas', async ({ page }) => {
+  for (let i = 0; i < 10; i++) { // corrida de quadros na primeira folha da página: o campo ganha foco antes de aplicar as teclas guardadas (falhava 3 em 8)
+    await start(page);
+    await dev(page).newDoc('folha');
+    await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+    await page.keyboard.type('a+b');
+    await page.keyboard.press('Space');
+    await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Matemática' }).click();
+    await page.getByRole('button', { name: 'Fração', exact: true }).click();
+    await page.keyboard.type('2');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => dev(page).text(), { message: `tentativa ${i + 1}` }).toContain('(a + b)/2');
+  }
+});

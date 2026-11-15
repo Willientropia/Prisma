@@ -23,6 +23,7 @@ Gráfico 2D, impressão do caderno e correções da tela (ADENDO 06, docs/TICKET
   - BUG-026: em `diff(f(t), t, t0)`, o `t` não aparece mais como não definido.
   - BUG-027: a legenda do gráfico mostra as séries em notação matemática.
   - BUG-028: `sin(g(t))` e `diff(i_cc(t, 0), t, 1)` aparecem com todos os parênteses no campo.
+  - BUG-029: botão do ribbon clicado enquanto a região nova monta entra depois das teclas já digitadas (o 06-26 falhava 3 em 8; já acontecia na v0.4.0).
 - **Revisão da versão** As marcas dos eixos não travam a tela com zoom extremo. A roda do caderno só dá zoom no gráfico selecionado. Tela e motor reconhecem o gráfico pela mesma regra. A rolagem lateral do touchpad não dá zoom. O teste F0-02 passou a esperar "Gráfico 2D" no grupo Conteúdo da folha (ADENDO 06, 5.4; autorizado pelo usuário).
 - **Testes** Os testes de navegador e o servidor dos testes carregam a cobertura e as fontes do MathLive mesmo com `node_modules` em atalho (worktree).
 

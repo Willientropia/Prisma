@@ -7,6 +7,7 @@ import 'mathlive/static.css'; // estilos da renderização estática e as fontes
 import { run } from '../commands/registry';
 import { math } from '../engine/math';
 import { grownOf, growSelect, topOperators } from './selecao';
+import { waitingFields } from './insert';
 import { CATEGORY, filterItems, partialName, STRUCTURE, type AssistItem } from './assistente';
 import { Assistente, type AssistDetail, type AssistRow } from '../components/Assistente';
 import { greekLatex, LATIN_TO_GREEK, type Node, latexToLine, lineToLatex, type LatexCtx } from '../format/mathlinear';
@@ -427,6 +428,8 @@ export function MathField(props: FieldProps) {
     // campo esperam na fila: senão o "=" de "x=2" seria tratado com o campo ainda vazio, antes do "x".
     let waiting = !!p.current.focused && !!p.current.initialKeys?.length;
     const queued: Key[] = [];
+    const stopWaiting = () => { waiting = false; waitingFields.delete(mf); };
+    if (waiting) waitingFields.set(mf, (latex) => queued.push({ key: '', latex })); // botão do ribbon nesse meio-tempo (BUG-029)
     const onKey = (e: KeyboardEvent) => {
       if (waiting) {
         if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); queued.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
@@ -466,18 +469,18 @@ export function MathField(props: FieldProps) {
       // a pessoa já clicou em outro lugar: não rouba o foco de volta; o campo é tratado como deixado
       const now = document.activeElement;
       if (now && now !== startEl && now !== document.body && now !== mf && !host.current?.contains(now)) {
-        releaseKeys(); waiting = false; p.current.onLeave?.(); return;
+        releaseKeys(); stopWaiting(); p.current.onLeave?.(); return;
       }
       mf.focus();
       // hasFocus() do MathLive diz "sim" antes do documento: só confia quando o foco é de fato do campo
       if (document.activeElement !== mf) {
         if (n < 120) focusFrame.current = requestAnimationFrame(() => tryFocus(n + 1));
-        else { releaseKeys(); waiting = false; }
+        else { releaseKeys(); stopWaiting(); }
         return;
       }
       if (p.current.selectOnFocus) mf.executeCommand('selectAll'); else mf.position = mf.lastOffset;
       const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys(), ...queued.splice(0)];
-      waiting = false;
+      stopWaiting();
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         if (k.latex) { mf.insert(k.latex, { selectionMode: 'placeholder', format: 'latex' }); state.edited = true; p.current.onInput?.(mf.value); continue; } // na ordem das teclas
@@ -487,7 +490,7 @@ export function MathField(props: FieldProps) {
     };
     focusNow.current = () => { cancelAnimationFrame(focusFrame.current); startEl = document.activeElement; focusFrame.current = requestAnimationFrame(() => tryFocus(0)); };
     if (p.current.focused) focusNow.current();
-    return () => { cancelAnimationFrame(focusFrame.current); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
+    return () => { cancelAnimationFrame(focusFrame.current); waitingFields.delete(mf); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
   }, []);
 
   useEffect(() => {
