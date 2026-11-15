@@ -15,6 +15,8 @@ import { applyPaineis, paineisOf } from './shell/paineis';
 
 const EDITORS = { caderno: Caderno, folha: Folha, tex: Latex, lib: Biblioteca };
 
+const editing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || ['MATH-FIELD', 'INPUT', 'TEXTAREA'].includes(t.tagName));
+
 export function App() {
   const doc = useWorkspace(activeDoc);
 
@@ -22,6 +24,8 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { useWorkspace.getState().set({ menuOpen: false, exportOpen: false, fnSearchOpen: false, formatDialog: null }); return; }
       const cmd = byShortcut(shortcutOf(e));
+      // Ctrl+Z e Ctrl+Y dentro de um campo (matemática, texto, linha de comando): o desfazer é o do próprio campo
+      if ((cmd?.id === 'app.desfazer' || cmd?.id === 'app.refazer') && editing(e.target)) return;
       if (cmd?.run) { e.preventDefault(); cmd.run(); }
     };
     window.addEventListener('keydown', onKey);

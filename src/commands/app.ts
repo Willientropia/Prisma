@@ -29,8 +29,9 @@ register('app.fechar', {
 });
 register('app.configuracoes', { label: 'Configurações', run: () => st().set({ formatDialog: { scope: 'app' }, menuOpen: false }) });
 register('home.modelos', { label: 'Modelos' });
-register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z' });
-register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y' });
+// Desfazer e refazer do documento (pedido do usuário, 14/11): com o foco num campo, quem desfaz é o campo (App.tsx não chama estes)
+register('app.desfazer', { label: 'Desfazer', shortcut: 'Ctrl+Z', run: () => { if (!st().undo()) say('Nada para desfazer'); } });
+register('app.refazer', { label: 'Refazer', shortcut: 'Ctrl+Y', run: () => { if (!st().undo(true)) say('Nada para refazer'); } });
 
 // Painéis (pedido do usuário, 14/11): mostrar e esconder, gravado no config.yaml
 const painel = (k: Painel) => () => void togglePainel(k).catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));

@@ -10,6 +10,7 @@ import type { RibbonTab } from '../shell/ribbons';
 import type { EvalResult } from '../engine/evaluate';
 import { importSm } from '../format/smath';
 import { appFormat, stampFormat } from '../engine/prepare';
+import * as historico from './historico';
 
 export type OpenDoc = {
   id: string; // caminho do arquivo, ou "novo:Caderno1" enquanto não foi salvo
@@ -70,6 +71,8 @@ type State = {
   openFile: (path: string) => Promise<void>;
   openWithDialog: (kind: 'tudo' | 'projeto') => Promise<void>;
   edit: (id: string, start: number, end: number, insert: string) => void;
+  /** Desfaz (ou refaz) o último passo do documento ativo; false: nada a fazer. */
+  undo: (redo?: boolean) => boolean;
   save: (id?: string, quiet?: boolean) => Promise<boolean>;
   saveAs: (id?: string) => Promise<boolean>;
   close: (id: string) => Promise<boolean>;
@@ -284,9 +287,21 @@ export const useWorkspace = create<State>((set, get) => {
       const doc = get().openDocs.find((d) => d.id === id);
       if (!doc) return;
       if (doc.readOnly) return say(doc.factory ? FACTORY_MSG : 'Arquivo em somente leitura (formato mais novo que esta versão do Prisma)');
+      historico.record(id, doc.text, start); // desfazer do documento (pedido do usuário, 14/11)
       updateDoc(id, { text: doc.text.slice(0, start) + insert + doc.text.slice(end), dirty: true });
       clearTimeout(autosave.get(id));
       if (doc.path) autosave.set(id, window.setTimeout(() => void get().save(id, true), AUTOSAVE_MS)); // só arquivo que já existe em disco
+    },
+
+    undo: (again) => {
+      const doc = activeDoc(get());
+      if (!doc || doc.readOnly) return false;
+      const text = (again ? historico.redo : historico.undo)(doc.id, doc.text);
+      if (text === null) return false;
+      updateDoc(doc.id, { text, dirty: true });
+      clearTimeout(autosave.get(doc.id));
+      if (doc.path) autosave.set(doc.id, window.setTimeout(() => void get().save(doc.id, true), AUTOSAVE_MS));
+      return true;
     },
 
     save: async (id, quiet) => {
@@ -363,6 +378,7 @@ export const useWorkspace = create<State>((set, get) => {
       const docs = get().openDocs;
       const i = docs.findIndex((d) => d.id === id);
       const rest = docs.filter((d) => d.id !== id);
+      historico.forget(id);
       const next = get().active === id ? (rest[Math.min(i, rest.length - 1)]?.id ?? 'home') : get().active;
       set({ openDocs: rest });
       if (next !== get().active) get().activate(next); // última guia do tipo e cruz zerada, como ao trocar de aba
