@@ -12,7 +12,8 @@ test('[F2-07] [F4-01] cabos-cc mostra 1,79 V, 0,45 % e APROVADO (biblioteca Elé
 
 test('[F2-11] avaliação que passa de 2 s é interrompida e o erro aparece na linha, sem travar a interface', async ({ page }) => {
   await start(page);
-  await dev(page).write(`${DOCS}/lento.prsm`, '---\ntipo: caderno\ntitulo: Lento\nversao_formato: 1\n---\n\n```calc {#c}\na := 2 m\n' + Array(30).fill('sum(1:10000000)').join(' + ') + ' = ?\n```\n');
+  // sum(1:1000000), no teto do range (F06); com 10^7 o range erra na hora (troca autorizada pelo usuário, 16/11)
+  await dev(page).write(`${DOCS}/lento.prsm`, '---\ntipo: caderno\ntitulo: Lento\nversao_formato: 1\n---\n\n```calc {#c}\na := 2 m\n' + Array(30).fill('sum(1:1000000)').join(' + ') + ' = ?\n```\n');
   await dev(page).open(`${DOCS}/lento.prsm`);
   await expect(page.locator('article .mline-error')).toHaveAttribute('title', /Tempo esgotado/, { timeout: 8000 });
   await expect(page.getByRole('tab', { name: 'Exibir', exact: true })).toBeEnabled(); // interface respondendo
