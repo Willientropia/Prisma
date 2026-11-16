@@ -85,6 +85,21 @@ describe('[A6-ROBUSTEZ-03] definição circular', { timeout: 30_000 }, () => {
     const r = sym(['('.repeat(20000) + '1' + ')'.repeat(20000) + ' = ?']);
     expect(r[0].error).toBe('A expressão tem níveis demais para calcular');
   });
+  // F07 (B11): função que chama a si mesma, direta ou por outra, para antes de estourar a pilha e diz o nome
+  for (const symbolic of [true, false]) {
+    const run = (lines: string[]) => evaluate({ libs: [], symbolic, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
+    it(`[F07] f(x) := f(x) + 1 e f(2) = ? avisa a definição circular (${symbolic ? 'folha' : 'caderno'})`, () => {
+      expect(run(['f(x) := f(x) + 1', 'f(2) = ?'])[1].error).toBe('Definição circular: f depende de si mesmo');
+    });
+    it(`[F07] g chama h e h chama g: definição circular (${symbolic ? 'folha' : 'caderno'})`, () => {
+      expect(run(['g(x) := h(x)', 'h(x) := g(x)', 'g(1) = ?'])[2].error).toMatch(/^Definição circular: [gh] depende de si mesmo$/);
+    });
+  }
+  it('[F07] funções encadeadas sem ciclo continuam iguais', () => {
+    const lines = ['f0(x) := 2*x', ...chain(300, (k) => `f${k}(x) := f${k - 1}(x) + 1`), 'f300(1) = ?', 'f0(f0(3)) = ?'];
+    const r = evaluate({ libs: [], symbolic: false, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
+    expect([r.at(-2)!.text, r.at(-1)!.text]).toEqual(['302', '12']);
+  });
   it('cadeia longa de nomes em aberto: termina em tempo limitado e sem erro em inglês', () => {
     const { ms, out } = runChild([...chain(1000, (k) => `d${k} := d${k - 1} + 1`), 'd1000 = ?'], true);
     expect(ms).toBeLessThan(5000);

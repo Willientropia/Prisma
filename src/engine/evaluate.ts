@@ -182,6 +182,26 @@ function lhsShown(src: string, limit: string | undefined, scope: Map<string, unk
   return show(lhs, target, fmt);
 }
 
+/**
+ * F07 (B11): função do usuário que volta a si mesma (f(x) := f(x) + 1, ou g chama h e h chama g) para aqui,
+ * com o nome, antes de estourar a pilha. Conta só a mesma função aninhada; cadeia de funções diferentes não conta.
+ * ponytail: limite fixo; sem `if` no motor toda recursão é sem fim. Com `if`, medir a pilha do worker antes de subir.
+ */
+const MAX_RECURSION = 100;
+function defineFunction(src: string, scope: Map<string, unknown>, parse: (s: string) => MathNode = math.parse) {
+  const node = parse(src) as MathNode & { name?: string };
+  const f = node.compile().evaluate(scope) as unknown;
+  if (!math.isFunctionAssignmentNode(node) || typeof f !== 'function') return f;
+  let depth = 0;
+  const guarded = Object.assign((...a: unknown[]) => {
+    if (depth >= MAX_RECURSION) throw new Error(`Definição circular: ${fromMath(node.name!)} depende de si mesmo`);
+    depth++;
+    try { return f(...a); } finally { depth--; }
+  }, f); // syntax e demais propriedades do math.js
+  scope.set(node.name!, guarded);
+  return guarded;
+}
+
 /** Parâmetros de f(a, b) = ... (o texto de classify): dentro da função, "2 s" com parâmetro s é produto. */
 const paramsOf = (c: Line) => new Set(c.kind === 'func' ? (/^[^(]*\(([^)]*)\)/.exec(c.src)?.[1] ?? '').split(',').map((x) => x.trim()) : []);
 
@@ -201,7 +221,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
       if (c0.kind === 'empty') continue;
       const ps = paramsOf(c0);
       const c = { ...c0, src: markVars(c0.src, (n) => scope.has(n + VAR_MARK) || ps.has(n)) };
-      try { math.evaluate(c.src, scope); if (c.name) defined.add(c.name); } catch (e) { libErrors.push(`${lib.id}: ${l.trim()}: ${message(e, c.src, scope)}`); }
+      try { defineFunction(c.src, scope); if (c.name) defined.add(c.name); } catch (e) { libErrors.push(`${lib.id}: ${l.trim()}: ${message(e, c.src, scope)}`); }
     }
   }
 
@@ -278,7 +298,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : { assigned: assignedOf(v, bfmt) }) };
         }
         if (c.kind === 'assign' || c.kind === 'func') {
-          const v = P(c.src).compile().evaluate(scope);
+          const v = defineFunction(c.src, scope, P);
           if (c.name) defined.add(c.name);
           return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? { ...show(v, c.target, bfmt), ...withRaw(v) } : c.kind === 'assign' ? { assigned: assignedOf(v, bfmt) } : {}) };
         }

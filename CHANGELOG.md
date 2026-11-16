@@ -2,6 +2,10 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
+## Em andamento
+
+- **F07** Definição circular em função (B11): `f(x) := f(x) + 1`, ou `g` que chama `h` que chama `g`, agora para em 100 chamadas aninhadas da mesma função com "Definição circular: f depende de si mesmo", em vez de estourar a pilha ("níveis demais"). O caso das variáveis (`x := x + 1`) já estava resolvido desde o A6-ROBUSTEZ-03. Pendente para quando houver `if` no motor: medir a pilha do worker antes de subir o limite.
+
 ## v0.7.0 — 2026-11-16
 
 Página escura do caderno e F06 (docs/TICKETS-FOLHA.md). verify:full aprovado: 758 testes, nenhuma falha.
