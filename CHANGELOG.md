@@ -6,7 +6,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## v0.6.0 — 2026-11-15
 
-Janela mais limpa, desfazer do documento, moldura em lote e F05 (docs/TICKETS-FOLHA.md). verify:full aprovado: 747 testes, nenhuma falha.
+Janela mais limpa, desfazer do documento, moldura em lote e F05 (docs/TICKETS-FOLHA.md). verify:full aprovado: 750 testes, nenhuma falha.
 
 - **Janela** (pedido do usuário, 14/11)
   - Barras de rolagem finas, no tom da interface, sem o trilho branco nem setas.
