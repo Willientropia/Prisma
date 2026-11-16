@@ -17,7 +17,8 @@ const MAX_SUBDIVISIONS = 2000;
  */
 export const CALC_LIMIT_MS = 1500;
 let deadline = Infinity;
-const tick = () => { if (performance.now() > deadline) throw new Error('O cálculo passou do tempo limite'); };
+/** Confere o prazo da linha; laços longos (integral, sum, for) chamam a cada passo. */
+export const tick = () => { if (performance.now() > deadline) throw new Error('O cálculo passou do tempo limite'); };
 
 // avisos da linha em avaliação (a integral que não convergiu); evaluate.ts recolhe depois de cada linha
 const pending: string[] = [];

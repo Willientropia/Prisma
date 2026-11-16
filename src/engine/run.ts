@@ -61,16 +61,18 @@ export async function recalc(docId: string): Promise<void> {
   useWorkspace.setState({ calculating: true });
   const margem = parseMargin((cfg.verificacao as { margem_atencao?: unknown } | undefined)?.margem_atencao);
   const out = await evaluateAsync({ libs, blocks, format, margem, symbolic: doc.type === 'folha' }); // folha: semântica do SMath (ADENDO 05)
+  if (out.kind === 'stopped') return; // outra avaliação começou (o indicador agora é dela) ou o usuário interrompeu (interrupt já desligou)
   useWorkspace.setState({ calculating: false });
 
   let result: EvalResult;
   if (out.kind === 'done') result = { ...out.result, libErrors: [...libErrors, ...out.result.libErrors], libs: info };
-  else if (out.kind === 'timeout') {
+  else if (out.kind === 'timeout' && !out.key) {
+    // o prazo acabou nas constantes e funções de biblioteca, antes de qualquer linha (F06, B18)
+    result = { blocks: {}, libErrors: [...libErrors, `Tempo esgotado: as bibliotecas passaram de ${LINE_LIMIT_MS / 1000} s antes da primeira linha`], defined: [], ms: LINE_LIMIT_MS, libs: info };
+  } else if (out.kind === 'timeout') {
     const n = blocks.find((b) => b.key === out.key)?.lines.length ?? 0;
     const ls = Array.from({ length: n }, (_, i) => (i === out.line ? { kind: 'eval' as const, error: `Tempo esgotado: a linha passou de ${LINE_LIMIT_MS / 1000} s` } : { kind: 'empty' as const }));
     result = { blocks: { [out.key]: ls }, libErrors, defined: [], ms: LINE_LIMIT_MS, libs: info };
-  } else if (out.kind === 'stopped') {
-    return; // outra avaliação começou ou o usuário interrompeu
   } else result = { blocks: {}, libErrors: [...libErrors, `Erro no motor: ${out.message}`], defined: [], ms: 0, libs: info };
 
   useWorkspace.setState((s) => ({ results: { ...s.results, [docId]: result } }));

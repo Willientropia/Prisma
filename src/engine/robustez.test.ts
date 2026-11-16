@@ -42,6 +42,29 @@ describe('[A6-ROBUSTEZ-02] cálculo aninhado tem prazo', { timeout: 30_000 }, ()
   });
 });
 
+describe('[F06] laços com limite no worker (B7 da AUDITORIA-FABLE)', { timeout: 30_000 }, () => {
+  it('range(1, 1/0): erro em português na hora, sem alocar sem fim', () => {
+    const { ms, out } = runChild(['range(1, 1/0) = ?'], false);
+    expect(ms).toBeLessThan(1000);
+    expect(out[0].error).toBe('range: elementos demais (máximo de 1 000 000)');
+  });
+  it('range(1, 10^8): o mesmo erro, sem gastar 15 s', () => {
+    const { ms, out } = runChild(['range(1, 10^8) = ?'], false);
+    expect(ms).toBeLessThan(1000);
+    expect(out[0].error).toBe('range: elementos demais (máximo de 1 000 000)');
+  });
+  it('for com 1 000 000 de voltas tem o prazo da linha', () => {
+    const { ms, out } = runChild(['for(i, range(1, 10^6), q[i] := i^2) = ?'], false);
+    expect(ms).toBeLessThan(3000);
+    expect(out[0].error).toMatch(/tempo limite/);
+  });
+  it('range e for pequenos continuam iguais', () => {
+    const { out } = runChild(['v := range(1, 4)', 'for(i, range(1, 3), w[i] := 2*i)', 'w = ?'], false);
+    expect(out[0].error).toBeUndefined();
+    expect(out[2].error).toBeUndefined();
+  });
+});
+
 describe('[A6-ROBUSTEZ-03] definição circular', { timeout: 30_000 }, () => {
   const sym = (lines: string[]) => evaluate({ libs: [], symbolic: true, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
   it('x := x + 1 e x = ? avisa a definição circular em português', () => {

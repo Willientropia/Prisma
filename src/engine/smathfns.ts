@@ -1,8 +1,10 @@
 // Funções de vetor, matriz e programação do SMath (ADENDO 05, E4.1). Índices começam em 1, como no SMath.
 // Vetor do SMath (n×1) é vetor de uma dimensão aqui; matriz com mais de uma coluna é 2D, preenchida por linha.
 import type { MathJsInstance, MathNode, Matrix } from 'mathjs';
+import { tick } from './calculus';
 
 type M = MathJsInstance;
+const MAX_ELEMENTS = 1_000_000; // o mesmo teto da sum (calculus.ts)
 type Sym = MathNode & { name: string };
 
 export function smathFunctions(math: M) {
@@ -39,6 +41,9 @@ export function smathFunctions(math: M) {
     const x0 = num(a), x1 = num(b);
     const step = s === undefined ? (x1 >= x0 ? 1 : -1) : num(s) - x0;
     if (!step) throw new Error('range: passo zero');
+    // conta antes de alocar: range(1, 1/0) ou range(1, 10^8) derrubavam o worker por memória (F06, B7)
+    const n = Math.floor((x1 - x0) / step + 1e-9) + 1;
+    if (!Number.isFinite(n) || n > MAX_ELEMENTS) throw new Error('range: elementos demais (máximo de 1 000 000)');
     const out: number[] = [];
     for (let x = x0, k = 0; step > 0 ? x <= x1 + 1e-12 : x >= x1 - 1e-12; x = x0 + ++k * step) out.push(Number(x.toPrecision(15)));
     return math.matrix(out);
@@ -77,7 +82,7 @@ export function smathFunctions(math: M) {
     prepareTargets(args[2], scope);
     const body = args[2].compile();
     let last: unknown;
-    for (const v of values) { scope.set(name, v); last = body.evaluate(scope); }
+    for (const v of values) { tick(); scope.set(name, v); last = body.evaluate(scope); } // prazo da linha a cada volta (F06)
     return last;
   }, { rawArgs: true });
 

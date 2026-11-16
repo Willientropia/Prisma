@@ -4,6 +4,13 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **F06** Laços e prazo no motor (B7 e B18 da auditoria):
+  - `range` com mais de 1 000 000 de elementos, ou infinito (`range(1, 1/0)`), dá erro na hora em vez de derrubar o cálculo por memória.
+  - `for` respeita o prazo da linha a cada volta.
+  - Prazo estourado nas bibliotecas, antes da primeira linha, agora aparece como mensagem.
+  - Uma avaliação interrompida por outra não apaga mais o indicador "calculando" da nova.
+  - A integral já tinha limite de subdivisões e prazo.
+
 - **Página escura do caderno** (pedido do usuário, 15/11): Exibir → Página escura deixa a página do caderno com as cores da folha livre, para ler melhor. Fica gravada no `config.yaml`. Imprimir e PDF continuam brancos. O teste F0-01 passou a esperar o botão.
 
 ## v0.6.0 — 2026-11-15
