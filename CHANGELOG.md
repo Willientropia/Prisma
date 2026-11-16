@@ -6,7 +6,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **F07** Definição circular em função (B11): `f(x) := f(x) + 1`, ou `g` que chama `h` que chama `g`, agora para em 100 chamadas aninhadas da mesma função com "Definição circular: f depende de si mesmo", em vez de estourar a pilha ("níveis demais"). O caso das variáveis (`x := x + 1`) já estava resolvido desde o A6-ROBUSTEZ-03. Pendente para quando houver `if` no motor: medir a pilha do worker antes de subir o limite.
 
-- **F08** Função do usuário enxerga definição em aberto (B10, ADENDO 05 E3.4): `s := 10*x`, `x := 2`, `f(a) := a + s`, `f(1) = ?` dá 21. Antes dava "Variável não definida: s". Os nomes do corpo são resolvidos na hora da chamada, com os valores daquele ponto. Pendente, depende de experimento no SMath: `s := 10*x`, `f(x) := x + s`, `f(1) =` hoje dá "Variável não definida: x" (o x de s não é o parâmetro).
+- **F08** Função do usuário enxerga definição em aberto (B10, ADENDO 05 E3.4): `s := 10*x`, `x := 2`, `f(a) := a + s`, `f(1) = ?` dá 21. Antes dava "Variável não definida: s". Os nomes do corpo são resolvidos na hora da chamada, com os valores daquele ponto. O nome em aberto entra no corpo antes dos parâmetros: `s := 10*x`, `f(x) := x + s`, `f(1) =` dá 11, como no SMath (conferido pelo usuário, 16/11).
 
 ## v0.7.0 — 2026-11-16
 

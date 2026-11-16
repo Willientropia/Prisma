@@ -395,6 +395,12 @@ describe('[F08] função do usuário enxerga definição em aberto', () => {
   it('nome em aberto que chama a própria função para no guarda do F07', () => {
     expect(sym(['f(a) := a + s', 's := f(1) + x', 'x := 2', 'f(1) = ?'])[3].error).toBe('Definição circular: f depende de si mesmo');
   });
+  it('o nome em aberto entra no corpo antes dos parâmetros: s := 10*x, f(x) := x + s, f(1) = 11 (conferido no SMath pelo usuário, 16/11)', () => {
+    expect(sym(['s := 10*x', 'f(x) := x + s', 'f(1) = ?'])[2].value).toBe(11);
+  });
+  it('parâmetro com o nome da definição em aberto vence: f(s) := s + 1', () => {
+    expect(sym(['s := 10*x', 'f(s) := s + 1', 'f(1) = ?'])[2].value).toBe(2);
+  });
   it('o que ainda falta na chamada continua avisando o nome', () => {
     expect(sym(['s := 10*x', 'f(a) := a + s', 'f(1) = ?'])[2].error).toBe('Variável não definida: x');
   });
