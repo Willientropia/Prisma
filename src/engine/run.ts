@@ -67,8 +67,10 @@ export async function recalc(docId: string): Promise<void> {
   let result: EvalResult;
   if (out.kind === 'done') result = { ...out.result, libErrors: [...libErrors, ...out.result.libErrors], libs: info };
   else if (out.kind === 'timeout' && !out.key) {
-    // o prazo acabou nas constantes e funções de biblioteca, antes de qualquer linha (F06, B18)
-    result = { blocks: {}, libErrors: [...libErrors, `Tempo esgotado: as bibliotecas passaram de ${LINE_LIMIT_MS / 1000} s antes da primeira linha`], defined: [], ms: LINE_LIMIT_MS, libs: info };
+    // o prazo acabou antes de qualquer linha (F06, B18): nas bibliotecas, ou ao subir o motor numa máquina lenta
+    const s = LINE_LIMIT_MS / 1000;
+    const msg = libs.length ? `Tempo esgotado: as bibliotecas passaram de ${s} s antes da primeira linha` : `Tempo esgotado: o cálculo passou de ${s} s antes da primeira linha`;
+    result = { blocks: {}, libErrors: [...libErrors, msg], defined: [], ms: LINE_LIMIT_MS, libs: info };
   } else if (out.kind === 'timeout') {
     const n = blocks.find((b) => b.key === out.key)?.lines.length ?? 0;
     const ls = Array.from({ length: n }, (_, i) => (i === out.line ? { kind: 'eval' as const, error: `Tempo esgotado: a linha passou de ${LINE_LIMIT_MS / 1000} s` } : { kind: 'empty' as const }));

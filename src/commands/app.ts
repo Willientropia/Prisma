@@ -45,7 +45,9 @@ register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }
 // Página escura do caderno (pedido do usuário, 15/11): só na tela, com as cores da folha; impressão e PDF seguem brancos
 register('exibir.paginaEscura', {
   run: () => {
-    void saveConfig({ caderno_escuro: st().config.caderno_escuro !== true })
+    const on = st().config.caderno_escuro !== true;
+    void saveConfig({ caderno_escuro: on })
+      .then(() => say(on ? 'Página escura ligada' : 'Página escura desligada'))
       .catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));
   },
 });

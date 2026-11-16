@@ -50,6 +50,7 @@ test('Exibir → Página escura: o caderno usa as cores da folha, grava no confi
   await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Exibir' }).click();
   await page.getByRole('button', { name: 'Página escura' }).click();
   await expect.poll(fundo).toBe('rgb(22, 19, 29)'); // --bg-grid, o fundo da folha
+  await expect(page.getByText('Página escura ligada')).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { prismaDev: { config(): string } }).prismaDev.config())).toContain('caderno_escuro: true');
   expect(await pagina.evaluate((e) => { document.documentElement.classList.add('printing'); const c = getComputedStyle(e).backgroundColor; document.documentElement.classList.remove('printing'); return c; })).toBe('rgb(255, 255, 255)');
   await page.getByRole('button', { name: 'Página escura' }).click();

@@ -21,12 +21,12 @@ beforeEach(() => {
 });
 
 describe('[F06] prazo e interrupção do cálculo (B18)', () => {
-  it('prazo estourado antes da primeira linha (constantes de biblioteca) aparece como mensagem', async () => {
+  it('prazo estourado antes da primeira linha aparece como mensagem (sem bibliotecas: não culpa as bibliotecas)', async () => {
     const r = recalc(ID);
     await flush();
     calls[0]({ kind: 'timeout', key: '', line: 0 });
     await r;
-    expect(useWorkspace.getState().results[ID]?.libErrors).toContain('Tempo esgotado: as bibliotecas passaram de 2 s antes da primeira linha');
+    expect(useWorkspace.getState().results[ID]?.libErrors).toContain('Tempo esgotado: o cálculo passou de 2 s antes da primeira linha');
   });
 
   it('a avaliação interrompida por outra não apaga o "calculando" da nova', async () => {

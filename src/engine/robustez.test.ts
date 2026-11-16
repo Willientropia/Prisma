@@ -59,9 +59,14 @@ describe('[F06] laços com limite no worker (B7 da AUDITORIA-FABLE)', { timeout:
     expect(out[0].error).toMatch(/tempo limite/);
   });
   it('range e for pequenos continuam iguais', () => {
-    const { out } = runChild(['v := range(1, 4)', 'for(i, range(1, 3), w[i] := 2*i)', 'w = ?'], false);
+    const { out } = runChild(['v := range(1, 4)', 'for(i, range(1, 3), w[i] := 2*i)', 'w = ?', 'range(0, 0.3, 0.1) = ?', 'range(5, 1) = ?'], false);
     expect(out[0].error).toBeUndefined();
-    expect(out[2].error).toBeUndefined();
+    expect(out[2].text).toBe('[2 | 4 | 6]');
+    expect(out[3].text).toBe('[0 | 0,1 | 0,2 | 0,3]');
+    expect(out[4].text).toBe('[5 | 4 | 3 | 2 | 1]');
+  });
+  it('range com limite NaN dá erro de limite, não de elementos demais', () => {
+    expect(runChild(['range(0, 0/0) = ?'], false).out[0].error).toBe('range: limites inválidos');
   });
 });
 

@@ -17,6 +17,8 @@ const MAX_SUBDIVISIONS = 2000;
  */
 export const CALC_LIMIT_MS = 1500;
 let deadline = Infinity;
+/** Teto de termos da sum e de elementos do range (F06): acima disso, erro em vez de travar ou estourar a memória. */
+export const MAX_TERMS = 1_000_000;
 /** Confere o prazo da linha; laços longos (integral, sum, for) chamam a cada passo. */
 export const tick = () => { if (performance.now() > deadline) throw new Error('O cálculo passou do tempo limite'); };
 
@@ -214,7 +216,6 @@ export function calculusFunctions(math: M) {
 
   /** sum(expr, i, a, b): soma de expr com i de a até b (passo 1); sum(vetor) e sum(a, b, c) do math.js continuam valendo. */
   const nativeSum = math.sum;
-  const MAX_TERMS = 1_000_000;
   const sum = Object.assign((args: MathNode[], _m: unknown, scope: Scope) => {
     if (args.length !== 4 || !math.isSymbolNode(args[1])) return (nativeSum as (...a: unknown[]) => unknown)(...args.map((a) => a.compile().evaluate(scope)));
     const name = (args[1] as Sym).name, body = args[0].compile();
