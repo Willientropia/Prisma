@@ -41,6 +41,21 @@ test('Exibir: esconder o painel esquerdo e a linha de comando; modo foco esconde
   await expect(esquerdo).toBeVisible();
 });
 
+test('Exibir → Página escura: o caderno usa as cores da folha, grava no config e imprime branco (pedido do usuário, 15/11)', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('caderno');
+  const pagina = page.locator('article[data-pagina="caderno"]');
+  const fundo = () => pagina.evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(await fundo()).toBe('rgb(255, 255, 255)');
+  await page.getByRole('tablist', { name: 'Guias da faixa de opções' }).getByRole('tab', { name: 'Exibir' }).click();
+  await page.getByRole('button', { name: 'Página escura' }).click();
+  await expect.poll(fundo).toBe('rgb(22, 19, 29)'); // --bg-grid, o fundo da folha
+  expect(await page.evaluate(() => (window as unknown as { prismaDev: { config(): string } }).prismaDev.config())).toContain('caderno_escuro: true');
+  expect(await pagina.evaluate((e) => { document.documentElement.classList.add('printing'); const c = getComputedStyle(e).backgroundColor; document.documentElement.classList.remove('printing'); return c; })).toBe('rgb(255, 255, 255)');
+  await page.getByRole('button', { name: 'Página escura' }).click();
+  await expect.poll(fundo).toBe('rgb(255, 255, 255)');
+});
+
 test('Ctrl+F1 recolhe a faixa até as guias; clicar numa guia abre de novo', async ({ page }) => {
   await start(page);
   await dev(page).newDoc('caderno');

@@ -39,7 +39,7 @@ export const RIBBONS: Record<DocType, Record<CommandTab, RibbonGroup[]>> = {
       ['Matemática', [['inserir.matriz', 'Matriz', 'grid'], ['inserir.somatorio', 'Somatório', 'sigma']]],
     ]),
     exibir: g([
-      ['Exibição', [['exibir.justificativas', 'Justificativas', 'eye'], ['exibir.soResultados', 'Só resultados', 'check'], ['exibir.codigo', 'Código-fonte', 'code']]],
+      ['Exibição', [['exibir.justificativas', 'Justificativas', 'eye'], ['exibir.soResultados', 'Só resultados', 'check'], ['exibir.codigo', 'Código-fonte', 'code'], ['exibir.paginaEscura', 'Página escura', 'moon']]],
       ['Navegação', [['exibir.estrutura', 'Estrutura', 'section'], ['exibir.dependencias', 'Dependências', 'tree'], ['exibir.zoom', 'Zoom', 'zoom']]],
     ]),
     saida: g([

@@ -34,6 +34,7 @@ export function App() {
 
   const config = useWorkspace((x) => x.config);
   useEffect(() => applyPaineis(paineisOf(config)), [config]); // larguras e painéis escondidos (pedido do usuário, 14/11)
+  useEffect(() => void document.documentElement.toggleAttribute('data-caderno-escuro', config.caderno_escuro === true), [config]); // tokens.css
 
   const Editor = doc && EDITORS[doc.type];
   return (

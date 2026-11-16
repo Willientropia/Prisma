@@ -4,6 +4,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
+- **Página escura do caderno** (pedido do usuário, 15/11): Exibir → Página escura deixa a página do caderno com as cores da folha livre, para ler melhor. Fica gravada no `config.yaml`. Imprimir e PDF continuam brancos. O teste F0-01 passou a esperar o botão.
+
 ## v0.6.0 — 2026-11-15
 
 Janela mais limpa, desfazer do documento, moldura em lote e F05 (docs/TICKETS-FOLHA.md). verify:full aprovado: 750 testes, nenhuma falha.

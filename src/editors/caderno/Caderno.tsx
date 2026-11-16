@@ -282,7 +282,7 @@ export function Caderno({ doc }: { doc: OpenDoc }) {
 
   const page = (
     <div className={s.workspace}>
-      <article className={s.page}>
+      <article className={s.page} data-pagina="caderno">
         {parsed.metaError && <p className={s.paperError}>Frontmatter inválido: {parsed.metaError}</p>}
         {result?.libErrors.map((e) => <p key={e} className={s.paperError}>{e}</p>)}
         {parsed.segments.map((seg, si) => {

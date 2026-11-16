@@ -42,6 +42,13 @@ register('exibir.faixa', { label: 'Recolher faixa', shortcut: 'Ctrl+F1', run: pa
 register('exibir.foco', { label: 'Modo foco', shortcut: 'Ctrl+Shift+F', run: () => void toggleFoco() });
 
 register('exibir.codigo', { run: () => st().set({ showSource: !st().showSource }) });
+// Página escura do caderno (pedido do usuário, 15/11): só na tela, com as cores da folha; impressão e PDF seguem brancos
+register('exibir.paginaEscura', {
+  run: () => {
+    void saveConfig({ caderno_escuro: st().config.caderno_escuro !== true })
+      .catch((e: unknown) => say(`Não foi possível salvar as configurações: ${e instanceof Error ? e.message : String(e)}`));
+  },
+});
 // Exibir > Assistente dinâmico (ADENDO 06, 3.1): ligado por padrão, salvo na configuração
 register('exibir.assistente', {
   run: () => {

@@ -108,3 +108,21 @@
   --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.5);
   --overlay: rgba(8, 9, 12, 0.55);
 }
+
+/* Página escura do caderno (guia Exibir, botão Página escura; pedido do usuário, 15/11): a página usa as cores da folha livre.
+   Só na tela: ao imprimir (html.printing, @media print) a página volta a ser branca. */
+@media screen {
+  html[data-caderno-escuro]:not(.printing) [data-pagina='caderno'] {
+    color-scheme: dark; /* barra de rolagem dentro do campo do MathLive, onde o estilo global não chega */
+    --paper: var(--bg-grid);
+    --paper-text: var(--math-var);
+    --paper-text-2: var(--text-3);
+    --paper-border: var(--border);
+    --paper-accent: var(--accent-light);
+    --paper-prose: var(--text);
+    --paper-error: var(--error-text);
+    --paper-hover: var(--hover);
+    --math-unit-paper: var(--math-unit);
+    --plot-paper-s1: var(--plot-s1); --plot-paper-s2: var(--plot-s2); --plot-paper-s3: var(--plot-s3); --plot-paper-s4: var(--plot-s4); --plot-paper-s5: var(--plot-s5);
+  }
+}

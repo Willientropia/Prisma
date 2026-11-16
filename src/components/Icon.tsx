@@ -49,6 +49,7 @@ export const ICONS = {
   ribbonUp: 'M3 5h18v6H3zM8 17l4-3 4 3',
   focus: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5',
   frame: 'M3 3h18v18H3zM7 7h10v10H7z', // moldura das regiões
+  moon: 'M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z', // página escura do caderno
 } as const;
 
 export type IconName = keyof typeof ICONS;

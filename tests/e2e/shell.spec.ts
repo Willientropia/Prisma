@@ -15,7 +15,7 @@ const RIBBON: Record<keyof typeof FILES, Record<string, string[]>> = {
   caderno: {
     Início: ['Células: Texto, Cálculo, Função, Gráfico, Verificação', 'Texto: Negrito, Itálico, Título, Lista, Link', 'Biblioteca: Inserir função, Salvar na biblioteca', 'Cálculo: Calcular tudo, Interromper', 'Unidades: Sistema, Converter'],
     Inserir: ['Conteúdo: Tabela, Imagem, Link para nota', 'Matemática: Matriz, Somatório'],
-    Exibir: ['Exibição: Justificativas, Só resultados, Código-fonte', 'Navegação: Estrutura, Dependências, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11)
+    Exibir: ['Exibição: Justificativas, Só resultados, Código-fonte, Página escura', 'Navegação: Estrutura, Dependências, Zoom', 'Painéis: Painel esquerdo, Painel direito, Recolher faixa, Modo foco'], // Painéis: pedido do usuário em 14/11; mudança do teste autorizada por ele ("aceite automático" da etapa, 14/11). Página escura: pedido do usuário em 15/11
     Saída: ['Saída: Exportar, Imprimir, Enviar ao LaTeX', 'Integração: Gerar SKILL.md'],
   },
   folha: {
