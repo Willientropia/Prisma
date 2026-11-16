@@ -372,3 +372,30 @@ describe('[A6-FIX2-05] A6-LEITOR: o produto que o motor lê, o leitor também l�
     });
   }
 });
+
+// F08 (B10 da AUDITORIA-FABLE): o corpo da função resolve os nomes na hora da chamada, inclusive os em aberto (ADENDO 05, E3.4)
+describe('[F08] função do usuário enxerga definição em aberto', () => {
+  const sym = (src: string[]) => evaluate({ libs: [], blocks: [{ key: 'b', type: 'calc', lines: src }], symbolic: true }).blocks.b;
+  it('s := 10*x, x := 2, f(a) := a + s, f(1) = ? dá 21', () => {
+    const r = sym(['s := 10*x', 'x := 2', 'f(a) := a + s', 'f(1) = ?', 's = ?']);
+    expect(r[3].error).toBeUndefined();
+    expect([r[3].value, r[4].value]).toEqual([21, 20]);
+  });
+  it('o nome que falta aparece depois da função e antes da chamada', () => {
+    expect(sym(['y := 3*z', 'f(a) := a*y', 'z := 2', 'f(1) = ?'])[3].value).toBe(6);
+  });
+  it('vale o valor do ponto da chamada: redefinido entre a função e a chamada, e de novo depois', () => {
+    const r = sym(['s := 10*x', 'f(a) := a + s', 'x := 2', 'f(1) = ?', 's := 5', 'f(1) = ?', 'x := 3', 's := 10*x', 'f(1) = ?']);
+    expect([r[3].value, r[5].value, r[8].value]).toEqual([21, 6, 31]);
+  });
+  it('função definida antes do nome existir: s não vira segundo', () => {
+    const r = sym(['f(a) := a + s', 's := 10*x', 'x := 2', 'f(1) = ?']);
+    expect([r[3].error, r[3].value, r[3].unit]).toEqual([undefined, 21, undefined]);
+  });
+  it('nome em aberto que chama a própria função para no guarda do F07', () => {
+    expect(sym(['f(a) := a + s', 's := f(1) + x', 'x := 2', 'f(1) = ?'])[3].error).toBe('Definição circular: f depende de si mesmo');
+  });
+  it('o que ainda falta na chamada continua avisando o nome', () => {
+    expect(sym(['s := 10*x', 'f(a) := a + s', 'f(1) = ?'])[2].error).toBe('Variável não definida: x');
+  });
+});

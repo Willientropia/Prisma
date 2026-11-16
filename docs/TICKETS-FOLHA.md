@@ -57,7 +57,7 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | F05 | **Feito (15/11), pendências no CHANGELOG.** B4 `for`, `Z%`, `U1_1ϕ` editáveis (antigo T04; `U1_1ϕ` já funcionava) | opusplan [R] |
 | F06 | **Feito (15/11).** B7 + B18 limites no worker (`range`/`for`/`integral`) e prazo | Sonnet [R] |
 | F07 | B11 definição circular sem estouro de pilha. **Feito (16/11).** | Sonnet |
-| F08 | B10 função enxerga definição em aberto | opusplan [R] |
+| F08 | B10 função enxerga definição em aberto. **Feito (16/11).** | opusplan [R] |
 | F09 | B8 nomes reservados (`E`, `tau`, `phi`…) — **decisão do usuário** | Opus |
 | F10 | B13 mensagens em português e índices a partir de 1 | Sonnet |
 | F11 | B12 simbólico com complexo; B14 `fmtSmath` NaN | Sonnet |

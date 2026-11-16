@@ -1,4 +1,5 @@
 // Avaliação pura e síncrona (roda no worker e nos testes). Ordem: bibliotecas, depois blocos na ordem dada.
+// Mais de 300 linhas: o laço de linhas, o estado simbólico da folha (open, expand, callScope) e as mensagens dividem o mesmo escopo e mudam juntos (MANUTENCAO-01).
 import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
 import { mapFree } from './bound';
@@ -188,7 +189,9 @@ function lhsShown(src: string, limit: string | undefined, scope: Map<string, unk
  * ponytail: limite fixo; sem `if` no motor toda recursão é sem fim. Com `if`, medir a pilha do worker antes de subir.
  */
 const MAX_RECURSION = 100;
-function defineFunction(src: string, scope: Map<string, unknown>, parse: (s: string) => MathNode = math.parse) {
+/** O que o math.js usa de um escopo (Map ou o callScope da folha). */
+type Scope = Pick<Map<string, unknown>, 'has' | 'get' | 'delete' | 'keys' | 'clear'> & { set(k: string, v: unknown): unknown };
+function defineFunction(src: string, scope: Scope, parse: (s: string) => MathNode = math.parse) {
   const node = parse(src) as MathNode & { name?: string };
   const f = node.compile().evaluate(scope) as unknown;
   if (!math.isFunctionAssignmentNode(node) || typeof f !== 'function') return f;
@@ -240,6 +243,16 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
     const miss = new Set<string>();
     mapFree(node, (s) => { if (!known(s.name)) miss.add(s.name); return s; }, true);
     return [...miss];
+  };
+  // F08 (B10, E3.4): o corpo da função resolve os nomes na hora da chamada, inclusive os em aberto (s := 10*x antes de x)
+  // ponytail: o nome em aberto é expandido e compilado a cada chamada (uns 5 µs; gráfico de 1000 pontos, 5 ms); guardar o compilado se pesar
+  const callScope = {
+    has: (k: string) => scope.has(k) || open.has(k),
+    get: (k: string) => (scope.has(k) || !open.has(k) ? scope.get(k) : expand(open.get(k)!).compile().evaluate(scope)),
+    set: (k: string, v: unknown) => (scope.set(k, v), callScope),
+    delete: (k: string) => scope.delete(k),
+    keys: () => scope.keys(),
+    clear: () => scope.clear(),
   };
   const resolveFree = (node: MathNode) => mapFree(node, (s) => (scope.has(s.name) ? math.resolve(s, scope) : s));
   const symbolicText = (node: MathNode) => {
@@ -298,7 +311,7 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
           return { kind: 'assign', writes: c.name, ...(c.show ? { ...show(v, c.target, bfmt), ...withRaw(v) } : { assigned: assignedOf(v, bfmt) }) };
         }
         if (c.kind === 'assign' || c.kind === 'func') {
-          const v = defineFunction(c.src, scope, P);
+          const v = defineFunction(c.src, input.symbolic ? callScope : scope, P);
           if (c.name) defined.add(c.name);
           return { kind: c.kind, writes: c.name, ...(c.show && c.kind === 'assign' ? { ...show(v, c.target, bfmt), ...withRaw(v) } : c.kind === 'assign' ? { assigned: assignedOf(v, bfmt) } : {}) };
         }
