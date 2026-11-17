@@ -10,10 +10,11 @@ export type Outcome =
   | { kind: 'error'; message: string };
 
 let worker: Worker | null = null;
+let ready = false; // o worker avisou que carregou; antes disso o prazo não corre (BUG-032)
 let seq = 0;
 let finish: ((o: Outcome) => void) | null = null;
 
-const kill = () => { worker?.terminate(); worker = null; };
+const kill = () => { worker?.terminate(); worker = null; ready = false; };
 
 /** Interrompe a avaliação em curso (comando Interromper ou nova avaliação). */
 export function stop(): void {
@@ -36,14 +37,16 @@ export function evaluateAsync(input: EvalInput): Promise<Outcome> {
       timer = window.setTimeout(() => { kill(); done({ kind: 'timeout', ...where }); }, LINE_LIMIT_MS);
     };
     finish = done;
+    // ponytail: a carga do worker não tem prazo (falha de carga chega pelo onerror; travada, o Interromper resolve)
     w.onmessage = (e) => {
+      if (e.data.ready) { ready = true; arm(); return; } // o pedido já está na fila do worker
       if (e.data.id !== id) return;
       if (e.data.progress) { where = e.data.progress; arm(); }
       else if (e.data.result) done({ kind: 'done', result: e.data.result });
       else done({ kind: 'error', message: e.data.fatal });
     };
     w.onerror = (e) => { kill(); done({ kind: 'error', message: e.message }); };
-    arm();
+    if (ready) arm();
     w.postMessage({ id, input });
   });
 }

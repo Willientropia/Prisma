@@ -10,6 +10,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **Derivada como operador** (pedido do usuário, 17/11; ADENDO 06, 4.7): `diff(f, u, t)` aparece como d/du (f) com a barra de avaliação em u = t, em vez do nome "diff". O campo lê de volta o operador, digitado com ou sem d reto, e continua lendo a forma antiga. A6-2-23 e BUG-028 passaram a esperar o operador. O botão Derivada do ribbon ainda insere a forma diff(;) no campo; ela vira operador ao sair.
 
+- **BUG-032** O prazo de 2 s por linha contava a carga do worker (math.js). Na primeira conta depois de abrir o app, ou depois de uma interrupção, uma carga lenta dava "Tempo esgotado: o cálculo passou de 2 s antes da primeira linha" e nenhum resultado. Agora o worker avisa quando carregou e o prazo só começa aí. A carga em si não tem prazo: falha de carga vira erro, e carga travada se resolve com Interromper.
+
 ## v0.7.0 — 2026-11-16
 
 Página escura do caderno e F06 (docs/TICKETS-FOLHA.md). verify:full aprovado: 758 testes, nenhuma falha.

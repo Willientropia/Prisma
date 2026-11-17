@@ -12,3 +12,4 @@ self.onmessage = (e: MessageEvent<{ id: number; input: EvalInput }>) => {
     post({ id, fatal: err instanceof Error ? err.message : String(err) });
   }
 };
+post({ ready: true }); // módulo carregado (math.js incluído): daqui em diante vale o prazo por linha (BUG-032)
