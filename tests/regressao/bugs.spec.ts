@@ -396,7 +396,7 @@ test('[BUG-028] sin(g(t)) e diff(i_cc(t, 0), t, 1) aparecem com todos os parênt
   await dev(page).write(file, `${head}${f}calc {#c}\ng(t) := t\ni_cc(t, a) := t\nsin(g(1)) = ?\ndiff(i_cc(t, 0), t, 1) = ?\n${f}\n`);
   await dev(page).open(file);
   const shown = () => page.evaluate(() => [...document.querySelectorAll('article math-field')].slice(2).map((m) => (m.shadowRoot!.querySelector('.ML__content') as HTMLElement).innerText.replace(/[\s\u200b]/g, '')));
-  await expect.poll(shown).toEqual(['sin(g(1))', 'diff(icc(t;0);t;1)']);
+  await expect.poll(shown).toEqual(['sin(g(1))', 'dtd(icc(t;0))∣∣∣t=1']); // derivada como operador d/dt com barra no ponto (A6-5, pedido do usuário em 17/11)
 });
 
 test('[BUG-029] botão do ribbon clicado enquanto a região nova monta entra depois das teclas já digitadas', async ({ page }) => {

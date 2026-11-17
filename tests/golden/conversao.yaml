@@ -97,7 +97,7 @@
 - {id: A6-2-21, linear: "sum(i^2, i, 1, 10)", tela_contem: ['\sum_{i=1}^{10}', 'i^{2}'], digitado: '\sum_{i=1}^{10}i^{2}'}
 - {id: A6-2-21, linear: "sum(i + 1, i, 1, 3)", tela_contem: ['\sum_{i=1}^{3}\left(i+1\right)'], digitado: '\sum_{i=1}^{3}\left(i+1\right)'}
 - {id: A6-2-22, linear: "nthroot(x, 3)", tela_contem: ['\sqrt[3]{x}'], digitado: '\sqrt[3]{x}'}
-- {id: A6-2-23, linear: "diff(x^2, x, 3)", tela_contem: ['\operatorname{diff}']}
+- {id: A6-2-23, linear: "diff(x^2, x, 3)", tela_contem: ['\frac{\mathrm{d}}{\mathrm{d}x}', '\right|_{x=3}']} # operador d/dx (A6-5), pedido do usuário em 17/11
 - {id: A6-2-24, linear: "v[2]", digitado: 'v_{\lbrack 2\rbrack}'}
 - {id: A6-2-24, linear: "batata[2]", digitado: 'batata_{\lbrack 2\rbrack}'}
 - {id: A6-2-24, linear: "M[2, 3]", digitado: 'M_{\lbrack 2;3\rbrack}'}

@@ -407,9 +407,11 @@ export function nodeLatex(n: Node, ctx: LatexCtx = {}): string {
       }
       // BUG-028: o campo do MathLive pareia errado \operatorname{sin}( com g(t) dentro (some o "(" de g); \left( \right) ele desenha certo
       const [o, c] = (BUILTINS.has(n.f) || n.f === 'for') && n.args.some(hasUserCall) ? ['\\left(', '\\right)'] : ['(', ')']; // for: \operatorname{for}, como as nativas
-      if (n.f === 'diff' && (n.args.length === 2 || n.args.length === 3) && v.t === 'id') { // diff(f, x[, ponto]): x é do cálculo (BUG-026)
+      // diff(f, x[, ponto]) na tela é o operador d/dx (ADENDO 06, 4.7; A6-5), com barra de avaliação no ponto; x é do cálculo (BUG-026)
+      if (n.f === 'diff' && (n.args.length === 2 || n.args.length === 3) && v.t === 'id') {
         const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), v.name]) });
-        return `\\operatorname{diff}${o}${[B(body), B(v), ...(lo ? [L(lo)] : [])].join(';\\,')}${c}`;
+        const d = `\\frac{\\mathrm{d}}{\\mathrm{d}${idLatex(v.name)}}\\left(${B(strip(body))}\\right)`;
+        return lo ? `\\left.${d}\\right|_{${idLatex(v.name)}=${L(lo)}}` : d;
       }
       if (n.f === 'for' && n.args.length === 3 && body.t === 'id') { // for(i, range, corpo): i é a variável do laço, não a unidade imaginária (F05)
         const B = (x: Node) => nodeLatex(x, { ...ctx, params: new Set([...(ctx.params ?? []), body.name]) });
@@ -714,7 +716,17 @@ class LatexParser {
     }
     if (t.k === 'cmd') {
       switch (t.v) {
-        case 'frac': { this.i++; const a = this.sub(this.group()).exprAll(); const b = this.sub(this.group()).exprAll(); return { t: 'bin', op: '/', a, b }; }
+        case 'frac': {
+          this.i++;
+          const num = this.group(), den = this.group();
+          const dv = derivVar(num, den);
+          if (dv) { // d/dx: derivada (A6-5); corpo entre parênteses, ou digitado sem eles, até o fim do termo
+            const nx = this.peek();
+            const body = (nx?.k === 'ch' && nx.v === '(') || (nx?.k === 'cmd' && nx.v === 'left') ? this.atom() : this.mul();
+            return { t: 'call', f: 'diff', args: [body.t === 'paren' ? body.a : body, { t: 'id', name: this.sub(dv).nameAll() }] };
+          }
+          return { t: 'bin', op: '/', a: this.sub(num).exprAll(), b: this.sub(den).exprAll() };
+        }
         case 'sqrt': {
           this.i++;
           if (this.peek()?.k === 'ch' && this.peek()!.v === '[') { // raiz n-ésima: \sqrt[n]{x}
@@ -845,6 +857,16 @@ class LatexParser {
     const open = this.next();
     if (open.v === 'lvert' || open.v === '|' || open.v === 'vert') { const a = this.until((x) => x.k === 'cmd' && x.v === 'right', true); return { t: 'call', f: 'abs', args: [a] }; }
     const a = this.until((x) => x.k === 'cmd' && x.v === 'right', true);
+    if (open.v === '.') { // \left. d/dx(f) \right|_{x=ponto}: derivada no ponto (A6-5)
+      if (this.peek()?.k !== 'sub' || a.t !== 'call' || a.f !== 'diff' || a.args.length !== 2) return fail('Barra de avaliação só depois de uma derivada');
+      this.i++;
+      const g = this.group();
+      const eq = g.findIndex((x) => x.k === 'ch' && x.v === '=');
+      if (eq < 0) return fail('Ponto da derivada esperado: x = valor');
+      const name = this.sub(g.slice(0, eq)).nameAll();
+      if (a.args[1].t !== 'id' || name !== a.args[1].name) return fail(`O ponto é de ${name}, mas a derivada é em ${a.args[1].t === 'id' ? a.args[1].name : '?'}`);
+      return { ...a, args: [...a.args, this.sub(g.slice(eq + 1)).exprAll()] };
+    }
     return { t: 'paren', a };
   }
   /** Lê até o fechamento (respeitando aninhamento de \left/\right) e devolve a expressão interna. */
@@ -862,6 +884,22 @@ class LatexParser {
     }
     return fail('Parêntese sem fechamento');
   }
+}
+
+/**
+ * \frac{d}{dx} (d reto ou não; o MathLive cola a variável ao d: \mathrm{dx}): devolve os tokens da variável x,
+ * ou null se a fração é uma divisão comum (\frac{d}{x}, \frac{d}{d}).
+ */
+function derivVar(num: LTok[], den: LTok[]): LTok[] | null {
+  const isD = (x?: LTok) => x?.k === 'ch' && x.v === 'd';
+  const roman = (t: LTok[]) => t[0]?.k === 'cmd' && t[0].v === 'mathrm' && t[1]?.k === 'open';
+  const numIsD = (num.length === 1 && isD(num[0])) || (num.length === 4 && roman(num) && isD(num[2]) && num[3].k === 'close');
+  if (!numIsD) return null;
+  let rest: LTok[];
+  if (isD(den[0])) rest = den.slice(1);
+  else if (roman(den) && isD(den[2])) { const end = den.findIndex((x, k) => k > 2 && x.k === 'close'); rest = [...den.slice(3, end), ...den.slice(end + 1)]; } // \mathrm{d}x ou \mathrm{dx}
+  else return null;
+  return rest.length && isLetter(rest[0]) ? rest : null;
 }
 
 /**

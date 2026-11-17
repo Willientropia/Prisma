@@ -8,6 +8,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **F08** Função do usuário enxerga definição em aberto (B10, ADENDO 05 E3.4): `s := 10*x`, `x := 2`, `f(a) := a + s`, `f(1) = ?` dá 21. Antes dava "Variável não definida: s". Os nomes do corpo são resolvidos na hora da chamada, com os valores daquele ponto. O nome em aberto entra no corpo antes dos parâmetros: `s := 10*x`, `f(x) := x + s`, `f(1) =` dá 11, como no SMath (conferido pelo usuário, 16/11).
 
+- **Derivada como operador** (pedido do usuário, 17/11; ADENDO 06, 4.7): `diff(f, u, t)` aparece como d/du (f) com a barra de avaliação em u = t, em vez do nome "diff". O campo lê de volta o operador, digitado com ou sem d reto, e continua lendo a forma antiga. A6-2-23 e BUG-028 passaram a esperar o operador. O botão Derivada do ribbon ainda insere a forma diff(;) no campo; ela vira operador ao sair.
+
 ## v0.7.0 — 2026-11-16
 
 Página escura do caderno e F06 (docs/TICKETS-FOLHA.md). verify:full aprovado: 758 testes, nenhuma falha.

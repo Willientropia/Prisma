@@ -63,6 +63,22 @@ describe('conversor: regras', () => {
     expect(toLatex('diff(g(t), t, y) = ?', ctx)).toContain('\\class{undef}{y}'); // o ponto continua conferido
   });
 
+  it('[A6-5] derivada aparece como operador d/du, com barra de avaliação no ponto; ida e volta igual (pedido do usuário, 17/11)', () => {
+    expect(toLatex('diff(x^2, x)')).toBe('\\frac{\\mathrm{d}}{\\mathrm{d}x}\\left(x^{2}\\right)');
+    const p = toLatex('diff(i_cc(u, λ_0), u, t_0) = ?', { defined: new Set(['i_cc', 'λ_0', 't_0']) });
+    expect(p).not.toContain('operatorname{diff}');
+    expect(p).not.toContain('undef');
+    expect(p).toMatch(/^\\left\.\\frac\{\\mathrm\{d\}\}\{\\mathrm\{d\}u\}\\left\(.*\\right\)\\right\|_\{u=t_\{/);
+    for (const s of ['diff(x^2, x)', 'diff(x^2, x, 3)', 'diff(i_cc(u, λ_0), u, t_0)', 'L*diff(i_ac(u, λ_0), u, t_0) + R*i_ac(t_0, λ_0)', 'diff(diff(x^3, x), x, 2)', 'diff(sin(t_c), t_c, 1)', '2*diff(x^2 + 1, x, 3)^2', 'diff(x^2, x)*3', 'diff(x^2, x)^2', '3*diff(x, x)/2'])
+      expect(lineToLinear(latexToLine(toLatex(s))), s).toBe(s);
+    // digitado no campo: d reto ou não, variável colada ao d (\mathrm{dx}), corpo sem parênteses; a forma antiga continua lida
+    expect(lineToLinear(latexToLine('\\frac{d}{dx}\\left(x^2\\right)'))).toBe('diff(x^2, x)');
+    expect(lineToLinear(latexToLine('\\frac{\\mathrm{d}}{\\mathrm{dx}}x^{2}'))).toBe('diff(x^2, x)');
+    expect(lineToLinear(latexToLine('\\operatorname{diff}(x^{2};x;3)'))).toBe('diff(x^2, x, 3)');
+    expect(lineToLinear(latexToLine('\\frac{d}{x}'))).toBe('d/x'); // divisão comum continua divisão
+    expect(() => latexToLine('\\left.\\frac{d}{dx}\\left(x^2\\right)\\right|_{y=3}')).toThrow(); // ponto de outra variável
+  });
+
   it('[F05] for com atribuição no corpo e nome com % abrem na tela e fazem ida e volta (B4 da auditoria)', () => {
     for (const l of ['for(i, range(1, 8), v[i] := i^2)', 'for(i, range(1, 8), L_Vmag[i] := row(L_Vmag[i], 1))', 'Z%_modulo := 0.15', 'Xt_impar := N*Z%_modulo', 'Z% := 0.15*i', 'Z%_modulo = ?'])
       expect(toLinear(toLatex(l)), l).toBe(l);
@@ -74,8 +90,8 @@ describe('conversor: regras', () => {
   });
 
   it('[BUG-028] função nativa com chamada de função do usuário dentro usa \\left( \\right), que o campo do MathLive desenha certo; ida e volta igual', () => {
-    for (const s of ['sin(g(t))', 'diff(i_cc(t, 0), t, 1)', 'exp(2*h(x, 1))']) {
-      expect(toLatex(s)).toMatch(/^\\operatorname\{(sin|diff|exp)\}\\left\(.*\\right\)$/);
+    for (const s of ['sin(g(t))', 'exp(2*h(x, 1))']) { // diff virou operador d/du (A6-5, pedido do usuário em 17/11): teste abaixo
+      expect(toLatex(s)).toMatch(/^\\operatorname\{(sin|exp)\}\\left\(.*\\right\)$/);
       expect(lineToLinear(latexToLine(toLatex(s)))).toBe(s);
     }
     expect(toLatex('sin(2*x + atan(r))')).toBe('\\operatorname{sin}(2\\cdot x+\\operatorname{atan}(r))'); // sem chamada do usuário: como antes

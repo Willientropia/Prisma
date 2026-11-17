@@ -265,7 +265,7 @@ Tipos: `unit` (Vitest), `browser` (Vitest no navegador), `e2e` (Playwright, Taur
 | A6-2-20 | 2.2: integral(f, x, a, b) vai e volta como ∫ de a até b de f dx (também ∞ e integral dentro de integral) | tests/golden/conversao.yaml | unit | ok |
 | A6-2-21 | 2.2: sum(f, i, a, b) vai e volta como Σ com índice, início e fim (corpo com + ou - entra entre parênteses) | tests/golden/conversao.yaml | unit | ok |
 | A6-2-22 | 2.2: nthroot(x, n) vai e volta como raiz n-ésima | tests/golden/conversao.yaml | unit | ok |
-| A6-2-23 | 2.2: diff entra nos nomes nativos (nome reto na tela); a estrutura d/d□ fica para o A6-5 | tests/golden/conversao.yaml | unit | ok |
+| A6-2-23 | 2.2 e 4.7: diff aparece como operador d/dx, com barra de avaliação no ponto (A6-5, pedido do usuário em 17/11) | tests/golden/conversao.yaml | unit | ok |
 | A6-2-24 | Índice de elemento vai e volta (v[2], batata[2], M[2, 3]) a partir do que o campo produz ao digitar | tests/golden/conversao.yaml | unit | ok |
 | A6-2-25 | 06-20, 2.1 (Home e End): início e fim da fórmula | tests/golden/teclado.yaml | browser | ok |
 | A6-2-26 | 06-20, 2.1 (Ctrl+Z e Ctrl+Y): desfazer e refazer | tests/golden/teclado.yaml | browser | ok |
