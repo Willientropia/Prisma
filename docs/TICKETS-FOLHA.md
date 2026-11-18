@@ -61,7 +61,7 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | F09 | B8 nomes reservados (`E`, `tau`, `phi`…) — **decisão do usuário**. **Feito (17/11): deixar como está; registrado em docs/adendo-05.md.** | Opus |
 | F10 | B13 mensagens em português e índices a partir de 1. **Feito (18/11).** | Sonnet |
 | F11 | B12 simbólico com complexo; B14 `fmtSmath` NaN. **Feito (18/11).** | Sonnet |
-| F12 | B16 bordas da sintaxe linear; B17 profundidade + fuzz | Sonnet |
+| F12 | B16 bordas da sintaxe linear; B17 profundidade + fuzz. **Feito (18/11).** | Sonnet |
 | F12b | **BUG-017** = B15 da AUDITORIA-FABLE: em `withAttr` (`src/format/doc.ts:110`) o texto de substituição do escape de regex está corrompido (`'\\export const blocks = (doc: PrismaDoc) =>'` em vez de `'\\$&'`). Hoje não afeta nada (atributos só com letras), mas `withAttr(..., 'a.b', null)` não remove. Teste que falha primeiro, depois a correção (achado de novo no plano do F-CONFIG, 12/11) | Haiku |
 
 ## Lote F3 — completar a folha

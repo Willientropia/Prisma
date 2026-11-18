@@ -100,10 +100,17 @@ class LinearParser {
     return { t: 'set', a, b: this.expr() };
   }
 
+  private depth = 0; // aninhamento de parênteses e de "-"/"^" em cadeia: 2 000 "(" estouravam a pilha ao ler (F12, B17)
+  private deeper<T>(f: () => T): T {
+    if (++this.depth > MAX_DEPTH) fail('Expressão longa demais');
+    try { return f(); } finally { this.depth--; }
+  }
   expr(): Node {
-    let a = this.rel();
-    for (let t = this.peek(); t?.k === 'op' && t.v === '||'; t = this.peek()) { this.i++; a = { t: 'bin', op: '||', a, b: this.rel() }; }
-    return a;
+    return this.deeper(() => {
+      let a = this.rel();
+      for (let t = this.peek(); t?.k === 'op' && t.v === '||'; t = this.peek()) { this.i++; a = { t: 'bin', op: '||', a, b: this.rel() }; }
+      return a;
+    });
   }
   private rel(): Node {
     const a = this.add();
@@ -161,9 +168,9 @@ class LinearParser {
     return neg && !r2 ? { t: 'neg', a } : a;
   }
   private unary(): Node {
-    if (this.isOp('-')) { this.i++; return { t: 'neg', a: this.unary() }; }
+    if (this.isOp('-')) { this.i++; return this.deeper(() => ({ t: 'neg', a: this.unary() })); }
     const a = this.atom();
-    if (this.isOp('^')) { this.i++; return { t: 'bin', op: '^', a, b: this.unary() }; }
+    if (this.isOp('^')) { this.i++; return this.deeper(() => ({ t: 'bin', op: '^', a, b: this.unary() })); }
     return a;
   }
   /** Átomo seguido de índices: v[2], M[2, 3], v[range(2, 7)] (o "[" colado; "[1, 2]" sozinho é matriz). */
@@ -223,6 +230,9 @@ class LinearParser {
         }
       }
       this.eat(']');
+      // [[1, 2], [3, 4]] (forma do math.js, usada nos golden): cada vetor-linha é uma linha da matriz (F12, B16)
+      const r0 = rows[0];
+      if (rows.length === 1 && r0.length && r0.every((x) => x.t === 'mat' && x.rows.length === 1)) return { t: 'mat', rows: r0.map((x) => (x as { rows: Node[][] }).rows[0]) };
       return { t: 'mat', rows };
     }
     return fail(`Inesperado: ${t.v}`);
@@ -453,7 +463,8 @@ function llex(src: string): LTok[] {
   for (let i = 0; i < src.length; ) {
     const c = src[i];
     if (c === '\\') {
-      const m = /^\\([a-zA-Z]+|.)/.exec(src.slice(i))!;
+      const m = /^\\([a-zA-Z]+|.)/.exec(src.slice(i));
+      if (!m) return fail('Comando incompleto: \\ no fim'); // "a\" colado: era TypeError (F12, B17)
       i += m[0].length;
       if (/^[a-zA-Z]/.test(m[1])) while (src[i] === ' ') i++;
       if (!SPACES.has(m[1])) out.push({ k: 'cmd', v: m[1] });
@@ -485,7 +496,7 @@ const isColoneq = (t?: LTok) => !!t && ((t.k === 'cmd' && (t.v === 'coloneq' || 
 
 class LatexParser {
   i = 0;
-  constructor(private t: LTok[]) {}
+  constructor(private t: LTok[], private depth = 0) {}
   peek(o = 0) { return this.t[this.i + o]; }
   next() { return this.t[this.i++]; }
   atEnd() { return this.i >= this.t.length; }
@@ -503,7 +514,10 @@ class LatexParser {
     }
     return fail('Chave sem fechamento');
   }
-  sub(toks: LTok[]) { return new LatexParser(toks); }
+  sub(toks: LTok[]) { // cada grupo aninhado é um nível: limite como o da leitura linear (F12, B17)
+    if (this.depth >= MAX_DEPTH) fail('Expressão longa demais');
+    return new LatexParser(toks, this.depth + 1);
+  }
 
   line(): Line {
     const e = this.expr();
@@ -774,6 +788,10 @@ class LatexParser {
       if (['sin', 'cos', 'tan', 'ln', 'log', 'exp', 'min', 'max', 'det', 'arcsin', 'arccos', 'arctan'].includes(t.v)) {
         this.i++;
         const f = t.v.replace(/^arc/, 'a');
+        // \sin x colado de outro programa: o argumento sem parênteses é o fator seguinte (era sin(), F12, B16)
+        const nx = this.peek();
+        if (!nx) return fail(`Argumento esperado depois de \\${t.v}`);
+        if (!((nx.k === 'ch' && nx.v === '(') || (nx.k === 'cmd' && nx.v === 'left'))) return { t: 'call', f, args: [this.unary()] };
         return this.callArgs(f);
       }
       return fail(`Comando não suportado: \\${t.v}`);
@@ -827,6 +845,7 @@ class LatexParser {
   nameLen(): number { const s = this.i; this.name(); return this.i - s; }
   private named(): Node {
     const n = this.name();
+    if (!n) return fail('Nome esperado'); // \mathrm{} vazio virava nome vazio (F12, B16)
     const nx = this.peek();
     if ((nx?.k === 'ch' && nx.v === '(') || (nx?.k === 'cmd' && nx.v === 'left' && this.peek(1)?.v === '(')) return this.callArgs(n);
     return { t: 'id', name: n };
@@ -852,7 +871,9 @@ class LatexParser {
       const sepComma = x.v === ',' && !(isDigit(toks[k - 1]) && isDigit(toks[k + 1]));
       if (d === 0 && x.k === 'ch' && (x.v === ';' || sepComma)) args.push([]); else args[args.length - 1].push(x);
     });
-    return { t: 'call', f, args: args.filter((a) => a.length).map((a) => (f === 'for' ? this.sub(a).argAll() : this.sub(a).exprAll())) }; // atribuição só no corpo do for
+    const filled = args.filter((a) => a.length);
+    if (f === 'el' && filled.length < 2) return fail('Índice esperado entre os colchetes'); // {v}_{\lbrack \rbrack} virava el(v) (F12, B16)
+    return { t: 'call', f, args: filled.map((a) => (f === 'for' ? this.sub(a).argAll() : this.sub(a).exprAll())) }; // atribuição só no corpo do for
   }
   private fence(): Node {
     this.i++; // \left

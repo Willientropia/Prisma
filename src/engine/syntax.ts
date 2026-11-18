@@ -138,28 +138,36 @@ const RELATION = /(<=|>=|<|>|≤|≥|==|!=|≠)/;
 /** Posição do primeiro "token" fora de parênteses e colchetes (o ":=" de dentro de for(...) é do corpo). */
 function topLevel(s: string, token: string): number {
   let depth = 0;
+  let quoted = false; // o que está entre aspas é texto: x := "a := b" (F12, B16)
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
-    if (c === '(' || c === '[') depth++;
+    if (c === '"') quoted = !quoted;
+    else if (quoted) continue;
+    else if (c === '(' || c === '[') depth++;
     else if (c === ')' || c === ']') depth--;
     else if (depth === 0 && s.startsWith(token, i)) return i;
   }
   return -1;
 }
-/** ":=" que sobrou dentro de parênteses (corpo de for) vira "=" para o math.js. */
-const inner = (s: string) => toMath(s).replace(/:=/g, '=');
+/** ":=" que sobrou dentro de parênteses (corpo de for) vira "=" para o math.js; dentro de aspas, fica. */
+const inner = (s: string) => toMath(s).replace(/"[^"]*"|:=/g, (m) => (m === ':=' ? '=' : m));
+/** Nome definido pela linha: só identificador ("x" := 1 não define nada). */
+const nameOf = (lhs: string) => { const n = lhs.replace(/[([].*$/, '').trim(); return /^[\p{L}_]/u.test(n) ? n : undefined; };
 
 export function classify(raw: string, isCheck = false): Line {
-  const line = raw.replace(/#.*$/, '').trim();
+  const line = raw.replace(/("[^"]*")|#.*$/g, (_, q: string | undefined) => q ?? '').trim(); // # dentro de aspas é texto
   if (!line) return { kind: 'empty', src: '' };
 
-  const ev = /^(.*?)(?<![:<>!=])=\s*\?\s*(.*)$/.exec(line);
+  // "= ?" fora de aspas: "a = ?" = ? pede o texto inteiro (F12, B16); as aspas são mascaradas só para procurar
+  const masked = line.replace(/"[^"]*"/g, (m) => `"${'x'.repeat(m.length - 2)}"`);
+  const em = /^(.*?)(?<![:<>!=])=\s*\?\s*(.*)$/.exec(masked);
+  const ev = em && [em[0], line.slice(0, em[1].length), line.slice(line.length - em[2].length)];
   const top = (x: string) => { const k = topLevel(x, ':='); return k < 0 ? null : [x, x.slice(0, k), x.slice(k + 2)]; };
   const defShow = ev && top(ev[1]);
   if (ev && defShow) {
     const lhs = defShow[1].trim();
     const t = ev[2].trim();
-    return { kind: FUNC_LHS.test(lhs) && !lhs.includes('[') ? 'func' : 'assign', src: `${toMath(lhs)} = ${inner(defShow[2])}`, name: lhs.replace(/[([].*$/, '').trim(), show: true, target: t ? (isScale(t) ? t : toMath(t).replace(/'/g, '')) : undefined };
+    return { kind: FUNC_LHS.test(lhs) && !lhs.includes('[') ? 'func' : 'assign', src: `${toMath(lhs)} = ${inner(defShow[2])}`, name: nameOf(lhs), show: true, target: t ? (isScale(t) ? t : toMath(t).replace(/'/g, '')) : undefined };
   }
   if (ev) {
     const t = ev[2].trim();
@@ -170,7 +178,7 @@ export function classify(raw: string, isCheck = false): Line {
   if (as) {
     const lhs = as[1].trim();
     const kind = FUNC_LHS.test(lhs) ? 'func' : 'assign';
-    return { kind, src: `${toMath(lhs)} = ${inner(as[2])}`, name: lhs.replace(/[([].*$/, '').trim() }; // v[i] := x define v
+    return { kind, src: `${toMath(lhs)} = ${inner(as[2])}`, name: nameOf(lhs) }; // v[i] := x define v
   }
 
   if (isCheck) {

@@ -485,3 +485,19 @@ describe('[F11] formato do SMath com limite alto e simbólico com complexo', () 
     expect(sym(['z := 3 - 𝐢', 'for(i, range(1, 3), q[i] := i)', 's := z*x', 's = ?']).symbolic).toMatch(/^\((3 - 𝐢|-𝐢 \+ 3)\)\*x$/);
   });
 });
+
+// F12 (B16): o que está entre aspas é texto, não sintaxe da linha
+describe('[F12] aspas na linha', () => {
+  it('"= ?", ":=" e "#" dentro de aspas não partem a linha', () => {
+    expect(classify('"a = ?" = ?')).toEqual({ kind: 'eval', src: '"a = ?"', target: undefined });
+    expect(classify('x := "a := b"')).toMatchObject({ kind: 'assign', src: 'x = "a := b"', name: 'x' });
+    expect(classify('x := "a#b" # comentário')).toMatchObject({ src: 'x = "a#b"' });
+  });
+  it('"x" := 1 não define o nome "x"', () => {
+    expect(classify('"x" := 1').name).toBeUndefined();
+  });
+  it('a linha com texto entre aspas calcula', () => {
+    const r = evaluate({ libs: [], symbolic: false, blocks: [{ key: 'b', type: 'calc', lines: ['x := "a := b"', 'x = ?', '"a = ?" = ?'] }] }).blocks.b;
+    expect([r[1].text, r[2].text]).toEqual(['"a := b"', '"a = ?"']); // texto aparece entre aspas
+  });
+});

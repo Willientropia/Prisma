@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { latexToLine, latexToUnit, lineToLinear, parseLinear, toLatex, toLinear, unitFromMathjs, unitToLinear } from './mathlinear';
+import { latexToLine, latexToUnit, lineToLinear, MathSyntaxError, parseLinear, toLatex, toLinear, unitFromMathjs, unitToLinear } from './mathlinear';
 import { blocks, lines, parse } from './doc';
 import { loadGolden, ROOT, walk } from '../../tests/helpers/files';
 import { readFileSync } from 'node:fs';
@@ -292,5 +292,31 @@ describe('[BUG-031] expressão funda demais tem limite explícito, não estouro 
   it('soma de 300 termos continua lendo e desenhando', () => {
     expect(toLatex(sum(300))).toContain('1+1');
     expect(lineToLinear(latexToLine(sum(300)))).toBe(sum(300).replaceAll('+', ' + ')); // forma canônica, com espaços
+  });
+});
+
+// F12 (B16 e B17 da AUDITORIA-FABLE): bordas da sintaxe linear e da leitura do campo
+describe('[F12] bordas da leitura', () => {
+  const syntaxError = (f: () => unknown, msg: RegExp) => { try { f(); } catch (e) { expect(e).toBeInstanceOf(MathSyntaxError); expect((e as Error).message).toMatch(msg); return; } throw new Error('não falhou'); };
+  it('B17: 2 000 níveis de parênteses, de "-" ou de grupos dão "Expressão longa demais", não estouro de pilha', () => {
+    syntaxError(() => parseLinear('('.repeat(2000) + '1' + ')'.repeat(2000)), /Expressão longa demais/);
+    syntaxError(() => parseLinear('-'.repeat(2000) + '1'), /Expressão longa demais/);
+    syntaxError(() => latexToLine('\\left('.repeat(2000) + '1' + '\\right)'.repeat(2000)), /Expressão longa demais/);
+    syntaxError(() => latexToLine('{'.repeat(2000) + '1' + '}'.repeat(2000)), /Expressão longa demais/);
+    expect(toLinear(toLatex('('.repeat(100) + '1' + ')'.repeat(100)))).toBe('('.repeat(100) + '1' + ')'.repeat(100));
+  });
+  it('B17: barra solta e \\sin sozinho dão erro de sintaxe em português, não TypeError', () => {
+    syntaxError(() => latexToLine('a\\'), /Comando incompleto/);
+    syntaxError(() => latexToLine('\\'), /Comando incompleto/);
+    syntaxError(() => latexToLine('\\sin'), /Argumento esperado/);
+  });
+  it('B16: \\sin x colado mantém o argumento; índice vazio e nome vazio são erro', () => {
+    expect(lineToLinear(latexToLine('\\sin x'))).toBe('sin(x)');
+    expect(lineToLinear(latexToLine('\\sin x+1'))).toBe('sin(x) + 1');
+    syntaxError(() => latexToLine('{v}_{\\lbrack \\rbrack}'), /Índice esperado/);
+    syntaxError(() => latexToLine('\\mathrm{}'), /Nome esperado/);
+  });
+  it('B16: [[1, 2], [3, 4]] abre como matriz 2×2', () => {
+    expect(toLinear(toLatex('M := [[1, 2], [3, 4]]'))).toBe('M := [1, 2; 3, 4]');
   });
 });

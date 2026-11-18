@@ -12,6 +12,12 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - Na folha, um complexo que entra numa expressão em aberto agora vai entre parênteses: com `z := 3 + 2*i` e `s := z*x`, `s = ?` dá (2·𝐢 + 3)·x. Antes saía `3 + 2i*x`, que se lê como 3 + 2i·x, um valor errado. O complexo entra com o 𝐢 próprio, que um i do usuário (o do laço for) não captura.
   - `fmtSmath` não dá mais "NaN" com limite exponencial alto: 1e-8 com 4 casas e limite 10 dá 0. O arredondamento que muda o expoente vira notação científica: 99999,5 com 4 algarismos e limite 5 dá 1·10⁵, e não 100000.
 
+- **F12** Bordas da sintaxe linear e da leitura do campo (B16, B17):
+  - Texto entre aspas é texto: `x := "a := b"` guarda o texto inteiro, `"a = ?" = ?` não parte a linha e `#` dentro de aspas não vira comentário. `"x" := 1` não conta mais como definição de x.
+  - 2 000 níveis de parênteses, de `-` ou de grupos dão "Expressão longa demais" ao ler, em vez de estouro de pilha. Barra solta no fim (`a\`) e `\sin` sozinho dão erro de sintaxe em português, em vez de TypeError.
+  - `\sin x` colado de outro programa mantém o argumento (antes virava sin()). Índice vazio e nome vazio são erro. A matriz `[[1, 2], [3, 4]]` abre como 2×2 (ao editar, volta como `[1, 2; 3, 4]`).
+  - Pendente, sem mudança de valor: `a^(b)` volta como `a^b` e `1 Ω*mm^2/m*A/mm^2` volta com os termos reordenados quando a linha é editada.
+
 ## v0.8.0 — 2026-11-17
 
 F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.
