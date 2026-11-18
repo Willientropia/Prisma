@@ -58,7 +58,7 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | F06 | **Feito (15/11).** B7 + B18 limites no worker (`range`/`for`/`integral`) e prazo | Sonnet [R] |
 | F07 | B11 definição circular sem estouro de pilha. **Feito (16/11).** | Sonnet |
 | F08 | B10 função enxerga definição em aberto. **Feito (16/11).** | opusplan [R] |
-| F09 | B8 nomes reservados (`E`, `tau`, `phi`…) — **decisão do usuário** | Opus |
+| F09 | B8 nomes reservados (`E`, `tau`, `phi`…) — **decisão do usuário**. **Feito (17/11): deixar como está; registrado em docs/adendo-05.md.** | Opus |
 | F10 | B13 mensagens em português e índices a partir de 1 | Sonnet |
 | F11 | B12 simbólico com complexo; B14 `fmtSmath` NaN | Sonnet |
 | F12 | B16 bordas da sintaxe linear; B17 profundidade + fuzz | Sonnet |

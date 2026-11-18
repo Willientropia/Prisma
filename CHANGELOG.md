@@ -2,6 +2,10 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
+## Em andamento
+
+- **F09** Nomes que valem sem definir (B8): decisão do usuário de deixar como está (`E`, `tau`, `phi` e os outros nomes do math.js continuam valendo). O usuário conferiu no SMath que `e` e `i` comuns já se comportam como lá. Registrado em docs/adendo-05.md, sem mudança de código. Pendente: o SMath mostra `i` para o valor i, e o Prisma mostra `1·i`.
+
 ## v0.8.0 — 2026-11-17
 
 F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.
