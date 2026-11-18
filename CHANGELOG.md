@@ -18,6 +18,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - `\sin x` colado de outro programa mantém o argumento (antes virava sin()). Índice vazio e nome vazio são erro. A matriz `[[1, 2], [3, 4]]` abre como 2×2 (ao editar, volta como `[1, 2; 3, 4]`).
   - Pendente, sem mudança de valor: `a^(b)` volta como `a^b` e `1 Ω*mm^2/m*A/mm^2` volta com os termos reordenados quando a linha é editada.
 
+- **F12b / BUG-017** O escape do nome de atributo em `withAttr` (src/format/doc.ts) estava corrompido no commit; `withAttr(..., "a.b", null)` não removia o atributo. Hoje não afetava nada (os atributos só têm letras), mas agora está coberto por teste.
+
 ## v0.8.0 — 2026-11-17
 
 F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.

@@ -107,7 +107,7 @@ export function withAttr(fenceLine: string, name: string, value: string | true |
   const nl = /\r?\n$/.exec(fenceLine)?.[0] ?? '';
   const head = fenceLine.slice(0, fenceLine.length - nl.length);
   const m = /\{([^}]*)\}/.exec(head);
-  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\export const blocks = (doc: PrismaDoc) =>');
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // BUG-017: o texto de substituição estava corrompido
   const re = new RegExp(`(^|\\s)${esc}(=(?:"[^"]*"|\\S+))?(?=\\s|$)`);
   const piece = value === true ? name : value === null ? '' : quote ? `${name}="${value.replace(/"/g, "'")}"` : `${name}=${value}`;
   if (!m) return value === null ? fenceLine : `${head} {${piece}}${nl}`;

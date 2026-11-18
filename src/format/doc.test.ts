@@ -151,6 +151,10 @@ describe('ADENDO 05: atributos da região', () => {
     expect(withAttr('```calc {#a x=40 descricao="x"}\n', 'descricao', 'Nova')).toBe('```calc {#a x=40 descricao="Nova"}\n');
     expect(withAttr('```area {#r titulo="Valores RMS" y=711}\n', 'recolhida', true)).toBe('```area {#r titulo="Valores RMS" y=711 recolhida}\n');
   });
+  it('[BUG-017] nome de atributo com caractere de regex (a.b) é escapado: troca e remove só ele', () => {
+    expect(withAttr('```calc {#a a.b=1 axb=2}\n', 'a.b', null)).toBe('```calc {#a axb=2}\n');
+    expect(withAttr('```calc {#a axb=2 a.b=1}\n', 'a.b', '3', false)).toBe('```calc {#a axb=2 a.b=3}\n');
+  });
 });
 
 describe('FCFG: atributo sem aspas', () => {
