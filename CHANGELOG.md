@@ -4,7 +4,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 ## Em andamento
 
-- **F09** Nomes que valem sem definir (B8): decisão do usuário de deixar como está (`E`, `tau`, `phi` e os outros nomes do math.js continuam valendo). O usuário conferiu no SMath que `e` e `i` comuns já se comportam como lá. Registrado em docs/adendo-05.md, sem mudança de código. Pendente: o SMath mostra `i` para o valor i, e o Prisma mostra `1·i`.
+- **F09** Nomes que valem sem definir (B8): decisão do usuário de deixar como está (`E`, `tau`, `phi` e os outros nomes do math.js continuam valendo). O usuário conferiu no SMath que `e` e `i` comuns já se comportam como lá. Registrado em docs/adendo-05.md, sem mudança de código. O valor i agora aparece como `i` (e `3 + i`, `−i`), sem o coeficiente 1, como no SMath; E8-29 (golden, smath.test e smath.spec) passou a esperar isso, com autorização do usuário (18/11).
 
 ## v0.8.0 — 2026-11-17
 

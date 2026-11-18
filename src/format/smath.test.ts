@@ -130,7 +130,7 @@ describe('variável do laço e símbolos próprios', () => {
   it('[E8-29] i ou e definidos pelo usuário geram o aviso com o valor; 𝐢 nunca é a variável', () => {
     const r = run('for(i, range(1, 8), q[i] := i)', '3 + 𝐢 = ?', '3 + i = ?');
     expect(r.shadow).toEqual({ name: 'i', value: '8' });
-    expect(r.blocks.b1[0].text).toContain('·i'); // continua complexo
+    expect(r.blocks.b1[0].text).toBe('3 + i'); // continua complexo; o coeficiente 1 some, como no SMath (F09, autorizado pelo usuário em 18/11)
     expect(r.blocks.b2[0].value).toBe(11); // i é a variável
     expect(run('e := 2').shadow).toEqual({ name: 'e', value: '2' });
     expect(run('x := 3 + i').shadow).toBeUndefined();

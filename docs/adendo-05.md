@@ -105,5 +105,5 @@
 
 - **Decisão do usuário (17/11):** deixar como está. Os nomes da instância do math.js continuam valendo quando não definidos: `E` = 2,718, `PI` = 3,1416, `tau` = 6,283, `phi` = 1,618, `SQRT2`, `SQRT1_2`, `LN2`, `LN10`, `LOG2E`, `LOG10E`, `NaN`, `null`, `true`, `false`, `version`. Definir o nome por cima (`E := 5`) vale a partir dali, como qualquer variável.
 - **e e i, conferido no SMath pelo usuário (17/11):** numa folha nova, `e =` dá 2,7183 e `i =` dá i. No `08do10.sm` a unidade imaginária é gravada como o operando `i` comum, e o SMath calcula complexos com ela. Logo o comportamento do Prisma já é o do SMath: `e` é a constante de Euler e `i` é a unidade imaginária enquanto não forem definidos; `𝐞` e `𝐢` em negrito são os símbolos próprios, que variável nenhuma esconde (E8-29).
-- **Diferença de exibição registrada:** para o valor i o SMath mostra `i`, e o Prisma mostra `1·i`.
+- **Exibição ajustada (18/11):** o coeficiente 1 do i some, como no SMath: `i`, `−i`, `3 + i` (`fmtComplex` e `numberLatex`).
 - **Sem mudança de código.** Consequências conhecidas e aceitas: `s := 10*E` com `E` não definido dá 27,18 em vez de ficar em aberto; digitar `E=` mostra o valor em vez de criar a definição.

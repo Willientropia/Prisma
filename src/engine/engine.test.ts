@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate, type BlockInput, type EvalInput, type LibInput, type PlotResult } from './evaluate';
 import { classify, greek } from './syntax';
-import { DEFAULT_FORMAT, fmtNum, parseMargin, prettyUnit } from './format';
+import { DEFAULT_FORMAT, fmtComplex, fmtNum, parseMargin, prettyUnit } from './format';
 import { math } from './math';
 import { isKnownUnit, unitFactor } from './unidades';
 import { blocks, lines, parse } from '../format/doc';
@@ -408,5 +408,12 @@ describe('[F08] função do usuário enxerga definição em aberto', () => {
   });
   it('o que ainda falta na chamada continua avisando o nome', () => {
     expect(sym(['s := 10*x', 'f(a) := a + s', 'f(1) = ?'])[2].error).toBe('Variável não definida: x');
+  });
+});
+
+// Coeficiente 1 do i some, como no SMath (o usuário conferiu: i = i, 17/11)
+describe('[F09] complexo com parte imaginária ±1 mostra i, não 1·i', () => {
+  it('fmtComplex: i, −i, 3 + i, 3 − i; os outros coeficientes continuam', () => {
+    expect([fmtComplex(0, 1), fmtComplex(0, -1), fmtComplex(3, 1), fmtComplex(3, -1), fmtComplex(3, 2)]).toEqual(['i', '−i', '3 + i', '3 − i', '3 + 2·i']);
   });
 });

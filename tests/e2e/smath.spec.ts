@@ -280,7 +280,7 @@ test('[E8-28] depois do for, i continua definido com o último valor (8)', async
 test('[E8-29] i definido pelo laço: aviso na barra de status; 𝐢 continua imaginário', async ({ page }) => {
   await openSheet(page, ['for(i, range(1, 8), q[i] := i)', 'z := 3 + 𝐢', 'z = ?']);
   await expect(page.locator('footer')).toContainText('i agora é uma variável (vale 8). A unidade imaginária continua disponível como 𝐢 no ribbon Matemática.');
-  await expect.poll(() => resultTexts(page)).toContain('3+1⋅i');
+  await expect.poll(() => resultTexts(page)).toContain('3+i'); // coeficiente 1 some, como no SMath (F09, autorizado pelo usuário em 18/11)
   expect((await shownLatex(page)).join('')).toContain('ML__mathbf');
 });
 

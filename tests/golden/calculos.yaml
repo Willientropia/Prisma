@@ -450,7 +450,7 @@
   definicoes: ["for(i, range(1, 8), q[i] := i)"]
   expr: "3 + 𝐢"
   sem_unidade: true
-  esperado: {texto: "3 + 1·i"}
+  esperado: {texto: "3 + i"} # coeficiente 1 some, como no SMath (F09, autorizado pelo usuário em 18/11)
 - id: E8-29
   descricao: "𝐞 continua sendo a constante de Euler com e := 2 definido"
   folha: true

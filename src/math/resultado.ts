@@ -9,7 +9,8 @@ export function numberLatex(t: string): string {
     .replace(/−/g, '-')
     .replace(/(\d),(\d)/g, '$1{,}$2')
     .replace(/e(-?\d+)/g, (_, n: string) => `\\cdot 10^{${Number(n)}}`)
-    .replace(/·i/g, '\\cdot \\mathbf{i}');
+    .replace(/·i/g, '\\cdot \\mathbf{i}')
+    .replace(/(^|[+\-(])i(?![\p{L}\d])/gu, '$1\\mathbf{i}'); // i sem coeficiente (3 + i, −i); o de "verdadeiro" não
 }
 
 /** Latex do resultado: "3{,}29\,\class{u}{\mathrm{V}}". */
