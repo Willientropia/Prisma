@@ -437,3 +437,25 @@ describe('[F10] mensagens em português, índices a partir de 1', () => {
     expect(err(['inv(mat(1, 2, 2, 4, 2, 2)) = ?'])).toBe('A matriz não tem inversa: o determinante é zero');
   });
 });
+
+// F10: resultado infinito ou indefinido é erro, como no SMath (conferido pelo usuário em 18/11: 1/0, -1/0 e 0/0 dão
+// "Divisão por zero."; 10^400 dá "O resultado está acima de max.")
+describe('[F10] divisão por zero e resultado acima do máximo', () => {
+  const run = (lines: string[], symbolic = false) => evaluate({ libs: [], symbolic, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b.at(-1)!;
+  it('1/0, -1/0, 0/0, com unidade e por dentro de função: Divisão por zero', () => {
+    for (const s of ['1/0 = ?', '-1/0 = ?', '0/0 = ?', '(1 m)/0 = ?']) expect(run([s]).error, s).toBe('Divisão por zero');
+    expect(run(['f(x) := 1/x', 'f(0) = ?']).error).toBe('Divisão por zero');
+    expect(run(['0/0 = ?'], true).error).toBe('Divisão por zero');
+  });
+  it('10^400 e o que vem dele: resultado acima do máximo', () => {
+    expect(run(['10^400 = ?']).error).toBe('O resultado está acima do máximo');
+    expect(run(['10^400 - 10^400 = ?']).error).toBe('O resultado está acima do máximo');
+    expect(run(['exp(1000) = ?']).error).toBe('O resultado está acima do máximo');
+  });
+  it('∞ como limite de integral continua valendo; integral divergente mostra o valor e o aviso, sem Infinity nem NaN', () => {
+    expect(run(['integral(exp(-x), x, 0, ∞) = ?']).value).toBeCloseTo(1, 8);
+    const d = run(['integral(1/x, x, 0, 1) = ?']);
+    expect([d.error, d.text]).toEqual([undefined, 'indefinido']);
+    expect(d.warning).toBe('A integral pode não ter convergido (estimativa de erro: infinita)');
+  });
+});

@@ -3,7 +3,7 @@
 import type { MathNode, Unit } from 'mathjs';
 import { parse as parseYaml } from 'yaml';
 import { mapFree } from './bound';
-import { withWarning } from './calculus';
+import { hasWarning, withWarning } from './calculus';
 import { graph2d, isGraph2D, type Graph2D, type GraphCtx, type Spec2D } from './grafico';
 import { math, smath } from './math';
 import { classify, fromMath, isScale, markVars, SCALES, toMath, toMathVars, VAR_MARK, type Line, type LineKind } from './syntax';
@@ -64,7 +64,31 @@ const cannot = (from: string, to: string) => new Error(`Não é possível conver
 /** show que não falha num valor sem exibição (o for devolve o último valor do corpo). */
 const safeShow = (v: unknown, target: string | undefined, fmt: FormatOpts): Partial<Shown> => { try { return show(v, target, fmt); } catch { return {}; } };
 
+/** Resultado infinito ou indefinido (1/0, 0/0, 10^400): erro, como no SMath (F10; message() diz a causa). */
+class NonFinite extends Error {}
+const finite = (x: unknown): boolean =>
+  typeof x === 'number' ? Number.isFinite(x) : math.isComplex(x) ? Number.isFinite(x.re) && Number.isFinite(x.im) : isUnit(x) ? x.value === null || finite(x.value) : true;
+/**
+ * Causa do resultado não finito: potência, exponencial ou produto que estoura com operandos finitos é "acima do máximo";
+ * o resto (1/0, 0/0, f(0) com f(x) := 1/x) é divisão por zero.
+ * ponytail: heurística pela forma da expressão; estouro dentro de função do usuário sai como divisão por zero.
+ */
+function overflowIn(src: string, scope: Map<string, unknown>): boolean {
+  const OVER = new Set(['pow', 'multiply', 'exp', 'factorial', 'gamma', 'sinh', 'cosh']);
+  let found = false;
+  try {
+    math.parse(src).traverse((n) => {
+      const x = n as MathNode & { fn?: string | { name?: string }; args?: MathNode[] };
+      const fn = math.isOperatorNode(n) ? (x.fn as string) : math.isFunctionNode(n) ? (x.fn as { name?: string }).name : undefined;
+      if (found || !fn || !OVER.has(fn)) return;
+      try { if (x.args!.every((a) => finite(a.compile().evaluate(scope))) && !finite(n.compile().evaluate(scope))) found = true; } catch { /* segue */ }
+    });
+  } catch { /* sem detalhe */ }
+  return found;
+}
+
 export function show(v: unknown, target: string | undefined, fmt: FormatOpts): Shown {
+  if (!finite(v) && !hasWarning()) throw new NonFinite(); // com aviso de integral, o infinito é o valor da integral divergente
   if (typeof v === 'boolean') return { text: v ? 'verdadeiro' : 'falso' };
   if (typeof v === 'function') return { text: 'função' };
   // conversão (E4.3): unidade sem valor ("mV", "deg") segue abaixo; número ou expressão ("10^-6") divide
@@ -142,6 +166,7 @@ function diagnose(node: MathNode, scope: Map<string, unknown>): string | undefin
 function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   const msg = e instanceof Error ? e.message : String(e);
   if (e instanceof RangeError && /call stack/i.test(msg)) return 'A expressão tem níveis demais para calcular'; // A6-ROBUSTEZ-03: estouro de pilha vem em inglês
+  if (e instanceof NonFinite) return overflowIn(src, scope) ? 'O resultado está acima do máximo' : 'Divisão por zero';
   let m: RegExpExecArray | null;
   if ((m = /Definição circular: .*$/.exec(msg))) return m[0]; // F07 por dentro de map(): o math.js embrulha a mensagem a cada nível
   if (/^Function \w+ cannot apply callback arguments to function [^:]+: /.test(msg)) return message(new Error(msg.replace(/^(Function \w+ cannot apply callback arguments to function [^:]+: )+/, '')), src, scope);

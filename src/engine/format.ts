@@ -12,7 +12,7 @@ export const DEFAULT_FORMAT: FormatOpts = { decimals: 4, sep: ',', mode: 'decima
 /** Sem mode (formato antigo): |x| >= 0,1 com casas fixas (1,79; 2,20; 712,80); menor, 3 algarismos (0,0214); extremos em notação científica. Com mode (o padrão): fmtSmath. */
 export function fmtNum(x: number, opts: FormatOpts = DEFAULT_FORMAT): string {
   const { decimals, sep } = opts;
-  if (!Number.isFinite(x)) return String(x);
+  if (!Number.isFinite(x)) return x > 0 ? '∞' : x < 0 ? '−∞' : 'indefinido'; // sem "Infinity" e "NaN" na tela (F10)
   if (opts.mode) return fmtSmath(x, opts);
   const a = Math.abs(x);
   let s: string;

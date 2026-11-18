@@ -25,6 +25,9 @@ export const tick = () => { if (performance.now() > deadline) throw new Error('O
 // avisos da linha em avaliação (a integral que não convergiu); evaluate.ts recolhe depois de cada linha
 const pending: string[] = [];
 /** Executa a avaliação de uma linha e anexa o primeiro aviso do cálculo, se houver. */
+/** A linha em curso já tem aviso de cálculo (integral sem convergência): o valor, mesmo infinito, é mostrado (A6-8-06). */
+export const hasWarning = () => pending.length > 0;
+
 export function withWarning<T extends object>(run: () => T): T & { warning?: string } {
   pending.length = 0;
   deadline = performance.now() + CALC_LIMIT_MS;
@@ -150,7 +153,7 @@ export function calculusFunctions(math: M) {
       lo = -1; hi = 1;
     }
     const r = adaptive(h, lo, hi);
-    if (!r.converged && !pending.length) pending.push(`A integral pode não ter convergido (estimativa de erro: ${r.err.toExponential(2).replace('.', ',')})`);
+    if (!r.converged && !pending.length) pending.push(`A integral pode não ter convergido (estimativa de erro: ${Number.isFinite(r.err) ? r.err.toExponential(2).replace('.', ',') : 'infinita'})`); // sem "Infinity" na tela (F10)
     return r.value;
   }
 
