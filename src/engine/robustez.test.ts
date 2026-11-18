@@ -91,6 +91,9 @@ describe('[A6-ROBUSTEZ-03] definição circular', { timeout: 30_000 }, () => {
     it(`[F07] f(x) := f(x) + 1 e f(2) = ? avisa a definição circular (${symbolic ? 'folha' : 'caderno'})`, () => {
       expect(run(['f(x) := f(x) + 1', 'f(2) = ?'])[1].error).toBe('Definição circular: f depende de si mesmo');
     });
+    it(`[F07] recursão por dentro de map(): a mesma mensagem, curta (${symbolic ? 'folha' : 'caderno'})`, () => {
+      expect(run(['f(a) := a + map([1, 2], f)', 'f(1) = ?'])[1].error).toBe('Definição circular: f depende de si mesmo');
+    });
     it(`[F07] g chama h e h chama g: definição circular (${symbolic ? 'folha' : 'caderno'})`, () => {
       expect(run(['g(x) := h(x)', 'h(x) := g(x)', 'g(1) = ?'])[2].error).toMatch(/^Definição circular: [gh] depende de si mesmo$/);
     });

@@ -401,6 +401,11 @@ describe('[F08] função do usuário enxerga definição em aberto', () => {
   it('parâmetro com o nome da definição em aberto vence: f(s) := s + 1', () => {
     expect(sym(['s := 10*x', 'f(s) := s + 1', 'f(1) = ?'])[2].value).toBe(2);
   });
+  it('passada como valor (map), com argumentos de menos e com parâmetro que é função (revisão da v0.8.0)', () => {
+    expect(sym(['s := 10*x', 'f(a) := a + s', 'x := 2', 'map([1, 2], f) = ?'])[3].text).toBe('[21 | 22]');
+    expect(sym(['s := 10*x', 'f(a, b) := a + b + s', 'x := 2', 'f(1) = ?'])[3].error).toMatch(/^Número de argumentos errado/);
+    expect(sym(['h(t) := 2*t', 's := 10*x', 'f(g, a) := g(a) + s', 'x := 2', 'f(h, 1) = ?'])[4].value).toBe(22);
+  });
   it('o que ainda falta na chamada continua avisando o nome', () => {
     expect(sym(['s := 10*x', 'f(a) := a + s', 'f(1) = ?'])[2].error).toBe('Variável não definida: x');
   });

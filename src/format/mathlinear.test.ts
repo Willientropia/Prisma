@@ -76,6 +76,8 @@ describe('conversor: regras', () => {
     expect(lineToLinear(latexToLine('\\frac{\\mathrm{d}}{\\mathrm{dx}}x^{2}'))).toBe('diff(x^2, x)');
     expect(lineToLinear(latexToLine('\\operatorname{diff}(x^{2};x;3)'))).toBe('diff(x^2, x, 3)');
     expect(lineToLinear(latexToLine('\\frac{d}{x}'))).toBe('d/x'); // divisão comum continua divisão
+    for (const s of ['d/dx', 'a := d/dx', 'd/dx*3', 'd/dt + 1', 'y := (d/dx)^2']) expect(lineToLinear(latexToLine(toLatex(s))), s).toBe(s); // variável d sobre dx (revisão da v0.8.0)
+    expect(lineToLinear(latexToLine('\\left.x+1\\right)'))).toBe('(x + 1)'); // \left. sem derivada: parênteses, como antes
     expect(() => latexToLine('\\left.\\frac{d}{dx}\\left(x^2\\right)\\right|_{y=3}')).toThrow(); // ponto de outra variável
   });
 

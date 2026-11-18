@@ -143,6 +143,8 @@ function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   const msg = e instanceof Error ? e.message : String(e);
   if (e instanceof RangeError && /call stack/i.test(msg)) return 'A expressão tem níveis demais para calcular'; // A6-ROBUSTEZ-03: estouro de pilha vem em inglês
   let m: RegExpExecArray | null;
+  if ((m = /Definição circular: .*$/.exec(msg))) return m[0]; // F07 por dentro de map(): o math.js embrulha a mensagem a cada nível
+  if (/^Function \w+ cannot apply callback arguments to function [^:]+: /.test(msg)) return message(new Error(msg.replace(/^(Function \w+ cannot apply callback arguments to function [^:]+: )+/, '')), src, scope);
   if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${fromMath(m[1])}`;
   if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${fromMath(m[1])}`;
   if (msg.startsWith('Não é possível converter')) return msg;
@@ -202,14 +204,18 @@ function defineFunction(src: string, scope: Map<string, unknown>, parse: (s: str
     const body = late?.(node.expr!, params);
     if (!body) return f(...a);
     const args = new Map(params.map((p, i) => [p, a[i]]));
-    return mapFree(body, (s) => (args.has(s.name) ? new math.ConstantNode(args.get(s.name) as never) : s)).compile().evaluate(scope);
+    return mapFree(body, (s) => (args.has(s.name) ? new math.ConstantNode(args.get(s.name) as never) : s), true).compile().evaluate(scope); // parâmetro usado como função também (g(a) com g parâmetro)
   };
   let depth = 0;
-  const guarded = Object.assign((...a: unknown[]) => {
-    if (depth >= MAX_RECURSION) throw new Error(`Definição circular: ${fromMath(node.name!)} depende de si mesmo`);
-    depth++;
-    try { return call(a); } finally { depth--; }
-  }, f); // syntax e demais propriedades do math.js
+  // typed-function do math.js com uma assinatura por parâmetro: confere o número de argumentos e, passada como valor
+  // (map([1, 2], f)), o math.js chama esta, não a original (revisão da v0.8.0)
+  const guarded = math.typed(node.name!, {
+    [params.map(() => 'any').join(',')]: (...a: unknown[]) => {
+      if (depth >= MAX_RECURSION) throw new Error(`Definição circular: ${fromMath(node.name!)} depende de si mesmo`);
+      depth++;
+      try { return call(a); } finally { depth--; }
+    },
+  });
   scope.set(node.name!, guarded);
   return guarded;
 }

@@ -720,8 +720,10 @@ class LatexParser {
           this.i++;
           const num = this.group(), den = this.group();
           const dv = derivVar(num, den);
-          if (dv) { // d/dx: derivada (A6-5); corpo entre parênteses, ou digitado sem eles, até o fim do termo
-            const nx = this.peek();
+          const nx = this.peek();
+          // sem corpo logo depois (fim, operador, ·), é divisão: a variável d sobre dx continua d/dx (revisão da v0.8.0)
+          const bodyNext = !!nx && !opOf(nx) && !['close', 'sup', 'sub', 'amp'].includes(nx.k) && !(nx.k === 'cmd' && ['cdot', 'times', 'right', 'coloneq', 'coloneqq'].includes(nx.v)) && !(nx.k === 'ch' && [')', ']', ';', ','].includes(nx.v));
+          if (dv && bodyNext) { // d/dx: derivada (A6-5); corpo entre parênteses, ou digitado sem eles, até o fim do termo
             const body = (nx?.k === 'ch' && nx.v === '(') || (nx?.k === 'cmd' && nx.v === 'left') ? this.atom() : this.mul();
             return { t: 'call', f: 'diff', args: [body.t === 'paren' ? body.a : body, { t: 'id', name: this.sub(dv).nameAll() }] };
           }
@@ -857,8 +859,8 @@ class LatexParser {
     const open = this.next();
     if (open.v === 'lvert' || open.v === '|' || open.v === 'vert') { const a = this.until((x) => x.k === 'cmd' && x.v === 'right', true); return { t: 'call', f: 'abs', args: [a] }; }
     const a = this.until((x) => x.k === 'cmd' && x.v === 'right', true);
-    if (open.v === '.') { // \left. d/dx(f) \right|_{x=ponto}: derivada no ponto (A6-5)
-      if (this.peek()?.k !== 'sub' || a.t !== 'call' || a.f !== 'diff' || a.args.length !== 2) return fail('Barra de avaliação só depois de uma derivada');
+    // \left. d/dx(f) \right|_{x=ponto}: derivada no ponto (A6-5); outro \left. ... \right continua parênteses
+    if (open.v === '.' && this.peek()?.k === 'sub' && a.t === 'call' && a.f === 'diff' && a.args.length === 2) {
       this.i++;
       const g = this.group();
       const eq = g.findIndex((x) => x.k === 'ch' && x.v === '=');
