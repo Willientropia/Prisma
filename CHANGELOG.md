@@ -8,6 +8,10 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **F10** Mensagens em português e índices a partir de 1 (B13): `M[3, 1]` numa matriz 2×2 dá "Índice 3 fora do intervalo (de 1 a 2)", em vez de "Index out of range (2 > 1)"; `v[1.5]` dá "O índice precisa ser inteiro (valor: 1,5)"; `x(3)` com x número, texto em conta, vetores de tamanhos diferentes e matriz sem inversa também viraram português. Resultado infinito ou indefinido virou erro, como no SMath (conferido pelo usuário em 18/11): `1/0`, `-1/0` e `0/0` dão "Divisão por zero", e `10^400` dá "O resultado está acima do máximo". A causa sai da forma da expressão: potência, exponencial ou produto que estoura é "acima do máximo", o resto é divisão por zero. Integral divergente continua mostrando o valor com o aviso (A6-8-06), agora "indefinido" e "estimativa de erro: infinita" em vez de NaN e Infinity.
 
+- **F11** Simbólico com complexo e formato do SMath (B12, B14):
+  - Na folha, um complexo que entra numa expressão em aberto agora vai entre parênteses: com `z := 3 + 2*i` e `s := z*x`, `s = ?` dá (2·𝐢 + 3)·x. Antes saía `3 + 2i*x`, que se lê como 3 + 2i·x, um valor errado. O complexo entra com o 𝐢 próprio, que um i do usuário (o do laço for) não captura.
+  - `fmtSmath` não dá mais "NaN" com limite exponencial alto: 1e-8 com 4 casas e limite 10 dá 0. O arredondamento que muda o expoente vira notação científica: 99999,5 com 4 algarismos e limite 5 dá 1·10⁵, e não 100000.
+
 ## v0.8.0 — 2026-11-17
 
 F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.

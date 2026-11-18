@@ -52,6 +52,9 @@ export function parseMargin(v: unknown): number | undefined {
 }
 
 /** Formato do SMath (E4.2): casas decimais ou algarismos significativos, zeros à direita opcionais. */
+/** n·10^k pelo texto (sem erro binário: 2,685·10² é 268,5); vale para qualquer n, inclusive 1e-8 (B14). */
+const shift = (n: number, k: number) => { const [m, e] = n.toExponential().split('e'); return Number(`${m}e${Number(e) + k}`); };
+
 function fmtSmath(x: number, o: FormatOpts): string {
   const a = Math.abs(x);
   const th = o.expThreshold ?? 5;
@@ -64,12 +67,14 @@ function fmtSmath(x: number, o: FormatOpts): string {
       const r = av === 0 ? 0 : Number(v.toPrecision(p));
       const dec = r === 0 ? 0 : Math.max(0, p - 1 - Math.floor(Math.log10(Math.abs(r))));
       s = r.toFixed(dec);
-    } else s = (Math.sign(v) * Number(`${Math.round(Number(`${Number(av.toPrecision(12))}e${digits}`))}e-${digits}`)).toFixed(digits);
+    } else s = (Math.sign(v) * shift(Math.round(shift(Number(av.toPrecision(12)), digits)), -digits)).toFixed(digits);
     if (!o.trailingZeros && s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
     if (s === '-0') s = '0';
     return s.replace('.', o.sep);
   };
-  const exp10 = a === 0 ? 0 : Math.floor(Math.log10(a));
+  // expoente do número já arredondado: 99999,5 com 4 algarismos é 100000, expoente 5 (B14); o que arredonda para 0 usa o original
+  const shown = Math.abs(Number(plain(x).replace(o.sep, '.')));
+  const exp10 = a === 0 ? 0 : Math.floor(Math.log10(shown || a));
   const always = o.notation === 'cientifica' || o.notation === 'engenharia';
   const step = o.notation === 'engenharia' ? 3 : 1;
   if (a !== 0 && (always || exp10 >= th || exp10 <= -th)) { // pelo expoente, como o SMath: limite 3 -> 1,475·10⁻³ e 1·10³

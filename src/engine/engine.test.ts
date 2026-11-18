@@ -459,3 +459,29 @@ describe('[F10] divisão por zero e resultado acima do máximo', () => {
     expect(d.warning).toBe('A integral pode não ter convergido (estimativa de erro: infinita)');
   });
 });
+
+// F11 (B12 e B14 da AUDITORIA-FABLE)
+describe('[F11] formato do SMath com limite alto e simbólico com complexo', () => {
+  const o = (mode: 'decimais' | 'significativos', decimals: number, expThreshold: number) => ({ decimals, sep: ',', mode, trailingZeros: false, expThreshold });
+  it('B14: 1e-8 com 4 casas e limite 10 dá 0, não NaN; com limite 7, 1e-8', () => {
+    expect(fmtNum(1e-8, o('decimais', 4, 10))).toBe('0');
+    expect(fmtNum(1.234e-7, o('decimais', 9, 10))).toBe('0,000000123');
+    expect(fmtNum(1e-8, o('decimais', 4, 7))).toBe('1e-8');
+    expect(fmtNum(2.685, o('decimais', 2, 5))).toBe('2,69'); // arredonda no decimal, não no binário
+  });
+  it('B14: o arredondamento que muda o expoente vira notação científica (99999,5 com 4 algarismos e limite 5)', () => {
+    expect(fmtNum(99999.5, o('significativos', 4, 5))).toBe('1e5');
+    expect(fmtNum(99994, o('significativos', 4, 5))).toBe('99990');
+  });
+  it('B12: complexo que entra numa expressão em aberto vai entre parênteses, com o 𝐢 próprio', () => {
+    const sym = (lines: string[]) => evaluate({ libs: [], symbolic: true, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b.at(-1)!;
+    const r = sym(['z := 3 + 2*i', 's := z*x', 's = ?']);
+    expect(r.symbolic).toMatch(/^\((3 \+ 2\*𝐢|2\*𝐢 \+ 3)\)\*x$/); // o simplify pode trocar a ordem; o que importa são os parênteses
+    expect(toLatex(r.symbolic!)).not.toContain('\\text');
+    // com x definido depois, o valor bate com (3 + 2i)·2
+    const v = sym(['z := 3 + 2*i', 's := z*x', 'x := 2', 's = ?']);
+    expect(v.text).toBe('6 + 4·i');
+    // i do usuário não captura o 𝐢 do complexo
+    expect(sym(['z := 3 - 𝐢', 'for(i, range(1, 3), q[i] := i)', 's := z*x', 's = ?']).symbolic).toMatch(/^\((3 - 𝐢|-𝐢 \+ 3)\)\*x$/);
+  });
+});

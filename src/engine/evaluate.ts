@@ -299,7 +299,10 @@ export function evaluate(input: EvalInput, onLine?: (key: string, line: number) 
     const out = mapFree(body, (s) => (!params.includes(s.name) && !scope.has(s.name) && open.has(s.name) ? ((used = true), new math.ParenthesisNode(expand(open.get(s.name)!))) : s));
     return used ? out : undefined;
   };
-  const resolveFree = (node: MathNode) => mapFree(node, (s) => (scope.has(s.name) ? math.resolve(s, scope) : s));
+  // B12: complexo entra entre parênteses e com o 𝐢 próprio (ⅈ), que um i do usuário não captura; o math.js escrevia
+  // 3 + 2i solto, e (3 + 2i)·x virava 3 + 2i·x
+  const complexNode = (c: Cx) => new math.ParenthesisNode(math.parse(c.re === 0 ? `${c.im}*ⅈ` : `${c.re} ${c.im < 0 ? '-' : '+'} ${Math.abs(c.im)}*ⅈ`));
+  const resolveFree = (node: MathNode) => mapFree(node, (s) => (!scope.has(s.name) ? s : math.isComplex(scope.get(s.name)) ? complexNode(scope.get(s.name) as Cx) : math.resolve(s, scope)));
   const symbolicText = (node: MathNode) => {
     let r = resolveFree(node);
     // A6-ROBUSTEZ-01: o simplify do math.js não tem prazo e o custo cresce ~4x por nível aninhado (82 caracteres: 0,5 s; 100: minutos); expressão grande fica como está
