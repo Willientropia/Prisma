@@ -2,7 +2,9 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
-## Em andamento
+## v0.8.0 — 2026-11-17
+
+F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.
 
 - **F07** Definição circular em função (B11): `f(x) := f(x) + 1`, ou `g` que chama `h` que chama `g`, agora para em 100 chamadas aninhadas da mesma função com "Definição circular: f depende de si mesmo", em vez de estourar a pilha ("níveis demais"). O caso das variáveis (`x := x + 1`) já estava resolvido desde o A6-ROBUSTEZ-03. Pendente para quando houver `if` no motor: medir a pilha do worker antes de subir o limite.
 
@@ -11,6 +13,11 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 - **Derivada como operador** (pedido do usuário, 17/11; ADENDO 06, 4.7): `diff(f, u, t)` aparece como d/du (f) com a barra de avaliação em u = t, em vez do nome "diff". O campo lê de volta o operador, digitado com ou sem d reto, e continua lendo a forma antiga. A6-2-23 e BUG-028 passaram a esperar o operador. O botão Derivada do ribbon ainda insere a forma diff(;) no campo; ela vira operador ao sair.
 
 - **BUG-032** O prazo de 2 s por linha contava a carga do worker (math.js). Na primeira conta depois de abrir o app, ou depois de uma interrupção, uma carga lenta dava "Tempo esgotado: o cálculo passou de 2 s antes da primeira linha" e nenhum resultado. Agora o worker avisa quando carregou e o prazo só começa aí. A carga em si não tem prazo: falha de carga vira erro, e carga travada se resolve com Interromper.
+
+- **Correções achadas na revisão da versão:**
+  - A função do usuário passada como valor (`map([1, 2], f)`) agora passa pelo limite de recursão do F07 e enxerga as definições em aberto do F08. Chamada com argumentos de menos dá "Número de argumentos errado", em vez de erro em inglês.
+  - Parâmetro usado como função (`f(g, a) := g(a) + s`) funciona também quando o corpo tem nome em aberto.
+  - Uma variável `d` dividida por `dx` continua sendo divisão, e não derivada; `\left.` sem derivada volta a ser lido como parênteses.
 
 ## v0.7.0 — 2026-11-16
 
