@@ -145,6 +145,14 @@ function message(e: unknown, src: string, scope: Map<string, unknown>): string {
   let m: RegExpExecArray | null;
   if ((m = /Definição circular: .*$/.exec(msg))) return m[0]; // F07 por dentro de map(): o math.js embrulha a mensagem a cada nível
   if (/^Function \w+ cannot apply callback arguments to function [^:]+: /.test(msg)) return message(new Error(msg.replace(/^(Function \w+ cannot apply callback arguments to function [^:]+: )+/, '')), src, scope);
+  // F10 (B13): o math.js conta índices a partir de 0; na tela, como o usuário escreve, a partir de 1
+  if ((m = /Index out of range \((-?\d+) ([<>]) (-?\d+)\)/.exec(msg)))
+    return m[2] === '<' ? `Índice ${Number(m[1]) + 1} fora do intervalo (o primeiro é ${Number(m[3]) + 1})` : `Índice ${Number(m[1]) + 1} fora do intervalo (de 1 a ${Number(m[3]) + 1})`;
+  if ((m = /Index must be an integer \(value: (-?[\d.e+-]+)\)/.exec(msg))) return `O índice precisa ser inteiro (valor: ${String(Number(m[1]) + 1).replace('.', ',')})`;
+  if ((m = /^'(.+)' is not a function; its value is:\s*([\s\S]*)$/.exec(msg))) return `${fromMath(m[1])} não é uma função (vale ${m[2].trim().replace(/(\d)\.(\d)/g, '$1,$2')})`;
+  if ((m = /^Cannot convert "(.*)" to a number$/.exec(msg))) return `Não é possível converter "${m[1]}" em número`;
+  if (/shape mismatch|Dimension mismatch/.test(msg)) return 'Dimensões incompatíveis entre vetores ou matrizes';
+  if (/Cannot calculate inverse, determinant is zero/.test(msg)) return 'A matriz não tem inversa: o determinante é zero';
   if ((m = /Undefined symbol (\S+)/.exec(msg))) return `Variável não definida: ${fromMath(m[1])}`;
   if ((m = /Undefined function (\S+)/.exec(msg))) return `Função não definida: ${fromMath(m[1])}`;
   if (msg.startsWith('Não é possível converter')) return msg;

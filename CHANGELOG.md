@@ -6,6 +6,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
 - **F09** Nomes que valem sem definir (B8): decisão do usuário de deixar como está (`E`, `tau`, `phi` e os outros nomes do math.js continuam valendo). O usuário conferiu no SMath que `e` e `i` comuns já se comportam como lá. Registrado em docs/adendo-05.md, sem mudança de código. O valor i agora aparece como `i` (e `3 + i`, `−i`), sem o coeficiente 1, como no SMath; E8-29 (golden, smath.test e smath.spec) passou a esperar isso, com autorização do usuário (18/11).
 
+- **F10** Mensagens em português e índices a partir de 1 (B13): `M[3, 1]` numa matriz 2×2 dá "Índice 3 fora do intervalo (de 1 a 2)", em vez de "Index out of range (2 > 1)"; `v[1.5]` dá "O índice precisa ser inteiro (valor: 1,5)"; `x(3)` com x número, texto em conta, vetores de tamanhos diferentes e matriz sem inversa também viraram português. Pendente, depende de experimento no SMath: `1/0`, `0/0` e `10^400` ainda aparecem como Infinity e NaN.
+
 ## v0.8.0 — 2026-11-17
 
 F07, F08, derivada como operador e BUG-032 (docs/TICKETS-FOLHA.md). verify:full aprovado: 778 testes, nenhuma falha.

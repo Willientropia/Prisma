@@ -417,3 +417,23 @@ describe('[F09] complexo com parte imaginária ±1 mostra i, não 1·i', () => {
     expect([fmtComplex(0, 1), fmtComplex(0, -1), fmtComplex(3, 1), fmtComplex(3, -1), fmtComplex(3, 2)]).toEqual(['i', '−i', '3 + i', '3 − i', '3 + 2·i']);
   });
 });
+
+// F10 (B13 da AUDITORIA-FABLE): erros do math.js em português e índices contados a partir de 1, como o usuário escreve
+describe('[F10] mensagens em português, índices a partir de 1', () => {
+  const err = (lines: string[]) => evaluate({ libs: [], symbolic: false, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b.at(-1)!.error;
+  it('índice fora do intervalo mostra o índice digitado e o intervalo válido', () => {
+    expect(err(['M := mat(1, 2, 3, 4, 2, 2)', 'M[3, 1] = ?'])).toBe('Índice 3 fora do intervalo (de 1 a 2)');
+    expect(err(['v := [1; 2; 3]', 'v[5] = ?'])).toBe('Índice 5 fora do intervalo (de 1 a 3)');
+    expect(err(['v := [1; 2; 3]', 'v[0] = ?'])).toBe('Índice 0 fora do intervalo (o primeiro é 1)');
+    expect(err(['el([1; 2], 3) = ?'])).toBe('Índice 3 fora do intervalo (de 1 a 2)');
+  });
+  it('índice não inteiro mostra o valor digitado', () => {
+    expect(err(['v := [1; 2; 3]', 'v[1.5] = ?'])).toBe('O índice precisa ser inteiro (valor: 1,5)');
+  });
+  it('nome que não é função, texto em conta, dimensões e matriz sem inversa', () => {
+    expect(err(['x := 2', 'x(3) = ?'])).toBe('x não é uma função (vale 2)');
+    expect(err(['x := "abc"', 'x + 1 = ?'])).toBe('Não é possível converter "abc" em número');
+    expect(err(['[1, 2] + [1, 2, 3] = ?'])).toBe('Dimensões incompatíveis entre vetores ou matrizes');
+    expect(err(['inv(mat(1, 2, 2, 4, 2, 2)) = ?'])).toBe('A matriz não tem inversa: o determinante é zero');
+  });
+});
