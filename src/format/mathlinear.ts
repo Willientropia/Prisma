@@ -587,11 +587,23 @@ class LatexParser {
       return a;
     }
   }
+  private nest = 0; // "-" e \sin em cadeia não passam por sub(): contam aqui, somados aos grupos (revisão da v0.9.0)
+  private deeper<T>(f: () => T): T {
+    if (this.depth + ++this.nest > MAX_DEPTH) fail('Expressão longa demais');
+    try { return f(); } finally { this.nest--; }
+  }
   private unary(): Node {
-    if (opOf(this.peek()) === '-') { this.i++; return { t: 'neg', a: this.unary() }; }
+    if (opOf(this.peek()) === '-') { this.i++; return this.deeper(() => ({ t: 'neg', a: this.unary() })); }
     let a = this.atom();
     while (this.peek()?.k === 'sup') { this.i++; a = { t: 'bin', op: '^', a, b: this.sub(this.group()).exprAll() }; }
     return a;
+  }
+  /** Argumento de \sin sem parênteses: o fator seguinte; número colado em nome vai junto (\sin 2x é sin(2x)). */
+  fnArg(): Node {
+    return this.deeper(() => {
+      const a = this.unary();
+      return a.t === 'num' && isLetter(this.peek()) ? { t: 'bin', op: '*', a, b: this.unary() } : a;
+    });
   }
   exprAll(): Node { const e = this.expr(); return this.done(e); }
   /** Argumento de função: expressão ou atribuição com ≔ fora de chaves e parênteses (corpo do for, F05). */
@@ -791,7 +803,7 @@ class LatexParser {
         // \sin x colado de outro programa: o argumento sem parênteses é o fator seguinte (era sin(), F12, B16)
         const nx = this.peek();
         if (!nx) return fail(`Argumento esperado depois de \\${t.v}`);
-        if (!((nx.k === 'ch' && nx.v === '(') || (nx.k === 'cmd' && nx.v === 'left'))) return { t: 'call', f, args: [this.unary()] };
+        if (!((nx.k === 'ch' && nx.v === '(') || (nx.k === 'cmd' && nx.v === 'left'))) return { t: 'call', f, args: [this.fnArg()] };
         return this.callArgs(f);
       }
       return fail(`Comando não suportado: \\${t.v}`);

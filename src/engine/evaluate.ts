@@ -67,21 +67,31 @@ const safeShow = (v: unknown, target: string | undefined, fmt: FormatOpts): Part
 /** Resultado infinito ou indefinido (1/0, 0/0, 10^400): erro, como no SMath (F10; message() diz a causa). */
 class NonFinite extends Error {}
 const finite = (x: unknown): boolean =>
-  typeof x === 'number' ? Number.isFinite(x) : math.isComplex(x) ? Number.isFinite(x.re) && Number.isFinite(x.im) : isUnit(x) ? x.value === null || finite(x.value) : true;
+  typeof x === 'number' ? Number.isFinite(x)
+    : math.isComplex(x) ? Number.isFinite(x.re) && Number.isFinite(x.im)
+    : isUnit(x) ? x.value === null || finite(x.value)
+    : math.isMatrix(x) || Array.isArray(x) ? (math.isMatrix(x) ? (x.toArray() as unknown[]) : x).flat(Infinity).every(finite) // [1/0, 2] também (revisão da v0.9.0)
+    : true;
+const isZero = (x: unknown) => (typeof x === 'number' ? x === 0 : isUnit(x) ? Number(x.value) === 0 : math.isComplex(x) ? x.re === 0 && x.im === 0 : false);
 /**
- * Causa do resultado não finito: potência, exponencial ou produto que estoura com operandos finitos é "acima do máximo";
- * o resto (1/0, 0/0, f(0) com f(x) := 1/x) é divisão por zero.
- * ponytail: heurística pela forma da expressão; estouro dentro de função do usuário sai como divisão por zero.
+ * Causa do resultado não finito: potência, exponencial, produto ou divisão por não zero que estoura com operandos
+ * finitos é "acima do máximo"; o resto (1/0, 0/0, f(0) com f(x) := 1/x) é divisão por zero.
+ * ponytail: heurística pela forma da expressão. Sai como divisão por zero: estouro dentro de função do usuário, variável
+ * que já guarda o estouro (x := 10^400 e depois x = ?) e, na folha, nome que só existe em aberto.
  */
 function overflowIn(src: string, scope: Map<string, unknown>): boolean {
-  const OVER = new Set(['pow', 'multiply', 'exp', 'factorial', 'gamma', 'sinh', 'cosh']);
+  const OVER = new Set(['pow', 'multiply', 'exp', 'factorial', 'gamma', 'sinh', 'cosh', 'divide']);
   let found = false;
   try {
     math.parse(src).traverse((n) => {
       const x = n as MathNode & { fn?: string | { name?: string }; args?: MathNode[] };
       const fn = math.isOperatorNode(n) ? (x.fn as string) : math.isFunctionNode(n) ? (x.fn as { name?: string }).name : undefined;
       if (found || !fn || !OVER.has(fn)) return;
-      try { if (x.args!.every((a) => finite(a.compile().evaluate(scope))) && !finite(n.compile().evaluate(scope))) found = true; } catch { /* segue */ }
+      try {
+        const args = x.args!.map((a) => a.compile().evaluate(scope) as unknown);
+        if (fn === 'divide' && isZero(args[1])) return; // essa é a divisão por zero
+        if (args.every(finite) && !finite(n.compile().evaluate(scope))) found = true;
+      } catch { /* segue */ }
     });
   } catch { /* sem detalhe */ }
   return found;
@@ -424,7 +434,7 @@ export function plot(body: string, scope: Map<string, unknown>, fmt: FormatOpts,
       ys.push(r.value ?? null);
     } catch (e) {
       ys.push(null);
-      error ??= message(e, expr, local);
+      if (!(e instanceof NonFinite)) error ??= message(e, expr, local); // polo (1/x em 0) é só um ponto sem valor, como antes
     }
   }
   return { ...base, ys, error };

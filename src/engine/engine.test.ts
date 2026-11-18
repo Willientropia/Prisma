@@ -452,6 +452,16 @@ describe('[F10] divisão por zero e resultado acima do máximo', () => {
     expect(run(['10^400 - 10^400 = ?']).error).toBe('O resultado está acima do máximo');
     expect(run(['exp(1000) = ?']).error).toBe('O resultado está acima do máximo');
   });
+  it('revisão da v0.9.0: divisão que estoura sem divisor zero, matriz com ∞ e polo no gráfico antigo', () => {
+    expect(run(['1e300/1e-300 = ?']).error).toBe('O resultado está acima do máximo');
+    expect(run(['[1/0, 2] = ?']).error).toBe('Divisão por zero');
+    const p = evaluate({ libs: [], blocks: [{ key: 'g', type: 'grafico', lines: ['x: {var: x, valores: [-1, 0, 1]}\n', 'y: {expr: "1/x"}\n'] }] }).plots!.g as PlotResult;
+    expect([p.ys, p.error]).toEqual([[-1, null, 1], undefined]); // polo: ponto sem valor, sem mensagem
+  });
+  it('revisão da v0.9.0: o coeficiente some quando aparece como 1, não por tolerância', () => {
+    expect(fmtComplex(3, 1.00001)).toBe('3 + i');
+    expect(fmtComplex(1e12, 1.9)).not.toMatch(/ \+ i$/);
+  });
   it('∞ como limite de integral continua valendo; integral divergente mostra o valor e o aviso, sem Infinity nem NaN', () => {
     expect(run(['integral(exp(-x), x, 0, ∞) = ?']).value).toBeCloseTo(1, 8);
     const d = run(['integral(1/x, x, 0, 1) = ?']);

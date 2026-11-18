@@ -316,6 +316,12 @@ describe('[F12] bordas da leitura', () => {
     syntaxError(() => latexToLine('{v}_{\\lbrack \\rbrack}'), /Índice esperado/);
     syntaxError(() => latexToLine('\\mathrm{}'), /Nome esperado/);
   });
+  it('revisão da v0.9.0: "-" e \\sin em cadeia no LaTeX também têm limite; \\sin 2x é sin(2x)', () => {
+    syntaxError(() => latexToLine('-'.repeat(20000) + '1'), /Expressão longa demais/);
+    syntaxError(() => latexToLine('\\sin '.repeat(20000) + 'x'), /Expressão longa demais/);
+    expect(lineToLinear(latexToLine('\\sin 2x'))).toBe(lineToLinear(latexToLine('\\sin\\left(2x\\right)')));
+    expect(lineToLinear(latexToLine('-'.repeat(300) + '1'))).toBe('-'.repeat(300) + '1');
+  });
   it('B16: [[1, 2], [3, 4]] abre como matriz 2×2', () => {
     expect(toLinear(toLatex('M := [[1, 2], [3, 4]]'))).toBe('M := [1, 2; 3, 4]');
   });

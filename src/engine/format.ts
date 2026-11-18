@@ -91,7 +91,8 @@ export function fmtComplex(re: number, im: number, o: FormatOpts = DEFAULT_FORMA
   const scale = Math.max(Math.abs(re), Math.abs(im), 1e-300);
   const zero = (n: number) => Math.abs(n) <= 1e-12 * scale;
   if (zero(im)) return fmtNum(re, o);
-  const ims = Math.abs(Math.abs(im) - 1) <= 1e-12 * scale ? 'i' : `${fmtNum(Math.abs(im), o)}·i`; // coeficiente 1 some, como no SMath (i = i; F09)
+  const coef = fmtNum(Math.abs(im), o);
+  const ims = coef === fmtNum(1, o) ? 'i' : `${coef}·i`; // coeficiente que aparece como 1 some, como no SMath (i = i; F09)
   if (zero(re)) return im < 0 ? `−${ims}` : ims;
   return `${fmtNum(re, o)} ${im < 0 ? '−' : '+'} ${ims}`;
 }

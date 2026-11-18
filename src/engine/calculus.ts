@@ -24,16 +24,18 @@ export const tick = () => { if (performance.now() > deadline) throw new Error('O
 
 // avisos da linha em avaliação (a integral que não convergiu); evaluate.ts recolhe depois de cada linha
 const pending: string[] = [];
-/** Executa a avaliação de uma linha e anexa o primeiro aviso do cálculo, se houver. */
 /** A linha em curso já tem aviso de cálculo (integral sem convergência): o valor, mesmo infinito, é mostrado (A6-8-06). */
 export const hasWarning = () => pending.length > 0;
 
+/** Executa a avaliação de uma linha e anexa o primeiro aviso do cálculo, se houver. */
 export function withWarning<T extends object>(run: () => T): T & { warning?: string } {
   pending.length = 0;
   deadline = performance.now() + CALC_LIMIT_MS;
   let r: T;
   try { r = run(); } finally { deadline = Infinity; }
-  return pending.length ? { ...r, warning: pending[0] } : r;
+  const warning = pending[0];
+  pending.length = 0; // fora da linha (gráfico antigo), hasWarning não enxerga o aviso da última linha
+  return warning ? { ...r, warning } : r;
 }
 
 // nós e pesos de Gauss-Kronrod 7-15 (QUADPACK qk15); a metade positiva, do extremo ao centro
