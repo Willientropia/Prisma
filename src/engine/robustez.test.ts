@@ -1,72 +1,93 @@
 // A6-ROBUSTEZ (ADENDO 06): entradas que travavam ou estouravam a pilha terminam com mensagem em português.
 // As que podem travar rodam em outro processo, que o teste mata no prazo; assim a falha não pendura a suíte.
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { evaluate } from './evaluate';
 import type { LineResult } from './evaluate';
 
 const ROOT = join(import.meta.dirname, '..', '..');
-const KILL_MS = 6_000;
+const KILL_MS = 6_000; // só o cálculo (BUG-037)
+const START_MS = 60_000; // partida do Node e do tsx, numa máquina ocupada
 
-function runChild(lines: string[], symbolic: boolean): { ms: number; out: LineResult[] } {
-  const r = spawnSync(process.execPath, ['--import', 'tsx', 'tests/helpers/eval-cli.ts'], { cwd: ROOT, input: JSON.stringify({ lines, symbolic }), encoding: 'utf8', timeout: KILL_MS, killSignal: 'SIGKILL' });
-  if (r.error || r.status !== 0) throw new Error(`não terminou em ${KILL_MS / 1000} s (${r.error?.message ?? r.stderr})`);
-  return JSON.parse(r.stdout);
+/**
+ * Roda a avaliação noutro processo e mata no prazo. Os KILL_MS contam só o cálculo: começam quando o processo
+ * avisa "pronto", depois de o Node e o tsx carregarem o motor, como o prazo do worker no BUG-032 (BUG-037).
+ * A partida tem teto próprio, folgado, para uma máquina ocupada não pendurar a suíte.
+ */
+function runChild(lines: string[], symbolic: boolean, opts: { partidaMs?: number } = {}): Promise<{ ms: number; out: LineResult[] }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, ['--import', 'tsx', 'tests/helpers/eval-cli.ts'], { cwd: ROOT, env: { ...process.env, PRISMA_EVAL_PARTIDA_MS: String(opts.partidaMs ?? 0) } });
+    let [stdout, stderr, killed] = ['', '', ''];
+    const kill = (why: string) => { killed = why; child.kill('SIGKILL'); };
+    const startTimer = setTimeout(() => kill(`não começou a calcular em ${START_MS / 1000} s`), START_MS);
+    let calcTimer: ReturnType<typeof setTimeout> | undefined;
+    child.stdout.on('data', (c) => (stdout += c));
+    child.stderr.on('data', (c) => {
+      stderr += c;
+      if (!calcTimer && stderr.includes('pronto\n')) { clearTimeout(startTimer); calcTimer = setTimeout(() => kill(`não terminou em ${KILL_MS / 1000} s`), KILL_MS); }
+    });
+    child.on('close', (code) => {
+      clearTimeout(startTimer); clearTimeout(calcTimer);
+      if (killed || code !== 0) reject(new Error(killed || `saiu com código ${code} (${stderr})`));
+      else resolve(JSON.parse(stdout));
+    });
+    child.stdin.end(JSON.stringify({ lines, symbolic }));
+  });
 }
 const chain = (n: number, step: (k: number) => string) => Array.from({ length: n }, (_, k) => step(k + 1));
 
 describe('[A6-ROBUSTEZ-01] cadeia de definições com nome indefinido (math.simplify)', { timeout: 30_000 }, () => {
-  it('b1 := b0*2 + 1 ... b20 = ? na folha termina em tempo limitado @tempo', () => {
-    const { ms, out } = runChild([...chain(20, (k) => `b${k} := b${k - 1}*2 + 1`), 'b20 = ?'], true);
+  it('b1 := b0*2 + 1 ... b20 = ? na folha termina em tempo limitado @tempo', async () => {
+    const { ms, out } = await runChild([...chain(20, (k) => `b${k} := b${k - 1}*2 + 1`), 'b20 = ?'], true);
     expect(ms).toBeLessThan(3000);
     expect(out.at(-1)!.symbolic).toContain('b0'); // continua em aberto, sem erro
   });
-  it('c1 := c0*R + V = ? em cadeia termina em tempo limitado', () => {
-    const { ms, out } = runChild(chain(20, (k) => `c${k} := c${k - 1}*R + V = ?`), true);
+  it('c1 := c0*R + V = ? em cadeia termina em tempo limitado', async () => {
+    const { ms, out } = await runChild(chain(20, (k) => `c${k} := c${k - 1}*R + V = ?`), true);
     expect(ms).toBeLessThan(3000);
     expect(out.at(-1)!.symbolic).toContain('c0');
   });
 });
 
 describe('[A6-ROBUSTEZ-02] cálculo aninhado tem prazo', { timeout: 30_000 }, () => {
-  it('integral dentro de integral termina com mensagem de tempo limite', () => {
-    const { ms, out } = runChild(['integral(integral(sin(1/(x*y)), y, 0, 0.001), x, 0, 0.001) = ?'], false);
+  it('integral dentro de integral termina com mensagem de tempo limite', async () => {
+    const { ms, out } = await runChild(['integral(integral(sin(1/(x*y)), y, 0, 0.001), x, 0, 0.001) = ?'], false);
     expect(ms).toBeLessThan(5000);
     expect(out[0].error).toMatch(/tempo limite/);
   });
-  it('sum dentro de sum: o limite vale para a conta toda', () => {
-    const { ms, out } = runChild(['sum(sum(i*j, j, 1, 900000), i, 1, 900000) = ?'], false);
+  it('sum dentro de sum: o limite vale para a conta toda', async () => {
+    const { ms, out } = await runChild(['sum(sum(i*j, j, 1, 900000), i, 1, 900000) = ?'], false);
     expect(ms).toBeLessThan(5000);
     expect(out[0].error).toMatch(/tempo limite/);
   });
 });
 
 describe('[F06] laços com limite no worker (B7 da AUDITORIA-FABLE)', { timeout: 30_000 }, () => {
-  it('range(1, 1/0): erro em português na hora, sem alocar sem fim', () => {
-    const { ms, out } = runChild(['range(1, 1/0) = ?'], false);
+  it('range(1, 1/0): erro em português na hora, sem alocar sem fim', async () => {
+    const { ms, out } = await runChild(['range(1, 1/0) = ?'], false);
     expect(ms).toBeLessThan(1000);
     expect(out[0].error).toBe('range: elementos demais (máximo de 1 000 000)');
   });
-  it('range(1, 10^8): o mesmo erro, sem gastar 15 s', () => {
-    const { ms, out } = runChild(['range(1, 10^8) = ?'], false);
+  it('range(1, 10^8): o mesmo erro, sem gastar 15 s', async () => {
+    const { ms, out } = await runChild(['range(1, 10^8) = ?'], false);
     expect(ms).toBeLessThan(1000);
     expect(out[0].error).toBe('range: elementos demais (máximo de 1 000 000)');
   });
-  it('for com 1 000 000 de voltas tem o prazo da linha', () => {
-    const { ms, out } = runChild(['for(i, range(1, 10^6), q[i] := i^2) = ?'], false);
+  it('for com 1 000 000 de voltas tem o prazo da linha', async () => {
+    const { ms, out } = await runChild(['for(i, range(1, 10^6), q[i] := i^2) = ?'], false);
     expect(ms).toBeLessThan(3000);
     expect(out[0].error).toMatch(/tempo limite/);
   });
-  it('range e for pequenos continuam iguais', () => {
-    const { out } = runChild(['v := range(1, 4)', 'for(i, range(1, 3), w[i] := 2*i)', 'w = ?', 'range(0, 0.3, 0.1) = ?', 'range(5, 1) = ?'], false);
+  it('range e for pequenos continuam iguais', async () => {
+    const { out } = await runChild(['v := range(1, 4)', 'for(i, range(1, 3), w[i] := 2*i)', 'w = ?', 'range(0, 0.3, 0.1) = ?', 'range(5, 1) = ?'], false);
     expect(out[0].error).toBeUndefined();
     expect(out[2].text).toBe('[2 | 4 | 6]');
     expect(out[3].text).toBe('[0 | 0,1 | 0,2 | 0,3]');
     expect(out[4].text).toBe('[5 | 4 | 3 | 2 | 1]');
   });
-  it('range com limite NaN dá erro de limite, não de elementos demais', () => {
-    expect(runChild(['range(0, 0/0) = ?'], false).out[0].error).toBe('range: limites inválidos');
+  it('range com limite NaN dá erro de limite, não de elementos demais', async () => {
+    expect((await runChild(['range(0, 0/0) = ?'], false)).out[0].error).toBe('range: limites inválidos');
   });
 });
 
@@ -103,10 +124,17 @@ describe('[A6-ROBUSTEZ-03] definição circular', { timeout: 30_000 }, () => {
     const r = evaluate({ libs: [], symbolic: false, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
     expect([r.at(-2)!.text, r.at(-1)!.text]).toEqual(['302', '12']);
   });
-  it('cadeia longa de nomes em aberto: termina em tempo limitado e sem erro em inglês @tempo', () => {
-    const { ms, out } = runChild([...chain(1000, (k) => `d${k} := d${k - 1} + 1`), 'd1000 = ?'], true);
+  it('cadeia longa de nomes em aberto: termina em tempo limitado e sem erro em inglês @tempo', async () => {
+    const { ms, out } = await runChild([...chain(1000, (k) => `d${k} := d${k - 1} + 1`), 'd1000 = ?'], true);
     expect(ms).toBeLessThan(5000);
     expect(out.at(-1)!.error ?? '').not.toMatch(/call stack/);
     expect(out.at(-1)!.symbolic).toContain('d0');
+  });
+});
+
+describe('[BUG-037] o prazo de 6 s do processo conta só o cálculo, não a partida do Node', { timeout: 30_000 }, () => {
+  it('partida de 7 s numa máquina ocupada e conta trivial: termina com o resultado, sem estourar o prazo', async () => {
+    const { out } = await runChild(['1 + 1 = ?'], false, { partidaMs: 7_000 });
+    expect(out[0].numText).toBe('2');
   });
 });
