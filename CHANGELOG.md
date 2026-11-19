@@ -5,6 +5,7 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 ## Em andamento
 
 - **F13** Levantamento do que falta para a folha igualar o SMath, em `docs/FOLHA-CHECKLIST.md` (seleção, arrasto, copiar/colar, desfazer, áreas, teclado, formatação), sem mudança de código. Pendente: o usuário conferir no SMath os itens marcados "conferir" antes de virarem ticket.
+- **F14** Copiar, recortar e colar regiões da folha: `Ctrl+C`, `Ctrl+X` e `Ctrl+V` com a folha em foco, e Recortar, Copiar e Apagar no botão direito da região, Colar no da área vazia. Cola na cruz (ou no ponto do clique), mantendo as distâncias; sem cruz, abaixo da última região. A cópia ganha id novo e mantém moldura, desativado, casas e descrição; recortar e colar mantém o id. Colar e recortar desfazem em um passo. A área de transferência leva os blocos do arquivo, então colar em outra folha funciona. Pendente: colar no caderno; conferir no SMath onde cola sem cruz. No VPS, os testes 06-40 (152 ms de 150) e 06-41 (espera fixa de 400 ms) do gráfico falham por tempo, também sem esta mudança.
 
 ## v0.9.0 — 2026-11-19
 

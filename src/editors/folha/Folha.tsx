@@ -24,6 +24,7 @@ import { useGraphTools } from '../grafico/ferramentas';
 import { isGraph2DBody, NEW_GRAPH, seriesOf, setSeries } from '../../format/grafico';
 import type { Graph2D } from '../../engine/grafico';
 import { sheetItems, type LibFn } from './assistente';
+import { clipBlocks, clipText, placeBlocks, withPos } from './blocos';
 import { baseItems, sortItems } from '../../math/assistente';
 import { allFunctions } from '../../commands/library';
 import s from '../editors.module.css';
@@ -68,17 +69,8 @@ function regionsOf(text: string): Region[] {
   return out;
 }
 
-/** Troca (ou acrescenta) x= e y= na linha de abertura do bloco. */
-export function withPos(fenceLine: string, x: number, y: number): string {
-  const nl = /\r?\n$/.exec(fenceLine)?.[0] ?? '';
-  const head = fenceLine.slice(0, fenceLine.length - nl.length);
-  const m = /\{([^}]*)\}/.exec(head);
-  if (!m) return `${head} {x=${x} y=${y}}${nl}`;
-  let inner = m[1];
-  inner = /\bx=\S+/.test(inner) ? inner.replace(/\bx=\S+/, `x=${x}`) : `${inner} x=${x}`;
-  inner = /\by=\S+/.test(inner) ? inner.replace(/\by=\S+/, `y=${y}`) : `${inner} y=${y}`;
-  return head.replace(m[0], `{${inner.trim()}}`) + nl;
-}
+/** Regiões copiadas por último: valem quando a área de transferência do sistema não entrega o texto (menu, permissão negada). */
+let lastClip = '';
 
 function useStale(): boolean {
   const calculating = useWorkspace((x) => x.calculating);
@@ -187,6 +179,9 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     e.stopPropagation();
     const a = r.seg.attrs;
     setMenu({ x: e.clientX, y: e.clientY, items: [
+      { label: 'Recortar', run: () => copyRegions(menuIds(r.id), true) },
+      { label: 'Copiar', run: () => copyRegions(menuIds(r.id), false) },
+      { label: 'Apagar', run: () => removeRegions(menuIds(r.id)) },
       { label: 'desativado' in a ? 'Ativar avaliação' : 'Desativar avaliação', run: () => setAttr(r.id, 'desativado', 'desativado' in a ? null : true) },
       { label: frameOn(menuIds(r.id)) ? 'Tirar moldura' : 'Moldura', run: () => toggleFrame(menuIds(r.id)) },
       ...(EVALUATED.has(r.seg.type) ? [{ label: 'Formato do resultado...', run: () => set({ formatDialog: { scope: 'region', docId: doc.id, regionId: r.id } }) }] : []),
@@ -267,6 +262,37 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       edit(doc.id, r.start - extra, r.end, '');
     }
     setSelected(new Set());
+  };
+
+  /** Copiar e recortar (F14): os blocos das regiões vão para a área de transferência; recortar apaga, em um passo de desfazer. */
+  const copyRegions = (ids: string[], cut: boolean, write?: (t: string) => void) => {
+    const rs = fresh().filter((r) => ids.includes(r.id) && r.seg.type !== 'area' && r.seg.type !== 'fim-area');
+    if (!rs.length) return;
+    lastClip = clipText(rs.map((r) => r.seg.raw));
+    if (write) write(lastClip);
+    else void navigator.clipboard?.writeText(lastClip).catch(() => {});
+    if (cut) removeRegions(rs.map((r) => r.id));
+    const n = rs.length;
+    set({ status: `${n === 1 ? '1 região' : `${n} regiões`} ${cut ? 'recortada' : 'copiada'}${n === 1 ? '' : 's'}` });
+  };
+  /** Colar (F14): na cruz, no ponto do menu ou, sem nenhum dos dois, abaixo da última região; as coladas ficam selecionadas. */
+  const pasteRegions = (text: string, at?: { x: number; y: number }) => {
+    const bs = clipBlocks(text || lastClip);
+    if (!bs.length) return set({ status: 'Colar: o texto copiado não tem regiões da folha' });
+    const rs = fresh();
+    const bottom = (r: Region) => num(r.seg, 'y') + (sheet.current?.querySelector<HTMLElement>(`[data-region="${r.id}"]`)?.offsetHeight ?? GRID);
+    const where = at ?? crossRef.current ?? { x: Math.min(...bs.map((b) => num(b, 'x'))), y: rs.length ? snap(Math.max(...rs.map(bottom))) + GRID : GRID * 2 };
+    const { text: add, ids } = placeBlocks(bs, new Set(rs.map((r) => r.id)), where);
+    const t = textNow();
+    edit(doc.id, t.length, t.length, `${t.endsWith('\n\n') ? '' : t.endsWith('\n') ? '\n' : '\n\n'}${add}`);
+    setSelected(new Set(ids));
+    setCross(null);
+    sheet.current?.focus();
+  };
+  const pasteFromMenu = (at: { x: number; y: number }) => {
+    const read = navigator.clipboard?.readText?.();
+    if (!read) return pasteRegions('', at);
+    void read.then((t) => pasteRegions(t, at), () => pasteRegions('', at));
   };
 
   /** Espaço numa região de cálculo com só um nome: vira região de texto, com a palavra, o espaço e o cursor no fim (A6-3). */
@@ -557,10 +583,18 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     <div className={s.sheetScroll}>
       <div ref={sheet} className={s.sheet} style={{ width: pageW, height: pageH }} tabIndex={0} aria-label="Folha"
         onPointerDown={onSheetDown} onKeyDown={onSheetKey}
-        onContextMenu={(e) => { // área vazia: formato do documento (F-CONFIG)
+        // Ctrl+C, Ctrl+X e Ctrl+V com a folha em foco (sem região em edição); dentro de um campo vale o do campo (F14)
+        onCopy={(e) => { if (e.target !== sheet.current || !selected.size) return; e.preventDefault(); copyRegions([...selected], false, (t) => e.clipboardData.setData('text/plain', t)); }}
+        onCut={(e) => { if (e.target !== sheet.current || !selected.size) return; e.preventDefault(); copyRegions([...selected], true, (t) => e.clipboardData.setData('text/plain', t)); }}
+        onPaste={(e) => { if (e.target !== sheet.current) return; e.preventDefault(); pasteRegions(e.clipboardData.getData('text/plain')); }}
+        onContextMenu={(e) => { // área vazia: colar no ponto do clique (F14) e formato do documento (F-CONFIG)
           if (e.target !== e.currentTarget) return;
           e.preventDefault();
-          setMenu({ x: e.clientX, y: e.clientY, items: [{ label: 'Formato do documento...', run: () => set({ formatDialog: { scope: 'doc', docId: doc.id } }) }] });
+          const p = at(e);
+          setMenu({ x: e.clientX, y: e.clientY, items: [
+            { label: 'Colar', run: () => pasteFromMenu({ x: pos(p.x), y: pos(p.y) }) },
+            { label: 'Formato do documento...', run: () => set({ formatDialog: { scope: 'doc', docId: doc.id } }) },
+          ] });
         }}>
         {regions.filter((r) => r.seg.type !== 'area' && r.seg.type !== 'fim-area' && !hidden(r.id)).map(regionView)}
         {areas.map((a) => {

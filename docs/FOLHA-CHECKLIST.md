@@ -37,12 +37,12 @@ Legenda da coluna "Situação":
 
 | # | Item | Situação | Observação |
 |---|------|----------|------------|
-| C1 | `Ctrl+C` / `Ctrl+X` nas regiões selecionadas | falta | Não há área de transferência de regiões na folha |
-| C2 | `Ctrl+V` cola na cruz, mantendo as distâncias entre as regiões | falta | Sem cruz, colar abaixo da última região (a conferir no SMath) |
-| C3 | Ids novos ao colar (`calc-7` não pode repetir) e atributos mantidos (moldura, desativado, casas, descrição) | falta | `nextId` já existe |
-| C4 | Colar entre duas folhas abertas, e de uma folha para o caderno | falta | Formato na área de transferência: os blocos do próprio arquivo, que já são texto |
+| C1 | `Ctrl+C` / `Ctrl+X` nas regiões selecionadas | existe | F14 |
+| C2 | `Ctrl+V` cola na cruz, mantendo as distâncias entre as regiões | existe | F14. Sem cruz, cola abaixo da última região, no mesmo x (conferir no SMath se é assim) |
+| C3 | Ids novos ao colar (`calc-7` não pode repetir) e atributos mantidos (moldura, desativado, casas, descrição) | existe | F14. Recortar e colar mantém o id original |
+| C4 | Colar entre duas folhas abertas, e de uma folha para o caderno | entre folhas existe; caderno falta | F14: a área de transferência leva os blocos do arquivo, então outra folha lê igual. No caderno, colar ainda não lê blocos |
 | C5 | Colar texto puro de fora (ex.: `x := 2` de um e-mail) cria uma região | conferir | |
-| C6 | Recortar, Copiar, Colar e Apagar no menu do botão direito | falta | O menu hoje só tem desativar, moldura, formato, descrição e alinhar |
+| C6 | Recortar, Copiar, Colar e Apagar no menu do botão direito | existe | F14. Colar fica no menu da área vazia e cola no ponto do clique |
 | C7 | Copiar um resultado como texto (ex.: `20 V`) | conferir | |
 
 ## 4. Desfazer
@@ -50,7 +50,7 @@ Legenda da coluna "Situação":
 | # | Item | Situação | Observação |
 |---|------|----------|------------|
 | D1 | `Ctrl+Z` / `Ctrl+Y` no documento (digitação, mover, moldura, apagar) | existe | `src/store/historico.ts`, 200 passos |
-| D2 | Desfazer colar e recortar em um passo | falta | Depende do C1 e C2 |
+| D2 | Desfazer colar e recortar em um passo | existe | F14 |
 | D3 | Depois de desfazer, a seleção e a cruz voltam para a região afetada | falta | Hoje só o texto volta; a seleção fica onde estava |
 | D4 | `Ctrl+Z` dentro de uma região em edição desfaz a digitação daquela linha, não o documento | conferir | Escrever o teste de navegador primeiro para ver o que acontece hoje |
 
