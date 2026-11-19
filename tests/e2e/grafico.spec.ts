@@ -98,7 +98,12 @@ test('[06-41] vista ajustada é salva e reaberta igual; duplo clique volta à au
   await page.mouse.wheel(0, -100);
   await expect.poll(() => dev(page).text()).toMatch(/x: \{min: [-\d.]+, max: [-\d.]+\}\ny: \{min: /);
   await expect.poll(async () => JSON.parse((await svg(page).getAttribute('data-view'))!).x[0]).not.toBe(-5);
-  await page.waitForTimeout(400); // o cálculo com a vista gravada volta
+  // o cálculo com a vista gravada volta: espera a tela mostrar a vista do arquivo (antes, 400 ms fixos, que não bastavam numa máquina lenta)
+  const fileView = async () => {
+    const m = /x: \{min: ([-\d.]+), max: ([-\d.]+)\}\ny: \{min: ([-\d.]+), max: ([-\d.]+)\}/.exec(await dev(page).text());
+    return m ? JSON.stringify({ x: [+m[1], +m[2]], y: [+m[3], +m[4]] }) : null;
+  };
+  await expect.poll(async () => JSON.stringify(JSON.parse((await svg(page).getAttribute('data-view'))!)) === (await fileView())).toBe(true);
   const saved = await svg(page).getAttribute('data-view');
   await dev(page).write(`${DOCS}/vista2.prsf`, await dev(page).text());
   await dev(page).open(`${DOCS}/vista2.prsf`);

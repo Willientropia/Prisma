@@ -289,7 +289,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     edit(doc.id, t.length, t.length, `${t.endsWith('\n\n') ? '' : t.endsWith('\n') ? '\n' : '\n\n'}${add}`);
     setSelected(new Set(ids));
     setCross(null);
-    sheet.current?.focus({ preventScroll: true });
+    sheet.current?.focus();
   };
   const pasteFromMenu = (at: { x: number; y: number }) => {
     const read = navigator.clipboard?.readText?.();
@@ -384,7 +384,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         setSelected(new Set());
         setCross({ x: pos(p0.x), y: pos(p0.y) });
       }
-      sheet.current?.focus({ preventScroll: true });
+      sheet.current?.focus();
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -397,7 +397,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     e.stopPropagation();
     setSelected((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
     setCross(null);
-    sheet.current?.focus({ preventScroll: true }); // sai da região em edição; Ctrl+C e Delete valem para a seleção
+    sheet.current?.focus(); // sai da região em edição; Ctrl+C e Delete valem para a seleção
   };
 
   // arrastar pela moldura: move com encaixe na grade
@@ -415,7 +415,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       setDrag(null);
       const { dx, dy } = groupDelta(ids, snap(ev.clientX - p0.x), snap(ev.clientY - p0.y));
       if (dx || dy) moveRegions(ids, dx, dy);
-      sheet.current?.focus({ preventScroll: true });
+      sheet.current?.focus();
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -515,7 +515,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const el = sheet.current?.querySelector<HTMLElement>(`[data-region="${id}"]`);
     setSelected(new Set());
     setCross({ x: num(r.seg, 'x'), y: snap(num(r.seg, 'y') + (el?.offsetHeight ?? GRID) + GRID / 2) });
-    sheet.current?.focus({ preventScroll: true });
+    sheet.current?.focus();
   };
 
   /** Shift+Enter: confirma e cria uma região logo abaixo, alinhada à esquerda (B4). */
