@@ -417,18 +417,24 @@ export function MathField(props: FieldProps) {
     mf.value = p.current.latex;
 
     const state: FieldState = { script: null, edited: false }; // edited: houve digitação desde o foco ou o último commit
+    /** Canto da lista: logo abaixo do campo, a partir do caractere do cursor. */
+    const listAt = () => {
+      const r = host.current!.getBoundingClientRect();
+      const b = mf.getElementInfo(Math.max(0, mf.position))?.bounds;
+      return { x: Math.max(0, Math.min((b?.right ?? r.left), window.innerWidth - 490)), y: r.bottom + 2 };
+    };
     state.paint = () => {
       const a = state.assist;
       if (!a) { setView(null); return; }
-      const r = host.current!.getBoundingClientRect();
-      const b = mf.getElementInfo(Math.max(0, mf.position))?.bounds;
+      // na região recém-criada o MathLive pode ainda não ter desenhado o caractere: mede de novo no quadro seguinte
+      requestAnimationFrame(() => { if (state.assist !== a || !host.current) return; const q = listAt(); setView((v) => (v && (v.x !== q.x || v.y !== q.y) ? { ...v, ...q } : v)); });
       const it = a.shown[a.sel];
       setView({
         // ponytail: só as 100 primeiras linhas são desenhadas (8 visíveis); mais que isso, o nome digitado filtra
         rows: a.shown.slice(0, ROWS).map((x) => ({ key: `${x.kind}:${x.name}`, name: x.name, kind: x.kind, nameLatex: x.nameLatex, category: CATEGORY[x.kind] })),
         sel: a.sel,
         detail: { nameLatex: it.nameLatex, title: it.title, line2: it.detail, note: it.note },
-        x: Math.max(0, Math.min((b?.right ?? r.left), window.innerWidth - 490)), y: r.bottom + 2,
+        ...listAt(),
       });
     };
     pick.current = {
