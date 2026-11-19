@@ -2,6 +2,10 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
+## Em andamento
+
+- **F13** Levantamento do que falta para a folha igualar o SMath, em `docs/FOLHA-CHECKLIST.md` (seleção, arrasto, copiar/colar, desfazer, áreas, teclado, formatação), sem mudança de código. Pendente: o usuário conferir no SMath os itens marcados "conferir" antes de virarem ticket.
+
 ## v0.9.0 — 2026-11-19
 
 F09 a F12b (docs/TICKETS-FOLHA.md). verify:full aprovado: 800 testes, nenhuma falha; app real: 2 ok.

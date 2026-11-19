@@ -68,6 +68,6 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 
 | # | Item | Modelo |
 |---|------|--------|
-| F13 | Levantar o que falta para a folha igualar o SMath no uso do usuário → `docs/FOLHA-CHECKLIST.md` (seleção, arrasto, copiar/colar, desfazer, áreas, teclado, formatação) | Opus, sessão curta, só ADENDO-05 e `Folha.tsx` |
+| F13 | **Feito (19/11): `docs/FOLHA-CHECKLIST.md`, itens "conferir" esperam o usuário no SMath.** Levantar o que falta para a folha igualar o SMath no uso do usuário → `docs/FOLHA-CHECKLIST.md` (seleção, arrasto, copiar/colar, desfazer, áreas, teclado, formatação) | Opus, sessão curta, só ADENDO-05 e `Folha.tsx` |
 | F14+ | Um ticket por item do checklist | Sonnet |
 | F-U1 | Unidades do usuário em biblioteca (ex.: `kWp` como apelido de `kW`). **Pendente:** o usuário confirmar no SMath como ele define unidade nova. Hoje as unidades extras só vêm de `src/engine/math.ts` (`createUnit`: Wp, dia, rad, deg, rpm) | Opus |
