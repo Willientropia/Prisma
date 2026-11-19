@@ -2,7 +2,9 @@
 
 Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
 
-## Em andamento
+## v0.9.0 — 2026-11-19
+
+F09 a F12b (docs/TICKETS-FOLHA.md). verify:full aprovado: 800 testes, nenhuma falha; app real: 2 ok.
 
 - **F09** Nomes que valem sem definir (B8): decisão do usuário de deixar como está (`E`, `tau`, `phi` e os outros nomes do math.js continuam valendo). O usuário conferiu no SMath que `e` e `i` comuns já se comportam como lá. Registrado em docs/adendo-05.md, sem mudança de código. O valor i agora aparece como `i` (e `3 + i`, `−i`), sem o coeficiente 1, como no SMath; E8-29 (golden, smath.test e smath.spec) passou a esperar isso, com autorização do usuário (18/11).
 
@@ -19,6 +21,8 @@ Cada versão tem uma tag `vX.Y.Z` no git com esta mesma descrição.
   - Pendente, sem mudança de valor: `a^(b)` volta como `a^b` e `1 Ω*mm^2/m*A/mm^2` volta com os termos reordenados quando a linha é editada.
 
 - **F12b / BUG-017** O escape do nome de atributo em `withAttr` (src/format/doc.ts) estava corrompido no commit; `withAttr(..., "a.b", null)` não removia o atributo. Hoje não afetava nada (os atributos só têm letras), mas agora está coberto por teste.
+
+- **Revisão da versão:** cadeia longa de `-` ou de `\sin` colada em LaTeX dá "Expressão longa demais"; `\sin 2x` é sin(2x); o `i` sem coeficiente é decidido pelo texto mostrado; divisão que estoura sem divisor zero (`1e300/1e-300`) dá "O resultado está acima do máximo"; matriz com infinito é erro; polo no gráfico antigo volta a ser só um ponto vazio; o aviso de integral é limpo ao fim da linha.
 
 ## v0.8.0 — 2026-11-17
 
