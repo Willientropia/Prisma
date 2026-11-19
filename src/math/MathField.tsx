@@ -525,6 +525,7 @@ export function MathField(props: FieldProps) {
       const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys(), ...queued.splice(0)];
       stopWaiting();
       let rest: Key[] = [];
+      const before = mf.value;
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         if (k.latex) { mf.insert(k.latex, { selectionMode: 'placeholder', format: 'latex' }); state.edited = true; p.current.onInput?.(mf.value); continue; } // na ordem das teclas
@@ -532,6 +533,10 @@ export function MathField(props: FieldProps) {
         // a tecla tirou o campo de foco (Enter, Tab, Esc): as seguintes não são deste campo (BUG-034)
         if (i < keys.length - 1 && document.activeElement !== mf) { rest = keys.slice(i + 1); break; }
       }
+      // as teclas aplicadas são digitação: marca a edição e avisa a linha já, sem esperar o "input" do MathLive, que
+      // sob carga chega depois de uma saída rápida (Ctrl+W, clique fora) e a linha não era gravada (BUG-036)
+      // só quando mudaram o conteúdo: um Backspace que apaga a linha vazia do caderno não é edição da linha seguinte
+      if (mf.value !== before && document.activeElement === mf) { state.edited = true; p.current.onInput?.(mf.value); }
       p.current.onReady?.(); // antes de repassar: a folha deixa de guardar teclas para esta região
       forwardKeys(rest);
     };

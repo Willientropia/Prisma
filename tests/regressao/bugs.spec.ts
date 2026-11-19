@@ -456,3 +456,15 @@ test('[BUG-034] Enter e teclas digitadas enquanto a região nova monta: as que v
   await page.keyboard.press('Enter');
   await expect.poll(() => dev(page).text(), { timeout: 10_000 }).toMatch(/```calc \{#calc-1 x=100 y=100\}\nx := 2\n```[\s\S]*```calc \{#calc-2 x=100 y=\d+\}\ny := 3\n```/);
 });
+
+test('[BUG-036] teclas digitadas enquanto a região nova monta contam como edição: sair logo depois grava a linha', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  // sob carga, o evento "input" do MathLive chega depois da saída: aqui ele é segurado até lá (falhava no verify do VPS)
+  await page.evaluate(() => document.addEventListener('input', (e) => { if ((e.target as Element).tagName === 'MATH-FIELD') e.stopImmediatePropagation(); }, true));
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  await page.keyboard.type('L:5'); // chega antes de o campo ter foco: guardada e aplicada quando ele fica pronto
+  await expect.poll(async () => (await fieldValues(page)).some((v) => v.endsWith('5'))).toBe(true);
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()); // sai antes de qualquer evento de digitação
+  await expect.poll(() => dev(page).text()).toContain('```calc {#calc-1 x=100 y=100}\nL := 5\n```');
+});
