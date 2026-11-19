@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statfsSync, writeFileSync 
 import { join } from 'node:path';
 import { checkMatriz } from './check-matriz';
 import { measureCoverage } from './coverage';
-import { diskWarning, saveFailure } from './falhas';
+import { diskWarning, folderBytes, quotaProblem, saveFailure } from './falhas';
 import { renderReport, type Origin, type Step } from './report';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -33,6 +33,11 @@ function step(name: string, cmd: string, env: Record<string, string> = {}): stri
 }
 const readJson = <T>(f: string): T | null => (existsSync(f) ? (JSON.parse(readFileSync(f, 'utf8')) as T) : null);
 
+const overQuota = quotaProblem(folderBytes(ROOT)); // limite de 60 GB do projeto: para antes de compilar qualquer coisa
+if (overQuota) {
+  console.error(`\n${overQuota}\n`);
+  process.exit(1);
+}
 const lowDisk = diskWarning((({ bavail, bsize }) => bavail * bsize)(statfsSync(ROOT)));
 if (lowDisk) console.warn(`\n${lowDisk}\n`);
 

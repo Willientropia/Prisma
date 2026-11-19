@@ -9,6 +9,18 @@ Lido em toda sessão, por qualquer modelo. Siga sempre.
 - Não varra o repositório. Para achar algo, use Grep ou o subagente `explorador`.
 - Sonnet por padrão. Opus com plano só para desenho grande (ribbon, gráfico 2D, importação do `.sm`).
 - Resposta final curta: o que mudou, arquivos, testes rodados. Sem recapitular passos.
+- Onde paramos, pendências e preferências do usuário: `docs/CONTINUAR.md`. Leia no início de uma sessão nova.
+
+## Disco: o projeto nunca passa de 60 GB (regra absoluta, decisão do usuário em 19/11)
+
+O Prisma roda num VPS. A pasta do projeto, com `node_modules`, `src-tauri/target`, `test-results` e tudo o mais, **nunca** pode passar de 60 GB. Não há exceção, nem com pedido de pressa.
+
+- `npm run espaco` mostra o tamanho. O `verify`, o `verify:full` e o `test:app` medem antes de começar e **param em 55 GB**: os 5 GB de folga são para uma compilação do Rust, que cresce GB de uma vez.
+- Antes de qualquer compilação (`cargo`, `tauri build`, `tauri dev`) ou instalação (`npm install`, navegadores do Playwright), rode `npm run espaco`. A partir de 45 GB, limpe antes de seguir.
+- Limpeza, da maior para a menor: `cargo clean --manifest-path src-tauri/Cargo.toml` (o `target` passa de 10 GB; ele se refaz na próxima compilação), `test-results/`, `playwright-report/`, `.vitest/`, `dist/`. O `verify` já guarda só as 5 últimas falhas do Playwright.
+- Proibido: worktree, segunda cópia do repositório, `git clone` dentro do projeto, guardar instalador, `.zip`, vídeo ou dump dentro da pasta, e desligar ou contornar a medição dos scripts.
+- Se não der para ficar abaixo de 55 GB sem apagar algo do usuário ou do git, pare e pergunte. Nunca apague arquivo versionado nem arquivo do usuário para ganhar espaço.
+- A garantia física (pasta montada numa imagem de 60 GB) está em `docs/CONTINUAR.md`, seção "VPS".
 
 ## Índice dos documentos (na raiz)
 

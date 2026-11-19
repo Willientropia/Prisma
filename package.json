@@ -17,7 +17,8 @@
     "test:commit": "tsc --noEmit && vitest run --project unit --mode commit",
     "lint": "eslint .",
     "check:matriz": "tsx scripts/check-matriz.ts",
-    "verify:rapido": "tsx scripts/verify-rapido.ts",
+    "espaco": "tsx scripts/espaco.ts",
+    "verify:rapido":"tsx scripts/verify-rapido.ts",
     "verify": "tsx scripts/verify.ts",
     "verify:full": "tsx scripts/verify.ts --full",
     "prepare": "simple-git-hooks"

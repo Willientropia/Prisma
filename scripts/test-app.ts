@@ -6,9 +6,15 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } fro
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { run } from 'node:test';
+import { folderBytes, quotaProblem } from './falhas';
 
 const ROOT = join(import.meta.dirname, '..');
-const sh = (cmd: string, env: NodeJS.ProcessEnv = process.env) => { const r = spawnSync(cmd, { cwd: ROOT, shell: true, stdio: 'inherit', env }); if (r.status !== 0) throw new Error(`falhou: ${cmd}`); };
+const overQuota = quotaProblem(folderBytes(ROOT)); // limite de 60 GB: a compilação abaixo cresce alguns GB
+if (overQuota) {
+  console.error(overQuota);
+  process.exit(1);
+}
+const sh =(cmd: string, env: NodeJS.ProcessEnv = process.env) => { const r = spawnSync(cmd, { cwd: ROOT, shell: true, stdio: 'inherit', env }); if (r.status !== 0) throw new Error(`falhou: ${cmd}`); };
 
 // 1. msedgedriver da mesma versão do Edge/WebView2 instalado
 const edge = spawnSync('powershell', ['-NoProfile', '-Command', '(Get-Item "${env:ProgramFiles(x86)}\\Microsoft\\Edge\\Application\\msedge.exe").VersionInfo.ProductVersion'], { encoding: 'utf8' }).stdout.trim();

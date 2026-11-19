@@ -1,9 +1,9 @@
 // F-INST: o verify guarda a falha do Playwright e avisa quando falta disco
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { diskWarning, saveFailure } from '../../scripts/falhas';
+import { diskWarning, folderBytes, quotaProblem, saveFailure } from '../../scripts/falhas';
 
 describe('F-INST', () => {
   it('[FINST-01] falha do Playwright fica em test-results/falhas/<data-hora>/ com a saída e o relatório', () => {
@@ -32,5 +32,19 @@ describe('F-INST', () => {
     expect(diskWarning(4.9 * GB)).toMatch(/menos de 5 GB/);
     expect(diskWarning(5 * GB)).toBeNull();
     expect(diskWarning(20 * GB)).toBeNull();
+  });
+
+  it('[FINST-03] limite de 60 GB do projeto: para em 55 GB, mede a pasta e guarda só as 5 últimas falhas', () => {
+    expect(quotaProblem(54.9e9)).toBeNull();
+    expect(quotaProblem(55e9)).toMatch(/55,0 GB.*limite é 60 GB/);
+    expect(quotaProblem(61e9)).toMatch(/^PARADO/);
+    const out = mkdtempSync(join(tmpdir(), 'falhas-'));
+    try {
+      for (let m = 0; m < 7; m++) saveFailure(out, 'x'.repeat(100), new Date(2026, 10, 19, 8, m, 0));
+      expect(readdirSync(join(out, 'falhas'))).toEqual(['2026-11-19_08-02-00', '2026-11-19_08-03-00', '2026-11-19_08-04-00', '2026-11-19_08-05-00', '2026-11-19_08-06-00']);
+      expect(folderBytes(out)).toBe(500);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
   });
 });
