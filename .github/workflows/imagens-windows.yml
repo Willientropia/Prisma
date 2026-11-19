@@ -20,9 +20,9 @@ jobs:
       - name: Testes visuais contra as imagens atuais
         continue-on-error: true
         run: npx playwright test --project=visual --reporter=list
-      - name: Imagens novas (só as que mudaram)
+      - name: Imagens novas (todas, para aprovar)
         continue-on-error: true
-        run: npx playwright test --project=visual --update-snapshots --reporter=list
+        run: npx playwright test --project=visual --update-snapshots=all --reporter=list
       - uses: actions/upload-artifact@v4
         with:
           name: imagens-windows
