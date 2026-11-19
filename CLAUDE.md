@@ -38,6 +38,13 @@ Conflito entre adendos: vale o de número maior. MANUTENCAO-* valem sempre e nã
 5. **Por versão, não por ticket:** quando o usuário pedir release ou push, rode `npm run verify:full`, o `revisor` no diff da versão e, se ele quiser, o Fable. Os achados viram uma lista para resolver de uma vez.
 6. **Push só com autorização do usuário.**
 
+## VPS: desenvolve, verifica e lança versão (decisão do usuário em 19/11; o PC dele fica fora)
+
+- No Linux, o `verify` deixa para o Windows o que só vale lá: os testes de tempo (marcados `@tempo`; liste com `grep -rn @tempo src tests`), o `cargo test` e o `test:app`. O relatório mostra essas etapas como "só no Windows: roda no release.yml"; não são testes pulados. Nenhum limite muda.
+- Imagens visuais por sistema: as do Windows em `tests/visual/__snapshots__/`, as do Linux em `tests/visual/__snapshots__/linux/`. Imagem nova ou trocada, de qualquer sistema, só com aprovação do usuário. As do Windows saem de um run do `.github/workflows/imagens-windows.yml` (artefato; `gh run download`).
+- **Fechamento de versão no VPS = `npm run verify:full` do Linux verde + o run do `release.yml` verde.** O `release.yml` (windows-latest) roda o `cargo test`, os testes `@tempo`, os visuais do Windows e o `test:app` antes do `tauri build`; se algo falhar, a release não sai. Confira com `gh run list --workflow release.yml` e `gh run view <id> --log-failed` (os resultados ficam no artefato `test-results`), corrija e publique a tag de novo.
+- Não instale Rust nem WebKitGTK no VPS. O Chromium do Playwright usa bibliotecas extraídas sem root em `~/.local/pw-libs` (`LD_LIBRARY_PATH`, já no `~/.bashrc` e no `.claude/settings.local.json`).
+
 ## Proibido sem autorização explícita do usuário
 
 - Apagar, pular (`.skip`, `.only`, `fixme`) ou enfraquecer teste: tolerância, valor esperado, imagem aprovada. Se achar que o teste está errado, explique e pergunte.

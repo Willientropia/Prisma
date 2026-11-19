@@ -24,7 +24,7 @@ import { useGraphTools } from '../grafico/ferramentas';
 import { isGraph2DBody, NEW_GRAPH, seriesOf, setSeries } from '../../format/grafico';
 import type { Graph2D } from '../../engine/grafico';
 import { sheetItems, type LibFn } from './assistente';
-import { clipBlocks, clipText, placeBlocks, withPos } from './blocos';
+import { areaSpans, clipBlocks, clipText, placeBlocks, withPos } from './blocos';
 import { baseItems, sortItems } from '../../math/assistente';
 import { allFunctions } from '../../commands/library';
 import s from '../editors.module.css';
@@ -146,21 +146,37 @@ export function Folha({ doc }: { doc: OpenDoc }) {
 
   // Áreas (ADENDO 05, E6): blocos area ... fim-area, na ordem do arquivo. Recolhida, as regiões de dentro
   // somem (mas continuam sendo avaliadas) e as de baixo sobem para ocupar o espaço.
-  const areas = useMemo(() => {
-    const out: { region: Region; members: Set<string>; top: number; bottom: number; collapsed: boolean; locked: boolean; titulo: string }[] = [];
-    const open: typeof out = [];
-    for (const r of regions) {
-      if (r.seg.type === 'area') {
-        const a = { region: r, members: new Set<string>(), top: num(r.seg, 'y'), bottom: num(r.seg, 'y') + AREA_HEAD, collapsed: 'recolhida' in r.seg.attrs, locked: 'travada' in r.seg.attrs, titulo: r.seg.attrs.titulo ?? '' };
-        out.push(a); open.push(a);
-      } else if (r.seg.type === 'fim-area') {
-        const k = open.map((a) => a.region.id).lastIndexOf(r.id);
-        const a = k >= 0 ? open.splice(k, 1)[0] : open.pop();
-        if (a) a.bottom = Math.max(a.bottom, num(r.seg, 'y', a.bottom));
-      } else for (const a of open) { a.members.add(r.id); a.bottom = Math.max(a.bottom, num(r.seg, 'y') + AREA_HEAD * 2); }
-    }
-    return out;
-  }, [regions]);
+  // quem é da área vale pela posição na tela, não pela ordem no arquivo (F17, blocos.ts)
+  const areas = useMemo(() => areaSpans(regions, AREA_HEAD).map((sp) => {
+    const r = regions.find((x) => x.seg.type === 'area' && x.id === sp.id)!;
+    return { region: r, members: new Set(sp.members), top: sp.top, bottom: sp.bottom, collapsed: 'recolhida' in r.seg.attrs, locked: 'travada' in r.seg.attrs, titulo: r.seg.attrs.titulo ?? '' };
+  }), [regions]);
+  const [areaDrag, setAreaDrag] = useState<{ id: string; dy: number } | null>(null);
+  /** Arrastar a linha de título leva a área inteira, com as regiões de dentro, na vertical (F17, R3). */
+  const onAreaDown = (e: PointerEvent<HTMLDivElement>, a: (typeof areas)[number]) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const ids = [...a.members];
+    const lowest = Math.min(a.top, ...fresh().filter((r) => ids.includes(r.id)).map((r) => num(r.seg, 'y'))); // o grupo para na borda de cima
+    const delta = (ev: globalThis.PointerEvent) => Math.max(snap(ev.clientY - e.clientY), -lowest);
+    const move = (ev: globalThis.PointerEvent) => { const dy = delta(ev); setAreaDrag({ id: a.region.id, dy }); setDrag({ ids, dx: 0, dy }); };
+    const up = (ev: globalThis.PointerEvent) => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      setAreaDrag(null);
+      setDrag(null);
+      const dy = delta(ev);
+      if (!dy) return;
+      // linhas da área e regiões de dentro, de trás para a frente (a linha de abertura muda de tamanho)
+      for (const r of fresh().filter((x) => x.id === a.region.id || ids.includes(x.id)).sort((p, q) => q.start - p.start)) {
+        const first = lines(r.seg.raw)[0];
+        const next = r.seg.type === 'area' || r.seg.type === 'fim-area' ? withAttr(first, 'y', String(num(r.seg, 'y') + dy), false) : withPos(first, num(r.seg, 'x'), num(r.seg, 'y') + dy);
+        edit(doc.id, r.start, r.start + first.length, next);
+      }
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
   /** Quanto uma posição y sobe por causa das áreas recolhidas acima dela. */
   const shiftAt = (y: number, self?: string) => areas.reduce((acc, a) => (a.collapsed && a.bottom <= y && a.region.id !== self ? acc + Math.max(0, a.bottom - a.top - AREA_HEAD) : acc), 0);
   const hidden = (id: string) => areas.some((a) => a.collapsed && a.members.has(id));
@@ -205,6 +221,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         const q = await useWorkspace.getState().ask({ title: 'Área', message: 'Título da área:', input: a.titulo, buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
         if (q.id === 'ok') setAttr(a.region.id, 'titulo', q.value.trim() || null);
       } },
+      { label: 'Desfazer área', run: () => removeRegions([a.region.id]) }, // tira as duas linhas; as regiões ficam onde estão (F17, R5)
     ] });
   };
 
@@ -627,10 +644,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         }}>
         {regions.filter((r) => r.seg.type !== 'area' && r.seg.type !== 'fim-area' && !hidden(r.id)).map(regionView)}
         {areas.map((a) => {
-          const top = a.top - shiftAt(a.top, a.region.id);
+          const top = a.top - shiftAt(a.top, a.region.id) + (areaDrag?.id === a.region.id ? areaDrag.dy : 0);
           return (
             <div key={a.region.key} data-area={a.region.id} className={s.area} style={{ top, height: a.collapsed ? AREA_HEAD : a.bottom - a.top }} onContextMenu={(e) => areaMenu(e, a)}>
-              <div className={s.areaHead}>
+              <div className={s.areaHead} onPointerDown={(e) => onAreaDown(e, a)} /* arrastar o título leva a área (F17) */>
                 <button type="button" className={s.areaToggle} aria-label={a.collapsed ? 'Expandir área' : 'Recolher área'} aria-expanded={!a.collapsed}
                   onPointerDown={(e) => e.stopPropagation()} onClick={() => setAttr(a.region.id, 'recolhida', a.collapsed ? null : true)}>
                   <Icon name="chevron" size={14} stroke={2} className={a.collapsed ? undefined : s.areaOpen} />

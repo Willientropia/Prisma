@@ -30,6 +30,24 @@ export function clipBlocks(text: string): BlockSegment[] {
   return parse(normalizeForSave(text)).segments.filter((s): s is BlockSegment => s.kind === 'block' && !NOT_REGION.has(s.type));
 }
 
+export type AreaSpan = { id: string; top: number; bottom: number; members: string[] };
+
+/**
+ * Áreas pela posição na tela, como o resto da folha (F17; F3-05; decisão do usuário em 19/11): pertence à área a
+ * região cujo y fica entre a linha de cima (bloco `area`) e a de baixo (`fim-area` com o mesmo id), seja qual for a
+ * ordem dos blocos no arquivo. Sem a linha de baixo, a área fica só com a linha do título (`head`).
+ */
+export function areaSpans(rs: { id: string; seg: BlockSegment }[], head: number): AreaSpan[] {
+  const ends = new Map<string, number>();
+  for (const r of rs) if (r.seg.type === 'fim-area' && !ends.has(r.id)) ends.set(r.id, coord(r.seg, 'y'));
+  const regions = rs.filter((r) => !NOT_REGION.has(r.seg.type));
+  return rs.filter((r) => r.seg.type === 'area').map((r) => {
+    const top = coord(r.seg, 'y');
+    const bottom = Math.max(top + head, ends.get(r.id) ?? 0);
+    return { id: r.id, top, bottom, members: regions.filter((m) => coord(m.seg, 'y') >= top && coord(m.seg, 'y') < bottom).map((m) => m.id) };
+  });
+}
+
 /** Primeiro `<prefixo>-N` livre, contando a partir de 1, como as regiões novas da folha. */
 function freeId(prefix: string, taken: Set<string>): string {
   let n = 1;

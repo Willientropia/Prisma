@@ -5,7 +5,9 @@ Leia no início de uma sessão nova, principalmente no VPS. As regras permanente
 ## Onde paramos (19/11/2026)
 
 - Última versão publicada: **v0.9.0** (F09 a F12b), com tag e GitHub Release. O `CHANGELOG.md` diz o que cada versão traz.
-- Próximo trabalho: **Lote F3** em `docs/TICKETS-FOLHA.md`, a começar pelo **F13**: levantar o que falta para a folha igualar o SMath no uso do usuário e gravar em `docs/FOLHA-CHECKLIST.md`. Depois, um ticket por item do checklist (F14+).
+- Lote F3 em andamento (`docs/TICKETS-FOLHA.md`): F13 (checklist em `docs/FOLHA-CHECKLIST.md`), F14 a F17 feitos em 19/11. Próximo: o próximo item "falta" do checklist; os marcados "conferir" esperam o usuário anotar como o SMath faz.
+- Aguardando aprovação do usuário: as imagens visuais do Linux (`tests/visual/__snapshots__/linux/`, ainda fora do git) e a da folha no Windows com as guias novas (run do `imagens-windows.yml`). Só faça commit delas depois do ok.
+- BUG-034 (CHANGELOG, Em andamento): o E8-09 falha 1 em 30 no VPS; causa ainda não achada.
 - `docs/planos/` guarda os planos aprovados de tickets já feitos (F04, F-CONFIG, A6-4). Servem de modelo de plano e de registro das decisões.
 
 ## Pendências soltas (sem ticket ainda)
@@ -24,13 +26,15 @@ Leia no início de uma sessão nova, principalmente no VPS. As regras permanente
 - Responder sempre em português do Brasil, inclusive em mensagens curtas de status.
 - Protocolo enxuto (`CLAUDE.md`, "Como trabalhar"): uma pasta, vários tickets em sequência, testes só da mudança. Verificação pesada só ao fechar versão.
 - Push só com autorização dele. O hook `pre-push` (instalado pelo `simple-git-hooks` no `npm install`) roda `npm run verify`. Durante esse verify, não edite arquivos e não use a porta 1420: a recarga do Vite derruba os testes do gancho.
-- Fechar versão:
+- O VPS faz tudo: desenvolve, verifica e lança versão; o PC do usuário fica fora (19/11). Fechar versão no VPS = `npm run verify:full` do Linux verde + o run do `release.yml` verde (`CLAUDE.md`, seção "VPS"):
   1. Subir a versão em `package.json`, `package-lock.json` (2 lugares), `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` e `src-tauri/Cargo.lock` (pacote `prisma`).
   2. Escrever no `CHANGELOG.md` a seção `## vX.Y.Z — data`, em pt-BR e curta, um item por ticket, com o resultado do `verify:full`.
   3. Fazer o commit e criar a tag anotada `vX.Y.Z` com o mesmo texto da seção.
   4. Fazer push da `main` e da tag.
 
-  A tag dispara `.github/workflows/release.yml`, que compila no Windows e publica a GitHub Release com o instalador. O usuário instala pelo launcher dele (Williehub). Não gere instalador local.
+  5. Acompanhar o run: `gh run list --workflow release.yml --limit 1` e `gh run watch <id>`. Se falhar: `gh run view <id> --log-failed` e `gh run download <id> -n test-results`; corrija, apague a tag local e remota (pergunte antes: é destrutivo), suba de novo.
+
+  A tag dispara `.github/workflows/release.yml`, que roda no Windows o `cargo test`, os testes `@tempo`, os visuais do Windows e o `test:app`, compila e publica a GitHub Release com o instalador. Se um teste falhar, a release não sai. O usuário instala pelo launcher dele (Williehub). Não gere instalador local.
 - Sessões em paralelo no mesmo computador disputam a porta 1420: o Playwright de uma testa o Vite da outra sem acusar erro. Uma sessão por vez.
 
 ## VPS
@@ -60,7 +64,11 @@ export PLAYWRIGHT_BROWSERS_PATH=/srv/prisma/.playwright
 
 `df -h /srv/prisma` mostra o uso da imagem inteira; `npm run espaco` mostra só a pasta do repositório.
 
-### O que não roda no Linux
+### O que roda só no Windows (no release.yml)
 
-- `npm run test:app` usa Edge WebView2, `msedgedriver` e PowerShell: só roda no Windows. No VPS, o `verify:full` falha nessa etapa. Ao fechar versão no VPS, rode `npm run verify`, avise o usuário que o app real não foi testado e pergunte se ele quer rodar o `test:app` no Windows antes do push.
-- As imagens aprovadas dos testes visuais do Playwright foram geradas no Windows. Se elas falharem no Linux só por fonte ou antialiasing, não atualize as imagens: explique e pergunte (CLAUDE.md, "Proibido").
+- Os testes de tempo (`@tempo`: C7-01, C7-02, B10-07, 06-40, BUG-029, A6-3-09 e dois de A6-ROBUSTEZ), o `cargo test` e o `test:app`. O `verify` do Linux deixa os três de fora e diz isso no relatório. Não instale Rust nem WebKitGTK no VPS (decisão do usuário).
+- Imagens visuais: cada sistema tem as suas (`tests/visual/__snapshots__/` no Windows, `linux/` no Linux). Falhou só por fonte ou serrilhado: não atualize; explique e pergunte. Para gerar as do Windows, rode o `imagens-windows.yml` (Actions → Run workflow, ou push num ramo `imagens/*`) e baixe com `gh run download`.
+
+### Chromium sem root
+
+O VPS não tem as bibliotecas de sistema do Chromium e não há sudo sem senha. Elas foram baixadas com `apt-get download` e extraídas em `~/.local/pw-libs` (libatk, libatk-bridge, libXdamage, libasound, libatspi). O `LD_LIBRARY_PATH` aponta para lá no `~/.bashrc` e no `.claude/settings.local.json`. O Node 22 vem do nvm, com atalhos em `~/.local/bin`.

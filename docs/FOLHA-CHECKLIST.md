@@ -59,10 +59,10 @@ Legenda da coluna "Situação":
 | # | Item | Situação | Observação |
 |---|------|----------|------------|
 | R1 | Criar área com as selecionadas, recolher, travar e renomear | existe | E6 |
-| R2 | Quem pertence à área | falta | **Diferença importante.** No Prisma a área vale pela ordem no arquivo (blocos entre `area` e `fim-area`); na tela ela é uma faixa por posição. Região nova criada dentro da faixa vai para o fim do arquivo e fica fora da área (não some ao recolher). Região arrastada para fora da faixa continua dentro. A conferir no SMath: lá a área é tudo o que está entre as duas linhas? |
-| R3 | Arrastar a área (pela linha de título) leva junto as regiões de dentro | falta | A linha de título não tem arrasto |
+| R2 | Quem pertence à área | existe | F17: pela posição na tela, como o resto da folha (usuário, 19/11): é da área a região entre as duas linhas, seja qual for a ordem no arquivo. O formato do arquivo não mudou |
+| R3 | Arrastar a área (pela linha de título) leva junto as regiões de dentro | existe | F17. Só na vertical |
 | R4 | Mudar a altura da área (arrastar a linha de baixo) | falta, conferir | |
-| R5 | Desfazer a área (tirar as linhas e deixar as regiões) | falta | Hoje só editando o fonte |
+| R5 | Desfazer a área (tirar as linhas e deixar as regiões) | existe | F17: botão direito no título > Desfazer área |
 | R6 | Apagar a área com o conteúdo | conferir | |
 
 ## 6. Teclado na folha (cruz, sem região em edição)

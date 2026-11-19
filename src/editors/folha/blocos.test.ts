@@ -1,6 +1,7 @@
-// F14: copiar, recortar e colar regiões da folha (docs/FOLHA-CHECKLIST.md C1 a C3).
+// Blocos da folha: copiar, recortar e colar (F14, checklist C1 a C3) e áreas pela posição (F17).
 import { describe, expect, it } from 'vitest';
-import { clipBlocks, clipText, placeBlocks, withPos } from './blocos';
+import { areaSpans, clipBlocks, clipText, placeBlocks, withPos } from './blocos';
+import { parse, type BlockSegment } from '../../format/doc';
 
 const FOLHA = [
   '---',
@@ -67,5 +68,24 @@ describe('[F14] blocos copiados e colados', () => {
   it('withPos troca x e y sem mexer no resto da linha de abertura', () => {
     expect(withPos('```calc {#s x=230 y=76 moldura}\n', 280, 120)).toBe('```calc {#s x=280 y=120 moldura}\n');
     expect(withPos('```calc\n', 20, 40)).toBe('```calc {x=20 y=40}\n');
+  });
+});
+
+describe('[F17] área vale pela posição na tela', () => {
+  const regs = (text: string) => parse(text).segments.filter((s): s is BlockSegment => s.kind === 'block').map((seg, i) => ({ id: seg.id ?? `b${i}`, seg }));
+  const F = '```';
+  it('[F17-01] é da área a região entre as duas linhas, mesmo escrita fora do trecho da área no arquivo', () => {
+    const text = [
+      `${F}calc {#antes x=40 y=160}`, 'a := 1', F, '',
+      `${F}area {#rms titulo="RMS" y=100}`, F, '',
+      `${F}calc {#dentro x=40 y=140}`, 'b := 2', F, '',
+      `${F}fim-area {#rms y=220}`, F, '',
+      `${F}calc {#embaixo x=40 y=260}`, 'c := 3', F, '',
+      `${F}calc {#tambem x=300 y=200}`, 'd := 4', F, '',
+    ].join('\n');
+    expect(areaSpans(regs(text), 20)).toEqual([{ id: 'rms', top: 100, bottom: 220, members: ['antes', 'dentro', 'tambem'] }]);
+  });
+  it('[F17-02] sem a linha de baixo, a área fica só com a linha do título', () => {
+    expect(areaSpans(regs(`${F}area {#a y=100}\n${F}\n\n${F}calc {#c x=0 y=110}\nx := 1\n${F}\n`), 20)).toEqual([{ id: 'a', top: 100, bottom: 120, members: ['c'] }]);
   });
 });

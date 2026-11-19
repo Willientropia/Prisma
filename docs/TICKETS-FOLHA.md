@@ -72,5 +72,6 @@ Visual do ribbon: `referencia-ribbon-matematica.dc.html`.
 | F14 | **Feito (19/11).** Copiar, recortar e colar regiões (checklist C1, C2, C3, C6, D2; C4 entre folhas) | Opus |
 | F15 | **Feito (19/11).** Ctrl+clique e Ctrl+A na seleção, setas movendo a cruz (checklist S3, S5, K4) | Opus |
 | F16 | **Feito (19/11).** Desativar avaliação e Descrição valem para todas as selecionadas (checklist F3). Junto, **BUG-033**: clicar na folha enquanto a região nova monta deixava o campo dela roubar o foco de volta | Opus |
-| F17+ | Um ticket por item do checklist | Sonnet |
+| F17 | **Feito (19/11).** Área pela posição na tela, arrastar a linha de título, desfazer área (checklist R2, R3, R5; decisão do usuário: vale a posição, como F3-05) | Opus |
+| F18+ | Um ticket por item do checklist | Sonnet |
 | F-U1 | Unidades do usuário em biblioteca (ex.: `kWp` como apelido de `kW`). **Pendente:** o usuário confirmar no SMath como ele define unidade nova. Hoje as unidades extras só vêm de `src/engine/math.ts` (`createUnit`: Wp, dia, rad, deg, rpm) | Opus |
