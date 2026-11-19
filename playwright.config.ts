@@ -11,7 +11,8 @@ export default defineConfig({
   workers: 1,
   reporter: [['list'], ['json', { outputFile: 'test-results/playwright.json' }]],
   outputDir: 'test-results/playwright',
-  snapshotPathTemplate: 'tests/visual/__snapshots__/{arg}{ext}',
+  // imagens aprovadas por sistema (a fonte é desenhada diferente): as do Windows na pasta de sempre; as de outro sistema em <sistema>/
+  snapshotPathTemplate: process.platform === 'win32' ? 'tests/visual/__snapshots__/{arg}{ext}' : 'tests/visual/__snapshots__/{platform}/{arg}{ext}',
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled', caret: 'hide' } },
   use: { ...(process.platform === 'win32' ? { channel: 'msedge' } : {}), baseURL: 'http://localhost:1420', viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' },
   projects: [

@@ -123,7 +123,9 @@ describe('sistema de testes', () => {
   it('[F00-02] os testes de desempenho C7-01 e C7-02 só rodam no verify:full e continuam existindo', () => {
     const verify = readFileSync(join(ROOT, 'scripts/verify.ts'), 'utf8');
     expect(verify).toContain(`full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"'`);
-    expect(verify).toContain('if (full && (perf.recalc == null');
+    expect(verify).toContain('if (full && win && (perf.recalc == null'); // fora do Windows os testes de tempo rodam no release.yml (19/11)
+    expect(verify).toContain("!win ? `npx playwright test --grep-invert ${TEMPO}`");
+    expect(readFileSync(join(ROOT, '.github/workflows/release.yml'), 'utf8')).toContain('npx playwright test --project=e2e --grep "@tempo"');
     const spec = readFileSync(join(ROOT, 'tests/e2e/desempenho.spec.ts'), 'utf8');
     expect(spec).toContain('[C7-01]');
     expect(spec).toContain('[C7-02]');

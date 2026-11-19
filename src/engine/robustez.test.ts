@@ -17,7 +17,7 @@ function runChild(lines: string[], symbolic: boolean): { ms: number; out: LineRe
 const chain = (n: number, step: (k: number) => string) => Array.from({ length: n }, (_, k) => step(k + 1));
 
 describe('[A6-ROBUSTEZ-01] cadeia de definições com nome indefinido (math.simplify)', { timeout: 30_000 }, () => {
-  it('b1 := b0*2 + 1 ... b20 = ? na folha termina em tempo limitado', () => {
+  it('b1 := b0*2 + 1 ... b20 = ? na folha termina em tempo limitado @tempo', () => {
     const { ms, out } = runChild([...chain(20, (k) => `b${k} := b${k - 1}*2 + 1`), 'b20 = ?'], true);
     expect(ms).toBeLessThan(3000);
     expect(out.at(-1)!.symbolic).toContain('b0'); // continua em aberto, sem erro
@@ -103,7 +103,7 @@ describe('[A6-ROBUSTEZ-03] definição circular', { timeout: 30_000 }, () => {
     const r = evaluate({ libs: [], symbolic: false, blocks: [{ key: 'b', type: 'calc', lines }] }).blocks.b;
     expect([r.at(-2)!.text, r.at(-1)!.text]).toEqual(['302', '12']);
   });
-  it('cadeia longa de nomes em aberto: termina em tempo limitado e sem erro em inglês', () => {
+  it('cadeia longa de nomes em aberto: termina em tempo limitado e sem erro em inglês @tempo', () => {
     const { ms, out } = runChild([...chain(1000, (k) => `d${k} := d${k - 1} + 1`), 'd1000 = ?'], true);
     expect(ms).toBeLessThan(5000);
     expect(out.at(-1)!.error ?? '').not.toMatch(/call stack/);

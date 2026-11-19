@@ -1,0 +1,32 @@
+# Gera as imagens aprovadas do Windows (tests/visual/__snapshots__/*.png) no windows-latest, para o usuário
+# aprovar antes do commit (CLAUDE.md: imagem aprovada só muda com autorização). Não faz commit: as imagens saem
+# como artefato. Primeiro roda os testes visuais contra as imagens atuais, para mostrar quais já passam aqui.
+# Uso: Actions → Imagens do Windows → Run workflow (ou push num ramo imagens/*); baixar com gh run download.
+name: Imagens do Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['imagens/**']
+
+jobs:
+  imagens:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Testes visuais contra as imagens atuais
+        continue-on-error: true
+        run: npx playwright test --project=visual --reporter=list
+      - name: Imagens novas (só as que mudaram)
+        continue-on-error: true
+        run: npx playwright test --project=visual --update-snapshots --reporter=list
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imagens-windows
+          path: |
+            tests/visual/__snapshots__/*.png
+            test-results/playwright/
+          retention-days: 14

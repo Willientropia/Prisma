@@ -70,7 +70,7 @@ test('[06-39] 1/(x − 1) não liga os lados da assíntota', async ({ page }) =>
   for (const r of c.runs) expect(r.every((p) => p[0] < pole) || r.every((p) => p[0] > pole)).toBe(true);
 });
 
-test('[06-40] redefinir F(x) acima atualiza a curva e a integral em até 150 ms', async ({ page }) => {
+test('[06-40] redefinir F(x) acima atualiza a curva e a integral em até 150 ms', { tag: '@tempo' }, async ({ page }) => {
   await start(page);
   await dev(page).open(REF);
   await expect.poll(() => resultTexts(page)).toEqual(['2,2']);

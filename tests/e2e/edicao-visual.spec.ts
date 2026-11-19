@@ -65,7 +65,7 @@ test('[B10-06] string-3 sem clicar em nada: 3,29 V, 0,82 % e o gráfico com 4 se
   await expect(fig).toContainText('limite 1 %');
 });
 
-test('[B10-07] mudar S de 4 para 6 atualiza para 2,1957 V e 0,5489 % logo depois da última tecla', async ({ page }) => {
+test('[B10-07] mudar S de 4 para 6 atualiza para 2,1957 V e 0,5489 % logo depois da última tecla', { tag: '@tempo' }, async ({ page }) => {
   await start(page);
   await dev(page).open(`${P}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);

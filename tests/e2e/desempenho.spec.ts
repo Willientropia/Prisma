@@ -2,7 +2,7 @@
 import { expect, test } from './fixtures';
 import { CALC, DOCS, armTimer, dev, focusField, resultTexts, start, tabs, timerMs } from './helpers';
 
-test('[C7-01] recálculo da string-3 em até 150 ms depois da última tecla', async ({ page }) => {
+test('[C7-01] recálculo da string-3 em até 150 ms depois da última tecla', { tag: '@tempo' }, async ({ page }) => {
   await start(page);
   await dev(page).open(`${CALC}/string-3.prsf`);
   await expect.poll(() => resultTexts(page)).toEqual(['3,2936V', '0,8234%']);
@@ -16,7 +16,7 @@ test('[C7-01] recálculo da string-3 em até 150 ms depois da última tecla', as
   expect(ms).toBeLessThanOrEqual(150);
 });
 
-test('[C7-02] [BUG-006] abrir um .prsm de 1 MB em até 500 ms', async ({ page }) => {
+test('[C7-02] [BUG-006] abrir um .prsm de 1 MB em até 500 ms', { tag: '@tempo' }, async ({ page }) => {
   await start(page);
   const para = 'Memorial descritivo do trecho de cabos, com as hipóteses de cálculo e as referências normativas. '.repeat(10);
   let body = '';

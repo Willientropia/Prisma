@@ -399,7 +399,7 @@ test('[BUG-028] sin(g(t)) e diff(i_cc(t, 0), t, 1) aparecem com todos os parênt
   await expect.poll(shown).toEqual(['sin(g(1))', 'dtd(icc(t;0))∣∣∣t=1']); // derivada como operador d/dt com barra no ponto (A6-5, pedido do usuário em 17/11)
 });
 
-test('[BUG-029] botão do ribbon clicado enquanto a região nova monta entra depois das teclas já digitadas', async ({ page }) => {
+test('[BUG-029] botão do ribbon clicado enquanto a região nova monta entra depois das teclas já digitadas', { tag: '@tempo' }, async ({ page }) => {
   for (let i = 0; i < 10; i++) { // corrida de quadros na primeira folha da página: o campo ganha foco antes de aplicar as teclas guardadas (falhava 3 em 8)
     await start(page);
     await dev(page).newDoc('folha');

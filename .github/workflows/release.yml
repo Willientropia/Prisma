@@ -50,6 +50,26 @@ jobs:
 
       - run: npm ci
       - run: npm run test:unit
+
+      # O que só vale no Windows (o verify do VPS deixa de fora; decisão do usuário em 19/11). Falhou: a release não sai.
+      - name: Rust (cargo test)
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+      - name: Testes de tempo no Vitest (@tempo)
+        run: npx vitest run --testNamePattern "@tempo"
+      - name: Testes de tempo e imagens visuais do Windows no Playwright
+        run: |
+          npx playwright test --project=e2e --grep "@tempo"
+          npx playwright test --project=visual
+      - name: App real (test:app)
+        run: npm run test:app
+      - name: Resultados dos testes (quando algo falhou)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 14
+
       - run: npx tauri build --bundles nsis
 
       - name: Notas da versão (CHANGELOG.md)

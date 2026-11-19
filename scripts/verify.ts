@@ -2,6 +2,9 @@
 // (testes V-*) + check-matriz + cobertura + relatório. --full acrescenta o app real e os testes de desempenho
 // (C7-01 e C7-02, que oscilam com a carga da máquina; F00). Por ticket, use npm run verify:rapido.
 // Qualquer falha devolve código diferente de 0.
+// Fora do Windows (VPS, decisão do usuário em 19/11) fica de fora o que só vale no Windows e roda no release.yml
+// (windows-latest) antes da compilação: os testes de tempo (marcados @tempo; liste com grep -rn @tempo src tests),
+// o cargo test e o test:app. As imagens visuais são as do próprio sistema (playwright.config.ts). Nenhum limite muda.
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -13,6 +16,9 @@ import { renderReport, type Origin, type Step } from './report';
 const ROOT = join(import.meta.dirname, '..');
 const OUT = join(ROOT, 'test-results');
 const full = process.argv.includes('--full');
+const win = process.platform === 'win32';
+const TEMPO = '@tempo';
+const WIN_ONLY = 'só no Windows: roda no release.yml';
 const MIN = { motor: 90, formato: 90, geral: 70 };
 const BASELINE = join(ROOT, 'tests/coverage-baseline.json');
 
@@ -47,15 +53,21 @@ for (const d of ['coverage', 'coverage-e2e', 'vitest.json', 'playwright.json']) 
 step('Tipos (tsc --noEmit)', 'npx tsc --noEmit');
 step('Lint (inclui proibição de .skip/.only/fixme)', 'npx eslint .');
 
-step('Vitest: unidade, navegador e meta', 'npx vitest run --coverage --reporter=default --reporter=json --outputFile.json=test-results/vitest.json');
+step('Vitest: unidade, navegador e meta', `npx vitest run --coverage --reporter=default --reporter=json --outputFile.json=test-results/vitest.json${win ? '' : ` --testNamePattern "^(?!.*${TEMPO})"`}`);
 type VitestJson = { testResults: { assertionResults: { fullName: string; status: string }[] }[] };
-for (const f of readJson<VitestJson>(join(OUT, 'vitest.json'))?.testResults ?? []) for (const a of f.assertionResults) titles.push({ title: a.fullName, ok: a.status === 'passed', skipped: a.status === 'skipped' || a.status === 'pending' || a.status === 'todo' });
+for (const f of readJson<VitestJson>(join(OUT, 'vitest.json'))?.testResults ?? []) for (const a of f.assertionResults) {
+  if (!win && a.fullName.includes(TEMPO)) continue; // fora do Windows: não roda aqui (release.yml), não é teste pulado
+  titles.push({ title: a.fullName, ok: a.status === 'passed', skipped: a.status === 'skipped' || a.status === 'pending' || a.status === 'todo' });
+}
 
-const cargo = step('Rust (cargo test)', 'cargo test --manifest-path src-tauri/Cargo.toml');
+const winOnly = (name: string) => steps.push({ name, ok: true, ms: 0, detail: WIN_ONLY });
+const cargo = win ? step('Rust (cargo test)', 'cargo test --manifest-path src-tauri/Cargo.toml') : (winOnly('Rust (cargo test)'), '');
+if (!win) winOnly(`Testes de tempo (${TEMPO})`);
 let rust = { passed: 0, failed: 0, ignored: 0 };
 for (const m of cargo.matchAll(/test result: \w+\. (\d+) passed; (\d+) failed; (\d+) ignored/g)) rust = { passed: rust.passed + +m[1], failed: rust.failed + +m[2], ignored: rust.ignored + +m[3] };
 
-const pwOut = step('Playwright: interface, regressão e visual', full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"', { PRISMA_COVERAGE: '1' });
+const pwCmd = !win ? `npx playwright test --grep-invert ${TEMPO}` : full ? 'npx playwright test' : 'npx playwright test --grep-invert "C7-0[12]"';
+const pwOut = step('Playwright: interface, regressão e visual', pwCmd, { PRISMA_COVERAGE: '1' });
 const failureDir = steps.at(-1)!.ok ? null : saveFailure(OUT, pwOut);
 if (failureDir) console.log(`\nSaída e relatório do Playwright guardados em ${failureDir}`);
 type PwSpec = { title: string; file: string; tests: { status: string; results: { stdout?: { text?: string }[] }[] }[] };
@@ -72,7 +84,8 @@ const walk = (s: PwSuite) => {
 };
 for (const s of readJson<{ suites: PwSuite[] }>(join(OUT, 'playwright.json'))?.suites ?? []) walk(s);
 
-if (full) {
+if (full && !win) winOnly('App real (tauri-driver)');
+if (full && win) {
   step('App real (tauri-driver)', 'npm run test:app');
   type AppJson = { tests: { title: string; ok: boolean }[]; startupMs: number | null };
   const app = readJson<AppJson>(join(OUT, 'app.json'));
@@ -101,7 +114,7 @@ steps.push({ name: 'Cobertura (mínimos e valor guardado)', ok: !covProblems.len
 problems.push(...covProblems);
 
 // desempenho (C7.7): os testes C7-* já falham sozinhos; aqui só confere que foram medidos
-if (full && (perf.recalc == null || perf.open == null)) problems.push('Desempenho não medido (testes C7-01/C7-02 não rodaram).');
+if (full && win && (perf.recalc == null || perf.open == null)) problems.push('Desempenho não medido (testes C7-01/C7-02 não rodaram).');
 
 // resultado
 const failedIds = new Set(titles.filter((t) => !t.ok && !t.skipped).flatMap((t) => [...t.title.matchAll(/\[([A-Z][A-Z0-9]*-\d+[a-z]?)\]/g)].map((m) => m[1])));

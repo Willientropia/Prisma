@@ -94,7 +94,7 @@ describe('tests/golden/teclado.yaml', () => {
     });
   }
 
-  it('[A6-3-09] Espaço numa expressão de 281 átomos (perto do limite de 300) responde em menos de 300 ms', async () => {
+  it('[A6-3-09] Espaço numa expressão de 281 átomos (perto do limite de 300) responde em menos de 300 ms @tempo', async () => {
     await mountLine('folha', '', ['a', 'b']);
     await userEvent.keyboard('a+b+'.repeat(70) + 'a');
     const t0 = performance.now();
