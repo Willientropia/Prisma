@@ -103,7 +103,7 @@ test('[C9-06] mudar uma cor em tokens.css passa da tolerância do teste visual',
     return diff / (p.length / 4);
   }, [normal, altered] as const);
   console.log(`C9-06: ${(ratio * 100).toFixed(1)} % dos pixels mudaram (tolerância 1 %)`);
-  expect(ratio).toBeGreaterThan(0.01); // maxDiffPixelRatio de playwright.config.ts
+  expect(ratio).toBeGreaterThan(0.01); // maior que a tolerância do Windows (maxDiffPixelRatio 1 %); no Linux qualquer pixel já reprova
 });
 
 // A6-4 (ADENDO 06, 06-43): o assistente aberto, nos cenários do 06-10 e do 06-11. Imagens aprovadas pelo usuário.

@@ -13,7 +13,9 @@ export default defineConfig({
   outputDir: 'test-results/playwright',
   // imagens aprovadas por sistema (a fonte é desenhada diferente): as do Windows na pasta de sempre; as de outro sistema em <sistema>/
   snapshotPathTemplate: process.platform === 'win32' ? 'tests/visual/__snapshots__/{arg}{ext}' : 'tests/visual/__snapshots__/{platform}/{arg}{ext}',
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled', caret: 'hide' } },
+  // Linux: imagens do mesmo sistema, ruído medido zero (42 capturas idênticas, 19/11): qualquer pixel diferente reprova,
+  // com o threshold padrão por pixel (aprovado pelo usuário em 19/11). Windows: 1 % até a medição no windows-latest.
+  expect: { toHaveScreenshot: { ...(process.platform === 'win32' ? { maxDiffPixelRatio: 0.01 } : { maxDiffPixels: 0 }), animations: 'disabled', caret: 'hide' } },
   use: { ...(process.platform === 'win32' ? { channel: 'msedge' } : {}), baseURL: 'http://localhost:1420', viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' },
   projects: [
     { name: 'e2e', testMatch: ['e2e/**/*.spec.ts', 'regressao/**/*.spec.ts'] },
