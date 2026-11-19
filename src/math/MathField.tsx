@@ -366,6 +366,17 @@ export function holdKeys(): void {
 }
 /** Teclas digitadas depois do Espaço que trocou a região por texto: quem recebe o foco as aplica (A6-3). */
 export const takeHeldKeys = (): Key[] => releaseKeys();
+/**
+ * Teclas guardadas que sobraram quando uma delas tirou o campo de foco: seguem para quem ficou com o foco, como se
+ * tivessem sido digitadas lá. Na folha, a primeira cria a próxima região e as outras esperam por ela; no caderno, a
+ * linha nova as recolhe (holdKeys). BUG-034: antes elas caíam no campo que já tinha saído e se perdiam.
+ */
+function forwardKeys(keys: Key[]): void {
+  for (const k of keys) {
+    if (k.latex) { window.dispatchEvent(new CustomEvent('prisma:inserir', { detail: k.latex })); continue; } // botão do ribbon
+    (document.activeElement ?? document.body).dispatchEvent(new KeyboardEvent('keydown', { key: k.key, ctrlKey: !!k.ctrlKey, metaKey: !!k.metaKey, shiftKey: !!k.shiftKey, altKey: !!k.altKey, bubbles: true, cancelable: true }));
+  }
+}
 function releaseKeys(): Key[] {
   if (!held) return [];
   window.removeEventListener('keydown', held.listener, true);
@@ -507,12 +518,16 @@ export function MathField(props: FieldProps) {
       if (p.current.selectOnFocus) mf.executeCommand('selectAll'); else mf.position = mf.lastOffset;
       const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys(), ...queued.splice(0)];
       stopWaiting();
+      let rest: Key[] = [];
       for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         if (k.latex) { mf.insert(k.latex, { selectionMode: 'placeholder', format: 'latex' }); state.edited = true; p.current.onInput?.(mf.value); continue; } // na ordem das teclas
         if (!handleKey(mf, k, state, p) && k.key.length === 1 && !k.ctrlKey && !k.metaKey) mf.executeCommand(['typedText', k.key]);
+        // a tecla tirou o campo de foco (Enter, Tab, Esc): as seguintes não são deste campo (BUG-034)
+        if (i < keys.length - 1 && document.activeElement !== mf) { rest = keys.slice(i + 1); break; }
       }
-      p.current.onReady?.();
+      p.current.onReady?.(); // antes de repassar: a folha deixa de guardar teclas para esta região
+      forwardKeys(rest);
     };
     focusNow.current = () => {
       cancelAnimationFrame(focusFrame.current);

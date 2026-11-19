@@ -437,3 +437,22 @@ test('[BUG-033] clicar na folha enquanto a região nova monta: o campo não roub
   await expect.poll(() => dev(page).text()).toMatch(/```calc \{#calc-\d+ x=120 y=400\}/);
   expect(await dev(page).text()).not.toMatch(/x=100 y=100\}\n[^`]*2/); // o 2 não foi parar na primeira região
 });
+
+test('[BUG-034] Enter e teclas digitadas enquanto a região nova monta: as que vêm depois do Enter vão para a próxima região', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  await page.getByLabel('Folha').click({ position: { x: 100, y: 100 } });
+  // campo lento para montar (como sob carga): x=2, Enter e y=3 chegam todos antes de ele ter foco
+  await page.evaluate(() => {
+    const [raf, caf] = [window.requestAnimationFrame.bind(window), window.cancelAnimationFrame.bind(window)];
+    const late = new Map<number, number>();
+    let n = 1e6;
+    window.requestAnimationFrame = (cb) => { const id = n++; late.set(id, window.setTimeout(() => { late.set(id, -raf(cb)); }, 150)); return id; };
+    window.cancelAnimationFrame = (id) => { const t = late.get(id); if (t === undefined) return caf(id); if (t < 0) caf(-t); else window.clearTimeout(t); late.delete(id); };
+  });
+  await page.keyboard.type('x=2');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('y=3');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => dev(page).text(), { timeout: 10_000 }).toMatch(/```calc \{#calc-1 x=100 y=100\}\nx := 2\n```[\s\S]*```calc \{#calc-2 x=100 y=\d+\}\ny := 3\n```/);
+});
