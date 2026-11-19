@@ -7,3 +7,4 @@ prisma-pacote-claude-code.zip
 test-results/
 playwright-report/
 .vitest/
+.claude/settings.local.json
