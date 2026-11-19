@@ -38,8 +38,9 @@ export default defineConfig(({ mode }) => ({
           browser: {
             enabled: true,
             headless: true,
-            // Edge instalado (Chromium): o download do Chromium do Playwright passa por rede bloqueada
-            provider: playwright({ launchOptions: { channel: 'msedge' } }),
+            // Windows: Edge instalado (Chromium), porque o download do Chromium do Playwright passa por rede bloqueada.
+            // Linux (VPS): o Chromium do Playwright (npx playwright install chromium)
+            provider: playwright({ launchOptions: process.platform === 'win32' ? { channel: 'msedge' } : {} }),
             instances: [{ browser: 'chromium', viewport: { width: 1440, height: 900 } }],
           },
         },
