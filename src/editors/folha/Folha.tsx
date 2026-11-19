@@ -275,13 +275,12 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const n = rs.length;
     set({ status: `${n === 1 ? '1 região' : `${n} regiões`} ${cut ? 'recortada' : 'copiada'}${n === 1 ? '' : 's'}` });
   };
-  /** Colar (F14): na cruz, no ponto do menu ou, sem nenhum dos dois, abaixo da última região; as coladas ficam selecionadas. */
+  /** Colar (F14): na cruz, no ponto do menu ou, sem nenhum dos dois, no canto superior esquerdo da página, como no SMath (usuário, 19/11); as coladas ficam selecionadas. */
   const pasteRegions = (text: string, at?: { x: number; y: number }) => {
     const bs = clipBlocks(text || lastClip);
     if (!bs.length) return set({ status: 'Colar: o texto copiado não tem regiões da folha' });
     const rs = fresh();
-    const bottom = (r: Region) => num(r.seg, 'y') + (sheet.current?.querySelector<HTMLElement>(`[data-region="${r.id}"]`)?.offsetHeight ?? GRID);
-    const where = at ?? crossRef.current ?? { x: Math.min(...bs.map((b) => num(b, 'x'))), y: rs.length ? snap(Math.max(...rs.map(bottom))) + GRID : GRID * 2 };
+    const where = at ?? crossRef.current ?? { x: GRID, y: GRID }; // primeiro ponto da grade: a moldura não fica cortada na borda
     const { text: add, ids } = placeBlocks(bs, new Set(rs.map((r) => r.id)), where);
     const t = textNow();
     edit(doc.id, t.length, t.length, `${t.endsWith('\n\n') ? '' : t.endsWith('\n') ? '\n' : '\n\n'}${add}`);
@@ -386,6 +385,16 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     window.addEventListener('pointerup', up);
   };
 
+  /** Ctrl+clique em qualquer ponto da região soma ou tira ela da seleção, sem entrar em edição (F15). */
+  const ctrlClick = (e: PointerEvent<HTMLDivElement>, id: string) => {
+    if (!(e.ctrlKey || e.metaKey) || e.button !== 0) return;
+    e.preventDefault(); // nem o campo de dentro recebe o clique nem o foco
+    e.stopPropagation();
+    setSelected((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+    setCross(null);
+    sheet.current?.focus(); // sai da região em edição; Ctrl+C e Delete valem para a seleção
+  };
+
   // arrastar pela moldura: move com encaixe na grade
   const onRegionDown = (e: PointerEvent<HTMLDivElement>, id: string) => {
     if (e.target !== e.currentTarget || e.button !== 0) return;
@@ -434,6 +443,13 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     if (e.target !== sheet.current) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size) { e.preventDefault(); removeRegions([...selected]); return; }
     if (e.key === 'Escape') { setCross(null); setSelected(new Set()); return; }
+    // Ctrl+A: todas as regiões visíveis; as de área recolhida ou travada ficam de fora, para Delete não apagar o que não se vê (F15)
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      setCross(null);
+      setSelected(new Set(fresh().filter((r) => r.seg.type !== 'area' && r.seg.type !== 'fim-area' && !hidden(r.id) && !locked(r.id)).map((r) => r.id)));
+      return;
+    }
     // Ctrl+Shift+seta esquerda alinha na vertical (à esquerda), Ctrl+Shift+seta acima na horizontal (pelo topo) (F-LAYOUT)
     if (e.ctrlKey && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowUp') && selected.size > 1) { e.preventDefault(); alignRegions(e.key === 'ArrowLeft' ? 'x' : 'y'); return; }
     if (creating.current) { // campo ainda montando: guarda a tecla (inclusive Enter e Ctrl+G) para aplicar quando tiver foco
@@ -442,6 +458,14 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     }
     // Enter com a cruz (sem região em edição) desce uma linha da grade, como no SMath (F-LAYOUT)
     if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && crossRef.current) { e.preventDefault(); setCross({ ...crossRef.current, y: crossRef.current.y + GRID }); return; }
+    // setas movem a cruz um ponto da grade, sem sair da página (F15)
+    const step = ({ ArrowLeft: [-GRID, 0], ArrowRight: [GRID, 0], ArrowUp: [0, -GRID], ArrowDown: [0, GRID] } as Record<string, [number, number]>)[e.key];
+    if (step && crossRef.current && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      e.preventDefault();
+      const c = crossRef.current;
+      setCross({ x: Math.min(Math.max(0, c.x + step[0]), pageW - GRID), y: Math.min(Math.max(0, c.y + step[1]), pageH - GRID) });
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
     e.preventDefault();
     const at = crossRef.current;
@@ -555,7 +579,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       content = <div className={s.regionImported}>Tabela importada do SMath (os dados ainda não são mostrados)</div>;
     } else content = <pre className={s.regionPre}>{b.body}</pre>;
     return (
-      <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDown={(e) => onRegionDown(e, r.id)} onContextMenu={(e) => regionMenu(e, r)}
+      <div key={r.key} data-region={r.id} className={cls} style={style} onPointerDownCapture={(e) => ctrlClick(e, r.id)} onPointerDown={(e) => onRegionDown(e, r.id)} onContextMenu={(e) => regionMenu(e, r)}
         {...(locked(r.id) ? ({ inert: '' } as object) : {})} /* área travada: nada de dentro recebe foco (E6) */ title={'desativado' in b.attrs ? 'Avaliação desativada' : undefined}>
         {b.attrs.descricao && b.type !== 'smath-original' && <div className={s.regionDesc}>{b.attrs.descricao}</div>}
         {escala !== 1 && b.type !== 'imagem' && b.type !== 'grafico' ? <div style={{ zoom: escala }}>{content}</div> : content /* imagem e gráfico já vêm no tamanho do SMath */}

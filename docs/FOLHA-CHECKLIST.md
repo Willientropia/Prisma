@@ -14,9 +14,9 @@ Legenda da coluna "Situação":
 |---|------|----------|------------|
 | S1 | Clique numa região seleciona só ela | existe | |
 | S2 | Arrastar na área vazia seleciona por retângulo | existe | Hoje basta encostar no retângulo. **Conferir:** no SMath a região precisa estar inteira dentro ou basta encostar? |
-| S3 | `Ctrl+clique` acrescenta ou tira uma região da seleção | falta | Hoje todo clique troca a seleção |
+| S3 | `Ctrl+clique` acrescenta ou tira uma região da seleção | existe | F15. Vale em qualquer ponto da região, sem entrar em edição |
 | S4 | Retângulo com `Ctrl` soma à seleção atual | falta, conferir | Hoje o retângulo sempre substitui |
-| S5 | `Ctrl+A` seleciona todas as regiões | falta | Só com o foco na folha, sem região em edição |
+| S5 | `Ctrl+A` seleciona todas as regiões | existe | F15. Só com o foco na folha; regiões de área recolhida ou travada ficam de fora |
 | S6 | `Esc` limpa a seleção e a cruz | existe | |
 | S7 | `Shift+clique` | conferir | Não sei se o SMath faz algo diferente do `Ctrl+clique` |
 
@@ -38,7 +38,7 @@ Legenda da coluna "Situação":
 | # | Item | Situação | Observação |
 |---|------|----------|------------|
 | C1 | `Ctrl+C` / `Ctrl+X` nas regiões selecionadas | existe | F14 |
-| C2 | `Ctrl+V` cola na cruz, mantendo as distâncias entre as regiões | existe | F14. Sem cruz, cola abaixo da última região, no mesmo x (conferir no SMath se é assim) |
+| C2 | `Ctrl+V` cola na cruz, mantendo as distâncias entre as regiões | existe | F14. Sem cruz, cola no canto superior esquerdo da página (primeiro ponto da grade), como no SMath (usuário, 19/11) |
 | C3 | Ids novos ao colar (`calc-7` não pode repetir) e atributos mantidos (moldura, desativado, casas, descrição) | existe | F14. Recortar e colar mantém o id original |
 | C4 | Colar entre duas folhas abertas, e de uma folha para o caderno | entre folhas existe; caderno falta | F14: a área de transferência leva os blocos do arquivo, então outra folha lê igual. No caderno, colar ainda não lê blocos |
 | C5 | Colar texto puro de fora (ex.: `x := 2` de um e-mail) cria uma região | conferir | |
@@ -72,7 +72,7 @@ Legenda da coluna "Situação":
 | K1 | Digitar na cruz cria região; `"` cria texto; `@` cria gráfico | existe | |
 | K2 | `Enter` confirma e põe a cruz abaixo; `Shift+Enter` cria a região abaixo | existe | |
 | K3 | `Enter` com a cruz desce uma linha da grade | existe | F-LAYOUT 2 |
-| K4 | Setas movem a cruz pela grade | falta | Hoje as setas não fazem nada na folha |
+| K4 | Setas movem a cruz pela grade | existe | F15. Um ponto da grade por tecla, sem sair da página |
 | K5 | Setas saindo de uma região em edição (no começo ou no fim da linha) vão para a região vizinha | conferir | |
 | K6 | `Tab` / `Shift+Tab` percorrem as regiões na ordem de leitura | conferir | |
 | K7 | `Delete` / `Backspace` apagam as selecionadas | existe | |

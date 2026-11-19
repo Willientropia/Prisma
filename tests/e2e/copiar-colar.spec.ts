@@ -37,7 +37,7 @@ test('[F14-10] Ctrl+C numa região e Ctrl+V na cruz: cópia com id novo no ponto
   await expect.poll(() => dev(page).text()).toBe(before);
 });
 
-test('[F14-11] Ctrl+X tira a região e Ctrl+V a devolve com o mesmo id; sem cruz, cola abaixo da última região', async ({ page }) => {
+test('[F14-11] Ctrl+X tira a região e Ctrl+V a devolve com o mesmo id; sem cruz, cola no canto superior esquerdo da página, como no SMath', async ({ page }) => {
   await openString3(page);
   await selectRegion(page, 's');
   await page.keyboard.press('Control+X');
@@ -45,10 +45,7 @@ test('[F14-11] Ctrl+X tira a região e Ctrl+V a devolve com o mesmo id; sem cruz
   expect(await dev(page).text()).not.toContain('{#s ');
   await page.keyboard.press('Control+V');
   await expect(page.locator('[data-region="s"]')).toHaveCount(1);
-  const text = await dev(page).text();
-  const [, x, y] = /```calc \{#s x=(\d+) y=(\d+)\}\nS := 4 mm\^2\n```/.exec(text)!;
-  expect(Number(x)).toBe(230); // mesmo x
-  expect(Number(y)).toBeGreaterThan(330); // abaixo da última região (a verificação em y=330)
+  expect(await dev(page).text()).toContain('```calc {#s x=20 y=20}\nS := 4 mm^2\n```');
 });
 
 test('[F14-12] botão direito: Copiar na região e Colar na área vazia cola no ponto do clique; Apagar tira a região', async ({ page }) => {
