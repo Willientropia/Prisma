@@ -84,8 +84,8 @@ Legenda da coluna "Situação":
 | # | Item | Situação | Observação |
 |---|------|----------|------------|
 | F1 | Formato do resultado por documento e por região | existe | F-CONFIG |
-| F2 | Moldura, descrição e desativar | existe | A moldura vale para a seleção toda; desativar e descrição, só para a região clicada |
-| F3 | Desativar e descrição aplicados a todas as selecionadas | falta | Mesmo padrão da moldura (`menuIds`) |
+| F2 | Moldura, descrição e desativar | existe | Valem para a seleção toda (F16) |
+| F3 | Desativar e descrição aplicados a todas as selecionadas | existe | F16 |
 | F4 | Texto: negrito, itálico, tamanho e listas | existe, conferir | TipTap. Conferir no SMath o que mais o usuário usa (cor do texto, alinhamento) |
 | F5 | Cor de fundo e cor da fonte de uma região | conferir | Se o SMath tiver e o usuário usar; cores só de `tokens.css` |
 | F6 | Largura da região de texto ajustável (quebra de linha) | conferir | |

@@ -413,3 +413,27 @@ test('[BUG-029] botão do ribbon clicado enquanto a região nova monta entra dep
     await expect.poll(() => dev(page).text(), { message: `tentativa ${i + 1}` }).toContain('(a + b)/2');
   }
 });
+
+test('[BUG-033] clicar na folha enquanto a região nova monta: o campo não rouba o foco de volta e a cruz fica onde se clicou', async ({ page }) => {
+  await start(page);
+  await dev(page).newDoc('folha');
+  const sheet = page.getByLabel('Folha');
+  await sheet.click({ position: { x: 100, y: 100 } });
+  // campo lento para montar, como numa máquina mais lenta (o VPS): o foco do MathLive espera os quadros de animação
+  await page.evaluate(() => {
+    const [raf, caf] = [window.requestAnimationFrame.bind(window), window.cancelAnimationFrame.bind(window)];
+    const late = new Map<number, number>(); // quadro pedido → espera antes dele
+    let n = 1e6;
+    window.requestAnimationFrame = (cb) => { const id = n++; late.set(id, window.setTimeout(() => { late.set(id, -raf(cb)); }, 150)); return id; };
+    window.cancelAnimationFrame = (id) => { const t = late.get(id); if (t === undefined) return caf(id); if (t < 0) caf(-t); else window.clearTimeout(t); late.delete(id); };
+  });
+  await page.keyboard.type('1');
+  await sheet.click({ position: { x: 100, y: 400 } }); // antes do campo da região nova ter foco: o foco já era da folha
+  await page.waitForTimeout(1500); // o campo terminou de montar
+  await expect(sheet).toBeFocused();
+  await expect(page.locator('[class*="cross"]')).toHaveCount(1);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type('2');
+  await expect.poll(() => dev(page).text()).toMatch(/```calc \{#calc-\d+ x=120 y=400\}/);
+  expect(await dev(page).text()).not.toMatch(/x=100 y=100\}\n[^`]*2/); // o 2 não foi parar na primeira região
+});

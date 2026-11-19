@@ -40,12 +40,36 @@ test('[F15-02] Ctrl+A na folha seleciona todas as regiões; Delete apaga e Ctrl+
   await expect.poll(() => dev(page).text()).toBe(before);
 });
 
+test('[F16-01] Desativar avaliação e Descrição no botão direito valem para todas as selecionadas', async ({ page }) => {
+  await openString3(page);
+  const s = (await page.locator('[data-region="s"]').boundingBox())!;
+  await page.mouse.click(s.x + 1, s.y + 1);
+  await page.locator('[data-region="criterio"]').click({ modifiers: ['Control'], position: { x: 1, y: 1 } });
+  await page.locator('[data-region="s"]').click({ button: 'right', position: { x: 1, y: 1 } });
+  await page.getByRole('menuitem', { name: 'Desativar avaliação' }).click();
+  await expect.poll(() => dev(page).text()).toContain('```calc {#s x=230 y=76 desativado}');
+  expect(await dev(page).text()).toContain('```verificar {#criterio x=40 y=330 desativado}');
+  expect(await dev(page).text()).not.toContain('{#entradas x=40 y=80 desativado}');
+  await page.locator('[data-region="criterio"]').click({ button: 'right', position: { x: 1, y: 1 } });
+  await page.getByRole('menuitem', { name: 'Descrição...' }).click();
+  const dlg = page.getByRole('alertdialog', { name: 'Descrição da região' });
+  await dlg.getByRole('textbox').fill('exemplo');
+  await dlg.getByRole('button', { name: 'OK' }).click();
+  await expect.poll(() => dev(page).text()).toContain('```calc {#s x=230 y=76 desativado descricao="exemplo"}');
+  expect(await dev(page).text()).toContain('```verificar {#criterio x=40 y=330 desativado descricao="exemplo"}');
+  await page.locator('[data-region="s"]').click({ button: 'right', position: { x: 1, y: 1 } });
+  await page.getByRole('menuitem', { name: 'Ativar avaliação' }).click(); // todas desativadas: o menu oferece ativar todas
+  await expect.poll(() => dev(page).text()).not.toContain('desativado');
+});
+
 test('[F15-03] setas movem a cruz um ponto da grade; a região nova nasce onde a cruz parou; a cruz não sai da página', async ({ page }) => {
   await openString3(page);
   await sheet(page).click({ position: { x: 600, y: 500 } });
   for (const k of ['ArrowRight', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'ArrowUp']) await page.keyboard.press(k);
   await page.keyboard.type('1');
   await expect.poll(() => dev(page).text()).toContain('```calc {#calc-1 x=640 y=480}');
+  // o campo novo pega o foco e a página rola até ele: só então se clica mais abaixo, como uma pessoa faria
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('MATH-FIELD');
   await page.keyboard.press('Escape');
   await sheet(page).click({ position: { x: 20, y: 1000 } });
   for (const k of ['ArrowLeft', 'ArrowLeft', 'ArrowLeft']) await page.keyboard.press(k);

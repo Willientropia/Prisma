@@ -182,12 +182,12 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       { label: 'Recortar', run: () => copyRegions(menuIds(r.id), true) },
       { label: 'Copiar', run: () => copyRegions(menuIds(r.id), false) },
       { label: 'Apagar', run: () => removeRegions(menuIds(r.id)) },
-      { label: 'desativado' in a ? 'Ativar avaliação' : 'Desativar avaliação', run: () => setAttr(r.id, 'desativado', 'desativado' in a ? null : true) },
+      { label: attrOn(menuIds(r.id), 'desativado') ? 'Ativar avaliação' : 'Desativar avaliação', run: () => toggleAttr(menuIds(r.id), 'desativado') },
       { label: frameOn(menuIds(r.id)) ? 'Tirar moldura' : 'Moldura', run: () => toggleFrame(menuIds(r.id)) },
       ...(EVALUATED.has(r.seg.type) ? [{ label: 'Formato do resultado...', run: () => set({ formatDialog: { scope: 'region', docId: doc.id, regionId: r.id } }) }] : []),
       { label: 'Descrição...', run: async () => {
         const q = await useWorkspace.getState().ask({ title: 'Descrição da região', message: 'Comentário curto mostrado acima da região (vazio tira):', input: a.descricao ?? '', buttons: [{ id: 'ok', label: 'OK', primary: true }, { id: 'cancel', label: 'Cancelar' }] });
-        if (q.id === 'ok') setAttr(r.id, 'descricao', q.value.trim() || null);
+        if (q.id === 'ok') for (const id of menuIds(r.id)) setAttr(id, 'descricao', q.value.trim() || null); // a seleção toda (F16)
       } },
       ...(selected.size > 1 && selected.has(r.id) ? [
         { label: 'Alinhar na vertical (à esquerda)', run: () => alignRegions('x') },
@@ -227,11 +227,14 @@ export function Folha({ doc }: { doc: OpenDoc }) {
   useEffect(() => { register('folha.area', { label: 'Área', run: wrapInArea }); return () => register('folha.area', { run: undefined }); });
   /** Moldura (ADENDO 05, E5) em todas as selecionadas de uma vez: se todas já têm, tira de todas (pedido do usuário, 14/11). */
   const menuIds = (id: string) => (selected.has(id) ? [...selected] : [id]); // menu numa região da seleção vale para a seleção toda
-  const frameOn = (ids: string[]) => { const rs = fresh().filter((r) => ids.includes(r.id)); return rs.length > 0 && rs.every((r) => 'moldura' in r.seg.attrs); };
-  const toggleFrame = (ids: string[]) => {
-    const off = frameOn(ids);
-    for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) setAttr(r.id, 'moldura', off ? null : true); // de trás para a frente
+  // atributo sem valor (moldura, desativado) em todas as selecionadas: se todas já têm, tira de todas (F16, como a moldura)
+  const attrOn = (ids: string[], name: string) => { const rs = fresh().filter((r) => ids.includes(r.id)); return rs.length > 0 && rs.every((r) => name in r.seg.attrs); };
+  const toggleAttr = (ids: string[], name: string) => {
+    const off = attrOn(ids, name);
+    for (const r of fresh().filter((x) => ids.includes(x.id)).sort((a, b) => b.start - a.start)) setAttr(r.id, name, off ? null : true); // de trás para a frente
   };
+  const frameOn = (ids: string[]) => attrOn(ids, 'moldura');
+  const toggleFrame = (ids: string[]) => toggleAttr(ids, 'moldura');
   useEffect(() => {
     register('folha.moldura', { label: 'Moldura', run: () => (selected.size ? toggleFrame([...selected]) : set({ status: 'Moldura: selecione uma ou mais regiões' })) });
     return () => register('folha.moldura', { run: undefined });
@@ -286,7 +289,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     edit(doc.id, t.length, t.length, `${t.endsWith('\n\n') ? '' : t.endsWith('\n') ? '\n' : '\n\n'}${add}`);
     setSelected(new Set(ids));
     setCross(null);
-    sheet.current?.focus();
+    sheet.current?.focus({ preventScroll: true });
   };
   const pasteFromMenu = (at: { x: number; y: number }) => {
     const read = navigator.clipboard?.readText?.();
@@ -352,6 +355,8 @@ export function Folha({ doc }: { doc: OpenDoc }) {
 
   const onSheetDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.target !== sheet.current || e.button !== 0) return;
+    // clique na folha enquanto a região nova monta: o campo dela desiste do foco (BUG-033), e as teclas seguintes são da folha
+    if (creating.current) { doneCreating(); pendingKeys.current = []; }
     const p0 = at(e);
     let moved = false;
     const move = (ev: globalThis.PointerEvent) => {
@@ -379,7 +384,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
         setSelected(new Set());
         setCross({ x: pos(p0.x), y: pos(p0.y) });
       }
-      sheet.current?.focus();
+      sheet.current?.focus({ preventScroll: true });
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -392,7 +397,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     e.stopPropagation();
     setSelected((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
     setCross(null);
-    sheet.current?.focus(); // sai da região em edição; Ctrl+C e Delete valem para a seleção
+    sheet.current?.focus({ preventScroll: true }); // sai da região em edição; Ctrl+C e Delete valem para a seleção
   };
 
   // arrastar pela moldura: move com encaixe na grade
@@ -410,7 +415,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
       setDrag(null);
       const { dx, dy } = groupDelta(ids, snap(ev.clientX - p0.x), snap(ev.clientY - p0.y));
       if (dx || dy) moveRegions(ids, dx, dy);
-      sheet.current?.focus();
+      sheet.current?.focus({ preventScroll: true });
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -441,6 +446,10 @@ export function Folha({ doc }: { doc: OpenDoc }) {
 
   const onSheetKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== sheet.current) return;
+    if (creating.current) { // campo ainda montando: guarda a tecla (inclusive Enter, Esc e Ctrl+G) para aplicar quando tiver foco
+      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); /* a tecla guardada não dispara também o atalho global (Ctrl+W fecharia o documento) */ pendingKeys.current.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
+      return;
+    }
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected.size) { e.preventDefault(); removeRegions([...selected]); return; }
     if (e.key === 'Escape') { setCross(null); setSelected(new Set()); return; }
     // Ctrl+A: todas as regiões visíveis; as de área recolhida ou travada ficam de fora, para Delete não apagar o que não se vê (F15)
@@ -452,10 +461,6 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     }
     // Ctrl+Shift+seta esquerda alinha na vertical (à esquerda), Ctrl+Shift+seta acima na horizontal (pelo topo) (F-LAYOUT)
     if (e.ctrlKey && e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowUp') && selected.size > 1) { e.preventDefault(); alignRegions(e.key === 'ArrowLeft' ? 'x' : 'y'); return; }
-    if (creating.current) { // campo ainda montando: guarda a tecla (inclusive Enter e Ctrl+G) para aplicar quando tiver foco
-      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); /* a tecla guardada não dispara também o atalho global (Ctrl+W fecharia o documento) */ pendingKeys.current.push({ key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, altKey: e.altKey }); }
-      return;
-    }
     // Enter com a cruz (sem região em edição) desce uma linha da grade, como no SMath (F-LAYOUT)
     if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && crossRef.current) { e.preventDefault(); setCross({ ...crossRef.current, y: crossRef.current.y + GRID }); return; }
     // setas movem a cruz um ponto da grade, sem sair da página (F15)
@@ -510,7 +515,7 @@ export function Folha({ doc }: { doc: OpenDoc }) {
     const el = sheet.current?.querySelector<HTMLElement>(`[data-region="${id}"]`);
     setSelected(new Set());
     setCross({ x: num(r.seg, 'x'), y: snap(num(r.seg, 'y') + (el?.offsetHeight ?? GRID) + GRID / 2) });
-    sheet.current?.focus();
+    sheet.current?.focus({ preventScroll: true });
   };
 
   /** Shift+Enter: confirma e cria uma região logo abaixo, alinhada à esquerda (B4). */

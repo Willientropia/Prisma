@@ -464,20 +464,46 @@ export function MathField(props: FieldProps) {
     // O MathLive só aceita foco alguns quadros depois de montado: tenta até conseguir e só então
     // aplica as teclas que chegaram antes (região nova na folha, linha nova no caderno).
     let startEl: Element | null = null; // quem tinha o foco quando este campo pediu foco
+    // Clique fora do campo enquanto ele espera o foco. O foco sozinho não mostra isso quando a pessoa clica no
+    // mesmo elemento que já tinha o foco (a própria folha, para pôr a cruz em outro ponto): BUG-033.
+    let clickedAway = false;
+    let watchTimer = 0;
+    // O MathLive aplica o foco 60 ms depois do focus() e tem a mesma falha: só desiste se o foco mudou de elemento.
+    // Logo depois do clique fora, o foco que ele ainda aplicar é recusado e volta para quem o tinha.
+    let veto = false;
+    let vetoTimer = 0;
+    // Conta só o clique dentro de quem tinha o foco (a folha), fora deste campo. Um botão do ribbon ou do catálogo
+    // não tira o foco de lugar e insere neste campo (BUG-029); clicar em outro campo muda o foco e o teste abaixo vê.
+    const onDownAway = (e: PointerEvent) => {
+      const t = e.target as globalThis.Node | null;
+      if (host.current?.contains(t) || !startEl?.contains(t)) return;
+      clickedAway = veto = true;
+      clearTimeout(vetoTimer);
+      vetoTimer = window.setTimeout(() => { veto = false; }, 400); // prazo: bem mais que os 60 ms do MathLive
+    };
+    const stopWatch = () => { clearTimeout(watchTimer); window.removeEventListener('pointerdown', onDownAway, true); };
+    mf.addEventListener('focusin', (e) => {
+      if (!veto) return;
+      e.stopImmediatePropagation(); // nem a região nem a folha tratam este foco
+      const back = e.relatedTarget;
+      if (back instanceof HTMLElement && !host.current?.contains(back)) back.focus({ preventScroll: true });
+      else mf.blur();
+    }, { capture: true });
     const tryFocus = (n: number) => {
-      if (!mf.isConnected) return;
+      if (!mf.isConnected) return stopWatch();
       // a pessoa já clicou em outro lugar: não rouba o foco de volta; o campo é tratado como deixado
       const now = document.activeElement;
-      if (now && now !== startEl && now !== document.body && now !== mf && !host.current?.contains(now)) {
-        releaseKeys(); stopWaiting(); p.current.onLeave?.(); return;
+      if (clickedAway || (now && now !== startEl && now !== document.body && now !== mf && !host.current?.contains(now))) {
+        stopWatch(); releaseKeys(); stopWaiting(); p.current.onLeave?.(); return;
       }
       mf.focus();
       // hasFocus() do MathLive diz "sim" antes do documento: só confia quando o foco é de fato do campo
       if (document.activeElement !== mf) {
         if (n < 120) focusFrame.current = requestAnimationFrame(() => tryFocus(n + 1));
-        else { releaseKeys(); stopWaiting(); }
+        else { stopWatch(); releaseKeys(); stopWaiting(); }
         return;
       }
+      stopWatch();
       if (p.current.selectOnFocus) mf.executeCommand('selectAll'); else mf.position = mf.lastOffset;
       const keys = [...(p.current.initialKeys?.splice(0) ?? []), ...releaseKeys(), ...queued.splice(0)];
       stopWaiting();
@@ -488,9 +514,17 @@ export function MathField(props: FieldProps) {
       }
       p.current.onReady?.();
     };
-    focusNow.current = () => { cancelAnimationFrame(focusFrame.current); startEl = document.activeElement; focusFrame.current = requestAnimationFrame(() => tryFocus(0)); };
+    focusNow.current = () => {
+      cancelAnimationFrame(focusFrame.current);
+      stopWatch();
+      startEl = document.activeElement;
+      clickedAway = false;
+      window.addEventListener('pointerdown', onDownAway, true);
+      watchTimer = window.setTimeout(stopWatch, 5000); // prazo: as 120 tentativas de foco acabam bem antes
+      focusFrame.current = requestAnimationFrame(() => tryFocus(0));
+    };
     if (p.current.focused) focusNow.current();
-    return () => { cancelAnimationFrame(focusFrame.current); waitingFields.delete(mf); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
+    return () => { cancelAnimationFrame(focusFrame.current); stopWatch(); clearTimeout(vetoTimer); waitingFields.delete(mf); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
   }, []);
 
   useEffect(() => {
