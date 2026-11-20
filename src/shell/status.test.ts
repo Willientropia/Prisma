@@ -11,7 +11,12 @@ describe('[BUG-038] resumo da barra de status', () => {
     expect(statusSummary({ evals: 0, checks: 0, passed: 0, errors: 0 })).toBe('Pronto · 0 resultados');
     expect(statusSummary({ evals: 2, checks: 0, passed: 0, errors: 3 })).toBe('Pronto · 2 resultados · 3 erros');
   });
-  it('verificações continuam como estão', () => {
-    expect(statusSummary({ evals: 2, checks: 1, passed: 1, errors: 0 })).toBe('Pronto · 2 resultados · 1 de 1 verificações aprovadas');
+  it('[BUG-038] verificações todas aprovadas, como no protótipo: "1 verificação aprovada", "3 verificações aprovadas"', () => {
+    expect(statusSummary({ evals: 2, checks: 1, passed: 1, errors: 0 })).toBe('Pronto · 2 resultados · 1 verificação aprovada');
+    expect(statusSummary({ evals: 2, checks: 3, passed: 3, errors: 0 })).toBe('Pronto · 2 resultados · 3 verificações aprovadas');
+  });
+  it('[BUG-038] com alguma reprovada fica "X de Y": o "de Y" é o que avisa a reprovação', () => {
+    expect(statusSummary({ evals: 2, checks: 3, passed: 2, errors: 0 })).toBe('Pronto · 2 resultados · 2 de 3 verificações aprovadas');
+    expect(statusSummary({ evals: 2, checks: 1, passed: 0, errors: 0 })).toBe('Pronto · 2 resultados · 0 de 1 verificações aprovadas');
   });
 });

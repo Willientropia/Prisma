@@ -6,7 +6,8 @@ const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : 
 export function statusSummary(s: { evals: number; checks: number; passed: number; errors: number }): string {
   return [
     `Pronto · ${count(s.evals, 'resultado', 'resultados')}`,
-    s.checks && `${s.passed} de ${s.checks} verificações aprovadas`,
+    // todas aprovadas: como no protótipo ("1 verificação aprovada"); com alguma reprovada, o "de Y" avisa (decisão do usuário, 20/11)
+    s.checks && (s.passed === s.checks ? count(s.checks, 'verificação aprovada', 'verificações aprovadas') : `${s.passed} de ${s.checks} verificações aprovadas`),
     s.errors && count(s.errors, 'erro', 'erros'),
   ].filter(Boolean).join(' · ');
 }
