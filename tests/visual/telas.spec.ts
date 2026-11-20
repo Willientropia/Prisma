@@ -117,7 +117,9 @@ async function assistOpen(page: Page, regions: string, typed: string) {
   await page.keyboard.type(typed, { delay: 30 });
   const list = page.getByRole('listbox', { name: 'Assistente dinâmico' });
   await expect(list).toBeVisible();
-  await expect(tabs(page).filter({ hasText: 'assistente.prsf' })).toContainText('assistente.prsf*'); // a digitação já foi gravada (a aba marca o documento alterado)
+  const tab = tabs(page).filter({ hasText: 'assistente.prsf' });
+  await expect(tab).toContainText('assistente.prsf*'); // a digitação foi gravada no documento (aba marcada como alterada)
+  await expect(tab).not.toContainText('*', { timeout: 6000 }); // e o salvamento automático (2 s) já passou: a aba não muda durante a captura
   await expect(status(page)).toContainText('Pronto'); // e o cálculo dela terminou: nada muda na tela durante a captura
   // posição da lista: medida (com fração, a mesma conta do MathField) e aplicada (inteira), para comparar rodadas (BUG-035)
   const pos = await page.evaluate(() => {

@@ -11,6 +11,7 @@ import { toLatex } from '../format/mathlinear';
 import { allFunctions } from '../commands/library';
 import s from './shell.module.css';
 import { paineisOf } from './paineis';
+import { statusSummary } from './status';
 
 const QUICK: [string, IconName][] = [['app.novo', 'file'], ['app.abrir', 'open'], ['app.salvar', 'save'], ['app.desfazer', 'undo'], ['app.refazer', 'redo']];
 
@@ -92,7 +93,7 @@ export function StatusBar() {
     const checks = all.filter((l) => l.kind === 'check');
     const passed = checks.filter((l) => l.status === 'ok' || l.status === 'warn').length;
     const errors = all.filter((l) => l.error).length + result.libErrors.length;
-    summary = [`Pronto · ${evals} resultados`, checks.length && `${passed} de ${checks.length} verificações aprovadas`, errors && `${errors} erros`].filter(Boolean).join(' · ');
+    summary = statusSummary({ evals, checks: checks.length, passed, errors });
   }
   return (
     <footer className={s.statusbar}>
