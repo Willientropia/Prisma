@@ -426,8 +426,6 @@ export function MathField(props: FieldProps) {
     state.paint = () => {
       const a = state.assist;
       if (!a) { setView(null); return; }
-      // na região recém-criada o MathLive pode ainda não ter desenhado o caractere: mede de novo no quadro seguinte
-      requestAnimationFrame(() => { if (state.assist !== a || !host.current) return; const q = listAt(); setView((v) => (v && (v.x !== q.x || v.y !== q.y) ? { ...v, ...q } : v)); });
       const it = a.shown[a.sel];
       setView({
         // ponytail: só as 100 primeiras linhas são desenhadas (8 visíveis); mais que isso, o nome digitado filtra
@@ -476,6 +474,18 @@ export function MathField(props: FieldProps) {
       state.edited = false;
       p.current.onLeave?.();
     });
+    // A lista acompanha o campo: é reposicionada quando o MathLive redesenha o campo (a letra pode mudar de largura
+    // quando a fonte certa chega, sem o campo mudar de tamanho) ou quando o campo muda de tamanho. Antes ela ficava
+    // onde a primeira medida a pôs (BUG-035). Só mede com a lista aberta.
+    const relist = () => {
+      if (!state.assist || !host.current) return;
+      const q = listAt();
+      setView((v) => (v && (v.x !== q.x || v.y !== q.y) ? { ...v, ...q } : v));
+    };
+    const follow = new ResizeObserver(relist);
+    follow.observe(mf);
+    const redraw = new MutationObserver(relist);
+    if (mf.shadowRoot) redraw.observe(mf.shadowRoot, { subtree: true, childList: true, characterData: true, attributes: true });
     mfRef.current = mf;
 
     // O MathLive só aceita foco alguns quadros depois de montado: tenta até conseguir e só então
@@ -550,7 +560,7 @@ export function MathField(props: FieldProps) {
       focusFrame.current = requestAnimationFrame(() => tryFocus(0));
     };
     if (p.current.focused) focusNow.current();
-    return () => { cancelAnimationFrame(focusFrame.current); stopWatch(); clearTimeout(vetoTimer); waitingFields.delete(mf); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
+    return () => { follow.disconnect(); redraw.disconnect(); cancelAnimationFrame(focusFrame.current); stopWatch(); clearTimeout(vetoTimer); waitingFields.delete(mf); mf.removeEventListener('keydown', onKey, { capture: true }); mf.remove(); mfRef.current = null; };
   }, []);
 
   useEffect(() => {

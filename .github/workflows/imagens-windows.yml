@@ -1,29 +1,36 @@
-# Gera as imagens aprovadas do Windows (tests/visual/__snapshots__/*.png) no windows-latest, para o usuário
-# aprovar antes do commit (CLAUDE.md: imagem aprovada só muda com autorização). Não faz commit: as imagens saem
-# como artefato. Primeiro roda os testes visuais contra as imagens atuais, para mostrar quais já passam aqui.
-# Uso: Actions → Imagens do Windows → Run workflow (ou push num ramo imagens/*); baixar com gh run download.
+# Imagens aprovadas do Windows (tests/visual/__snapshots__/*.png) no windows-latest. Não faz commit: tudo sai como
+# artefato, para o usuário aprovar antes (CLAUDE.md: imagem aprovada só muda com autorização).
+# 1. Ruído: roda os testes visuais N vezes com tolerância zero contra as imagens aprovadas (o que a release compara).
+# 2. Imagens novas: regera todas, para aprovação.
+# Uso: push num ramo imagens/* (3 rodadas de tudo), ou
+#   gh workflow run imagens-windows.yml -f repeticoes=20 -f filtro=A6-4-47
+# e baixe com gh run download <id> -n imagens-windows.
 name: Imagens do Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      repeticoes:
+        description: 'Rodadas da medição de ruído'
+        default: '3'
+      filtro:
+        description: 'Só os testes cujo título contém isto (vazio = todos)'
+        default: ''
   push:
     branches: ['imagens/**']
 
 jobs:
   imagens:
     runs-on: windows-latest
+    env:
+      REPETICOES: ${{ inputs.repeticoes || '3' }}
+      FILTRO: ${{ inputs.filtro || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - name: Testes visuais contra as imagens atuais
-        continue-on-error: true
-        run: npx playwright test --project=visual --reporter=list
-      - name: Imagens novas (todas, para aprovar)
-        continue-on-error: true
-        run: npx playwright test --project=visual --update-snapshots=all --reporter=list
-      - name: Ruído no windows-latest (3 rodadas, tolerância zero, contra as imagens recém-geradas)
+      - name: Ruído contra as imagens aprovadas (tolerância zero)
         continue-on-error: true
         shell: bash
         run: |
@@ -31,14 +38,18 @@ jobs:
           import base from './playwright.config';
           export default { ...base, outputDir: 'test-results/ruido', expect: { toHaveScreenshot: { ...base.expect!.toHaveScreenshot, maxDiffPixelRatio: 0, maxDiffPixels: 0 } } };
           EOF
-          npx playwright test -c playwright.ruido.config.ts --project=visual --repeat-each 3 --reporter=list 2>&1 | tee ruido.txt
+          npx playwright test -c playwright.ruido.config.ts --project=visual --repeat-each "$REPETICOES" ${FILTRO:+--grep "$FILTRO"} --reporter=list 2>&1 | tee ruido.txt
           echo "--- resumo: pixels diferentes por captura (vazio = nenhum)" >> ruido.txt
           grep -E "pixels \(ratio" ruido.txt | sort | uniq -c >> ruido.txt || true
+          grep -E "^\s+[0-9]+ (passed|failed)" ruido.txt >> ruido.txt || true
+      - name: Imagens novas (todas, para aprovar)
+        continue-on-error: true
+        run: npx playwright test --project=visual --update-snapshots=all --reporter=list
       - uses: actions/upload-artifact@v4
         with:
           name: imagens-windows
           path: |
             tests/visual/__snapshots__/*.png
-            test-results/playwright/
+            test-results/ruido/
             ruido.txt
           retention-days: 14
