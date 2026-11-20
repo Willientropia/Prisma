@@ -421,7 +421,8 @@ export function MathField(props: FieldProps) {
     const listAt = () => {
       const r = host.current!.getBoundingClientRect();
       const b = mf.getElementInfo(Math.max(0, mf.position))?.bounds;
-      return { x: Math.max(0, Math.min((b?.right ?? r.left), window.innerWidth - 490)), y: r.bottom + 2 };
+      // pixel inteiro: com fração, as letras da lista saem com serrilhado diferente a cada posição (BUG-035)
+      return { x: Math.round(Math.max(0, Math.min((b?.right ?? r.left), window.innerWidth - 490))), y: Math.round(r.bottom + 2) };
     };
     state.paint = () => {
       const a = state.assist;

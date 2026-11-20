@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { expect, test } from '../e2e/fixtures';
-import { CALC, PROJ, dev, resultTexts, start } from '../e2e/helpers';
+import { CALC, PROJ, dev, resultTexts, start, status, tabs } from '../e2e/helpers';
 
 /** Espera fontes e quadros assentarem; o tempo de cálculo (muda a cada execução) fica mascarado. */
 async function shot(page: Page, name: string) {
@@ -115,7 +115,20 @@ async function assistOpen(page: Page, regions: string, typed: string) {
   await dev(page).open(f);
   await page.getByLabel('Folha').click({ position: { x: 100, y: 300 } });
   await page.keyboard.type(typed, { delay: 30 });
-  await expect(page.getByRole('listbox', { name: 'Assistente dinâmico' })).toBeVisible();
+  const list = page.getByRole('listbox', { name: 'Assistente dinâmico' });
+  await expect(list).toBeVisible();
+  await expect(tabs(page).filter({ hasText: 'assistente.prsf' })).toContainText('assistente.prsf*'); // a digitação já foi gravada (a aba marca o documento alterado)
+  await expect(status(page)).toContainText('Pronto'); // e o cálculo dela terminou: nada muda na tela durante a captura
+  // posição da lista: medida (com fração, a mesma conta do MathField) e aplicada (inteira), para comparar rodadas (BUG-035)
+  const pos = await page.evaluate(() => {
+    // o campo em edição, onde a lista abriu
+    const mf = document.activeElement as HTMLElement & { position: number; getElementInfo(o: number): { bounds?: DOMRect } | undefined };
+    const r = mf.parentElement!.getBoundingClientRect();
+    const b = mf.getElementInfo(Math.max(0, mf.position))?.bounds;
+    const l = document.querySelector('[role="listbox"]')!.closest('[style*="left"]') as HTMLElement | null;
+    return { medidoX: b?.right ?? null, medidoY: r.bottom + 2, aplicado: l ? `${l.style.left} ${l.style.top}` : '?' };
+  });
+  console.log(`A6-4-47 (${typed}): lista medida em x=${pos.medidoX} y=${pos.medidoY}; aplicada em ${pos.aplicado}`);
 }
 
 test('[A6-4-47] 06-43: assistente aberto com s numa folha vazia (06-10)', async ({ page }) => {
