@@ -12,6 +12,7 @@ Leia no início de uma sessão nova, principalmente no VPS. As regras permanente
 
 ## Pendências soltas (sem ticket ainda)
 
+- A6-2-01 (Vitest de navegador) falhou 1 vez em cerca de 11 verify completos no VPS, em 20/11: a linha sqrt(x) não foi gravada em 2,7 s. Não reproduziu em 20 rodadas, com ou sem o MutationObserver do BUG-035. Suspeita: carga do servidor com prazo de 2 s, não confirmada. Se falhar de novo em qualquer push, investigar (é padrão), sem mudar o prazo do teste antes de falar com o usuário.
 - `a^(b)` volta como `a^b`, e `1 Ω*mm^2/m*A/mm^2` volta com os termos reordenados quando a linha é editada. O valor não muda (F12).
 - O botão "Derivada" do ribbon ainda insere `diff(;)`, e não o operador d/du que a tela já desenha.
 - A unidade `var` não existe: o math.js define `VAR` como unidade complexa (`Q = ? VAR` dá −1125·i). Hoje a potência reativa sai em VA.
